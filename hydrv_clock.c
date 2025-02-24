@@ -68,7 +68,6 @@ hydrv_ReturnCode hydrv_Clock_ConfigureHSI(void)
         return HYDRV_FAIL;
     }
 
-
     hydrv_ReturnCode pll_rc = ConfigurePLL_(&pll_config_hsi, &system_clock_mhz);
     hydrv_clock_status.pll = pll_rc != HYDRV_OK;
     if (hydrv_clock_status.pll)
@@ -83,7 +82,7 @@ hydrv_ReturnCode hydrv_Clock_ConfigureHSI(void)
     {
         return HYDRV_FAIL;
     }
-    
+
     return HYDRV_OK;
 }
 
@@ -147,7 +146,7 @@ static void EnablePowerClock_(void)
     volatile uint32_t tmpreg = 0x00U;
     SET_BIT(RCC->APB1ENR, RCC_APB1ENR_PWREN);
     tmpreg = READ_BIT(RCC->APB1ENR, RCC_APB1ENR_PWREN);
-    UNUSED(tmpreg);
+    (void)tmpreg;
 }
 
 static void SetPowerVoltageScale_(void)
@@ -155,7 +154,7 @@ static void SetPowerVoltageScale_(void)
     volatile uint32_t tmpreg = 0x00U;
     MODIFY_REG(PWR->CR, PWR_CR_VOS, PWR_REGULATOR_VOLTAGE_SCALE1);
     tmpreg = READ_BIT(PWR->CR, PWR_CR_VOS);
-    UNUSED(tmpreg);
+    (void)tmpreg;
 }
 
 static hydrv_ReturnCode EnableHSI_(void)

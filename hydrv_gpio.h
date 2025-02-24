@@ -31,7 +31,7 @@ typedef enum
         __IO uint32_t tmpreg = 0x00U;                                                                      \
         SET_BIT(RCC->AHB1ENR, RCC_AHB1ENR_##GPIOx##EN); /* Delay after an RCC peripheral clock enabling */ \
         tmpreg = READ_BIT(RCC->AHB1ENR, RCC_AHB1ENR_##GPIOx##EN);                                          \
-        UNUSED(tmpreg);                                                                                    \
+        (void)tmpreg;                                                                                    \
     } while (0U);
 
 #define HYDRV_GPIO_INIT_OUTPUT(GPIOx, pin) \
