@@ -1,0 +1,6 @@
+[submodule "drvs/CMSIS_DEVICE_F4"]
+	path = drvs/CMSIS_DEVICE_F4
+	url = https://github.com/STMicroelectronics/cmsis-device-f4.git
+[submodule "drvs/CMSIS_5"]
+	path = drvs/CMSIS_5
+	url = https://github.com/ARM-software/CMSIS_5.git
