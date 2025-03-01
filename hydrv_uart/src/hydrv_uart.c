@@ -4,9 +4,6 @@
 
 #include "stm32f4xx.h"
 
-#include "hydrv_clock.h"
-#include "hydrv_gpio.h"
-
 #define USART_BRR_DIV_Fraction_Val(val) (val << USART_BRR_DIV_Fraction_Pos)
 #define USART_BRR_DIV_Mantissa_Val(val) (val << USART_BRR_DIV_Mantissa_Pos)
 #define USART_CR2_STOP_1bit (0x0UL << USART_CR2_STOP_Pos)
