@@ -12,6 +12,7 @@ typedef enum
     HYDRV_FAIL,
     HYDRV_TIMEOUT,
     HYDRV_BUSY,
+    HYDRV_NO_DATA
 } hydrv_ReturnCode;
 
 typedef bool hydrv_ConditionFunc();
