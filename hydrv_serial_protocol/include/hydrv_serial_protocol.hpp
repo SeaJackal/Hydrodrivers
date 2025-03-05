@@ -55,8 +55,7 @@ namespace hydrv::serialProtocol
 
     public:
         SerialProtocolDriver(USART_TypeDef *USARTx, uint8_t address,
-                             uint8_t *public_memory,
-                             uint32_t public_memory_capacity);
+                             MessageProcessor::PublicMemoryInterface &public_memory);
 
     private:
         USART_TypeDef *USARTx_;

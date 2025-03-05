@@ -3,13 +3,11 @@
 namespace hydrv::serialProtocol
 {
     SerialProtocolDriver::SerialProtocolDriver(USART_TypeDef *USARTx, uint8_t address,
-                                               uint8_t *public_memory,
-                                               uint32_t public_memory_capacity)
+                                               MessageProcessor::PublicMemoryInterface &public_memory)
         : MessageProcessor(address,
                            tx_queue_,
                            rx_queue_,
-                           public_memory,
-                           public_memory_capacity),
+                           public_memory),
           USARTx_(USARTx)
     {
         hydrv_UART_Init(USARTx);
