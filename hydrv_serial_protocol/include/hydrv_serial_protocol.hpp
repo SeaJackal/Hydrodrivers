@@ -40,9 +40,10 @@ namespace hydrv::serialProtocol
         class TxQueue_ : public MessageProcessor::TxQueueInterface
         {
         public:
-            TxQueue_();
+            TxQueue_(SerialProtocolDriver &driver);
 
         private:
+            SerialProtocolDriver &driver_;
             hydrolib_RingQueue queue_;
             uint8_t buffer[HYDROLIB_SP_TX_BUFFER_CAPACITY];
 

@@ -17,7 +17,7 @@ void hydrv_UART_Init(USART_TypeDef *USARTx)
     SET_BIT(USARTx->CR1, USART_CR1_PS);      // odd parity
     CLEAR_BIT(USARTx->CR1, USART_CR1_OVER8); // 16-bit oversampling
     MODIFY_REG(USARTx->CR2, USART_CR2_STOP, USART_CR2_STOP_1bit);
-    // SET_BIT(USARTx->CR1, USART_CR1_RXNEIE);
+    SET_BIT(USARTx->CR1, USART_CR1_RXNEIE);
     SET_BIT(USARTx->CR1, USART_CR1_TE);
     SET_BIT(USARTx->CR1, USART_CR1_RE);
 
@@ -37,19 +37,16 @@ void hydrv_UART_Init(USART_TypeDef *USARTx)
 
 hydrv_ReturnCode hydrv_UART_Transmit(USART_TypeDef *USARTx, uint8_t data)
 {
-    if (READ_BIT(USARTx->SR, USART_SR_RXNE))
-    {
-        return HYDRV_BUSY;
-    }
     if (!READ_BIT(USARTx->SR, USART_SR_TC))
     {
         return HYDRV_FAIL;
     }
+    SET_BIT(USARTx->CR1, USART_CR1_TCIE);
     USARTx->DR = data;
     return HYDRV_OK;
 }
 
-hydrv_ReturnCode hydrv_UART_Receive(USART_TypeDef *USARTx, uint8_t* data)
+hydrv_ReturnCode hydrv_UART_Receive(USART_TypeDef *USARTx, uint8_t *data)
 {
     if (READ_BIT(USARTx->SR, USART_SR_RXNE))
     {
@@ -57,4 +54,24 @@ hydrv_ReturnCode hydrv_UART_Receive(USART_TypeDef *USARTx, uint8_t* data)
         return HYDRV_OK;
     }
     return HYDRV_FAIL;
+}
+
+bool hydrv_UART_IsReceived(USART_TypeDef *USARTx)
+{
+    return READ_BIT(USARTx->SR, USART_SR_RXNE) != 0;
+}
+
+bool hydrv_UART_IsTransmitted(USART_TypeDef *USARTx)
+{
+    return READ_BIT(USARTx->SR, USART_SR_TC) != 0;
+}
+
+void hydrv_UART_enableTxInterruption(USART_TypeDef *USARTx)
+{
+    SET_BIT(USARTx->CR1, USART_CR1_TCIE);
+}
+
+void hydrv_UART_disableTxInterruption(USART_TypeDef *USARTx)
+{
+    CLEAR_BIT(USARTx->CR1, USART_CR1_TCIE);
 }

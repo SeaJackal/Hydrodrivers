@@ -8,7 +8,8 @@ namespace hydrv::serialProtocol
                            tx_queue_,
                            rx_queue_,
                            public_memory),
-          USARTx_(USARTx)
+          USARTx_(USARTx),
+          tx_queue_(*this)
     {
         hydrv_UART_Init(USARTx);
     }
@@ -35,6 +36,7 @@ namespace hydrv::serialProtocol
         hydrolib_ReturnCode read_result = tx_queue_.ReadByte(&transmiting_byte);
         if (read_result != HYDROLIB_RETURN_OK)
         {
+            hydrv_UART_disableTxInterruption(USARTx_);
             return HYDRV_NO_DATA;
         }
 
@@ -73,14 +75,19 @@ namespace hydrv::serialProtocol
         return hydrolib_RingQueue_PushByte(&queue_, byte);
     }
 
-    SerialProtocolDriver::TxQueue_::TxQueue_()
+    SerialProtocolDriver::TxQueue_::TxQueue_(SerialProtocolDriver &driver) : driver_(driver)
     {
         hydrolib_RingQueue_Init(&queue_, buffer, HYDROLIB_SP_TX_BUFFER_CAPACITY);
     }
 
     hydrolib_ReturnCode SerialProtocolDriver::TxQueue_::Push(void *buffer, uint32_t length)
     {
-        return hydrolib_RingQueue_Push(&queue_, buffer, length);
+        hydrolib_ReturnCode res = hydrolib_RingQueue_Push(&queue_, buffer, length);
+        if (res == HYDROLIB_RETURN_OK)
+        {
+            hydrv_UART_enableTxInterruption(driver_.USARTx_);
+        }
+        return res;
     }
 
     hydrolib_ReturnCode SerialProtocolDriver::TxQueue_::ReadByte(uint8_t *byte)
