@@ -52,7 +52,7 @@ namespace hydrv::serialProtocol
 
     SerialProtocolDriver::RxQueue_::RxQueue_()
     {
-        hydrolib_RingQueue_Init(&queue_, buffer, HYDROLIB_SP_RX_BUFFER_CAPACITY);
+        hydrolib_RingQueue_Init(&queue_, buffer_, HYDROLIB_SP_RX_BUFFER_CAPACITY);
     }
 
     hydrolib_ReturnCode SerialProtocolDriver::RxQueue_::Read(void *buffer, uint32_t length, uint32_t shift) const
@@ -77,7 +77,7 @@ namespace hydrv::serialProtocol
 
     SerialProtocolDriver::TxQueue_::TxQueue_(SerialProtocolDriver &driver) : driver_(driver)
     {
-        hydrolib_RingQueue_Init(&queue_, buffer, HYDROLIB_SP_TX_BUFFER_CAPACITY);
+        hydrolib_RingQueue_Init(&queue_, buffer_, HYDROLIB_SP_TX_BUFFER_CAPACITY);
     }
 
     hydrolib_ReturnCode SerialProtocolDriver::TxQueue_::Push(void *buffer, uint32_t length)

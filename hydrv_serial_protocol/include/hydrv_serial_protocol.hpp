@@ -27,7 +27,7 @@ namespace hydrv::serialProtocol
 
         private:
             hydrolib_RingQueue queue_;
-            uint8_t buffer[HYDROLIB_SP_RX_BUFFER_CAPACITY];
+            uint8_t buffer_[HYDROLIB_SP_RX_BUFFER_CAPACITY];
 
         public:
             hydrolib_ReturnCode Read(void *buffer, uint32_t length, uint32_t shift) const override;
@@ -45,7 +45,7 @@ namespace hydrv::serialProtocol
         private:
             SerialProtocolDriver &driver_;
             hydrolib_RingQueue queue_;
-            uint8_t buffer[HYDROLIB_SP_TX_BUFFER_CAPACITY];
+            uint8_t buffer_[HYDROLIB_SP_TX_BUFFER_CAPACITY];
 
         public:
             hydrolib_ReturnCode Push(void *buffer, uint32_t length) override;
