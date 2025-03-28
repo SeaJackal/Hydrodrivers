@@ -5,10 +5,9 @@ project(HydrodriversUART VERSION 1.0)
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
 
-file(GLOB SRCS src/*.c)
-add_library(HydrodriversUART ${SRCS})
+add_library(HydrodriversUART INTERFACE)
 
-target_link_libraries(HydrodriversUART HydrodriversCommon)
-target_link_libraries(HydrodriversUART CMSIS)
+target_link_libraries(HydrodriversUART INTERFACE HydrodriversGPIO INTERFACE HydrolibCommon)
+target_link_libraries(HydrodriversUART INTERFACE CMSIS)
 
-target_include_directories(HydrodriversUART PUBLIC include)
+target_include_directories(HydrodriversUART INTERFACE include)

@@ -72,6 +72,11 @@ hydrv_ReturnCode hydrv_GPIOinitUART_4_8(GPIO_TypeDef *GPIOx, hydrv_GPIOpinNumber
     return HYDRV_OK;
 }
 
+void hydrv_GPIOinitAltFunc(GPIO_TypeDef *GPIOx, hydrv_GPIOpinNumber pin, uint8_t alt_func)
+{
+    GPIOinitAltFunc_(GPIOx, pin, alt_func);
+}
+
 void hydrv_GPIO_Set(GPIO_TypeDef *GPIOx, hydrv_GPIOpinNumber pin)
 {
     GPIOset_(GPIOx, pin);

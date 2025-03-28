@@ -25,8 +25,6 @@
 
 void hydrv_UART_Init(USART_TypeDef *USARTx);
 
-void NewFunction(USART_TypeDef *USARTx);
-
 hydrv_ReturnCode hydrv_UART_Transmit(USART_TypeDef *USARTx, uint8_t data);
 hydrv_ReturnCode hydrv_UART_Receive(USART_TypeDef *USARTx, uint8_t *data);
 
