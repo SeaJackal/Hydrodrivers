@@ -1,102 +1,69 @@
 #include "hydrv_serial_protocol.hpp"
+#include "hydrolib_serial_protocol_core.hpp"
 
 namespace hydrv::serialProtocol
 {
-    SerialProtocolDriver::SerialProtocolDriver(USART_TypeDef *USARTx, uint8_t address,
-                                               MessageProcessor::PublicMemoryInterface &public_memory)
-        : MessageProcessor(address,
-                           tx_queue_,
-                           rx_queue_,
-                           public_memory),
-          USARTx_(USARTx),
-          tx_queue_(*this)
-    {
-        hydrv_UART_Init(USARTx);
-    }
 
-    hydrv_ReturnCode SerialProtocolDriver::ReceiveByteCallback()
-    {
-        uint8_t received_byte;
-        hydrv_ReturnCode receive_result = hydrv_UART_Receive(USARTx_, &received_byte);
-        if (receive_result != HYDRV_OK)
-        {
-            return HYDRV_BUSY;
-        }
-        hydrolib_ReturnCode push_result = rx_queue_.PushByte(received_byte);
-        if (push_result != HYDROLIB_RETURN_OK)
-        {
-            return HYDRV_FAIL;
-        }
-        return HYDRV_OK;
-    }
+  SerialProtocolDriver::SerialProtocolDriver(
+      uint8_t address, MessageProcessor::PublicMemoryInterface &public_memory,
+      const UART::UARTLow::UARTPreset &UART_preset,
+      GPIO_TypeDef *rx_GPIOx, hydrv_GPIOpinNumber rx_pin, GPIO_TypeDef *tx_GPIOx,
+      hydrv_GPIOpinNumber tx_pin, uint32_t IRQ_priority)
+      : USART_(UART_preset, rx_GPIOx, rx_pin, tx_GPIOx, tx_pin, IRQ_priority),
+        rx_queue_(USART_), tx_queue_(USART_),
+        processor_(address, tx_queue_, rx_queue_, public_memory) {}
 
-    hydrv_ReturnCode SerialProtocolDriver::TransmitHandler()
-    {
-        uint8_t transmiting_byte;
-        hydrolib_ReturnCode read_result = tx_queue_.ReadByte(&transmiting_byte);
-        if (read_result != HYDROLIB_RETURN_OK)
-        {
-            hydrv_UART_disableTxInterruption(USARTx_);
-            return HYDRV_NO_DATA;
-        }
+  void SerialProtocolDriver::IRQHandler() { USART_.IRQcallback(); }
 
-        hydrv_ReturnCode transmit_result = hydrv_UART_Transmit(USARTx_, transmiting_byte);
-        if (transmit_result != HYDRV_OK)
-        {
-            return transmit_result;
-        }
+  bool SerialProtocolDriver::ProcessRx() { return processor_.ProcessRx(); }
 
-        tx_queue_.DropByte();
-        return HYDRV_OK;
-    }
+  hydrolib_ReturnCode SerialProtocolDriver::TransmitWrite(uint8_t device_address,
+                                                          uint32_t memory_address,
+                                                          uint32_t length,
+                                                          uint8_t *data)
+  {
+    return processor_.TransmitWrite(device_address, memory_address, length, data);
+  }
 
-    SerialProtocolDriver::RxQueue_::RxQueue_()
-    {
-        hydrolib_RingQueue_Init(&queue_, buffer_, HYDROLIB_SP_RX_BUFFER_CAPACITY);
-    }
+  hydrolib_ReturnCode SerialProtocolDriver::TransmitRead(uint8_t device_address,
+                                                         uint32_t memory_address,
+                                                         uint32_t length,
+                                                         uint8_t *buffer)
+  {
+    return processor_.TransmitRead(device_address, memory_address, length, buffer);
+  }
 
-    hydrolib_ReturnCode SerialProtocolDriver::RxQueue_::Read(void *buffer, uint32_t length, uint32_t shift) const
-    {
-        return hydrolib_RingQueue_Read(&queue_, buffer, length, shift);
-    }
+  SerialProtocolDriver::RxQueue_::RxQueue_(UART::UART<HYDROLIB_SP_RX_BUFFER_CAPACITY,
+                                                      HYDROLIB_SP_TX_BUFFER_CAPACITY> &UART) : UART_(UART)
+  {
+  }
 
-    void SerialProtocolDriver::RxQueue_::Drop(uint32_t number)
-    {
-        hydrolib_RingQueue_Drop(&queue_, number);
-    }
+  hydrolib_ReturnCode SerialProtocolDriver::RxQueue_::Read(void *buffer,
+                                                           uint32_t length,
+                                                           uint32_t shift) const
+  {
+    return UART_.ReadRx(buffer, length, shift);
+  }
 
-    void SerialProtocolDriver::RxQueue_::Clear()
-    {
-        hydrolib_RingQueue_Clear(&queue_);
-    }
+  void SerialProtocolDriver::RxQueue_::Drop(uint32_t number)
+  {
+    UART_.DropRx(number);
+  }
 
-    hydrolib_ReturnCode SerialProtocolDriver::RxQueue_::PushByte(uint8_t byte)
-    {
-        return hydrolib_RingQueue_PushByte(&queue_, byte);
-    }
+  void SerialProtocolDriver::RxQueue_::Clear()
+  {
+    UART_.ClearRx();
+  }
 
-    SerialProtocolDriver::TxQueue_::TxQueue_(SerialProtocolDriver &driver) : driver_(driver)
-    {
-        hydrolib_RingQueue_Init(&queue_, buffer_, HYDROLIB_SP_TX_BUFFER_CAPACITY);
-    }
+  SerialProtocolDriver::TxQueue_::TxQueue_(UART::UART<HYDROLIB_SP_RX_BUFFER_CAPACITY,
+                                                      HYDROLIB_SP_TX_BUFFER_CAPACITY> &UART)
+      : UART_(UART)
+  {
+  }
 
-    hydrolib_ReturnCode SerialProtocolDriver::TxQueue_::Push(void *buffer, uint32_t length)
-    {
-        hydrolib_ReturnCode res = hydrolib_RingQueue_Push(&queue_, buffer, length);
-        if (res == HYDROLIB_RETURN_OK)
-        {
-            hydrv_UART_enableTxInterruption(driver_.USARTx_);
-        }
-        return res;
-    }
-
-    hydrolib_ReturnCode SerialProtocolDriver::TxQueue_::ReadByte(uint8_t *byte)
-    {
-        return hydrolib_RingQueue_ReadByte(&queue_, byte, 0);
-    }
-
-    void SerialProtocolDriver::TxQueue_::DropByte()
-    {
-        hydrolib_RingQueue_Drop(&queue_, 1);
-    }
-}
+  hydrolib_ReturnCode SerialProtocolDriver::TxQueue_::Push(void *buffer,
+                                                           uint32_t length)
+  {
+    return UART_.Transmit(buffer, length);
+  }
+} // namespace hydrv::serialProtocol
