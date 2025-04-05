@@ -5,9 +5,10 @@ project(HydrodriversGPIO VERSION 1.0)
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
 
-add_library(HydrodriversGPIO src/hydrv_gpio_low.cpp)
+file(GLOB SRCS src/*.c)
+add_library(HydrodriversGPIO ${SRCS})
 
-target_link_libraries(HydrodriversGPIO PUBLIC HydrolibCommon)
-target_link_libraries(HydrodriversGPIO PUBLIC CMSIS)
+target_link_libraries(HydrodriversGPIO HydrodriversCommon)
+target_link_libraries(HydrodriversGPIO CMSIS)
 
 target_include_directories(HydrodriversGPIO PUBLIC include)
