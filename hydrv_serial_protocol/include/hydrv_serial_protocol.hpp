@@ -15,16 +15,17 @@ namespace hydrv::serialProtocol
 
   class SerialProtocolDriver
   {
+  public:
+    using UART = UART::UART<HYDROLIB_SP_RX_BUFFER_CAPACITY, HYDROLIB_SP_TX_BUFFER_CAPACITY>;
+
   private:
     class RxQueue_ : public MessageProcessor::RxQueueInterface
     {
     public:
-      RxQueue_(UART::UART<HYDROLIB_SP_RX_BUFFER_CAPACITY,
-                          HYDROLIB_SP_TX_BUFFER_CAPACITY> &UART);
+      RxQueue_(UART &UART);
 
     private:
-      UART::UART<HYDROLIB_SP_RX_BUFFER_CAPACITY, HYDROLIB_SP_TX_BUFFER_CAPACITY>
-          &UART_;
+      UART &UART_;
 
     public:
       hydrolib_ReturnCode Read(void *buffer, uint32_t length,
@@ -36,12 +37,10 @@ namespace hydrv::serialProtocol
     class TxQueue_ : public MessageProcessor::TxQueueInterface
     {
     public:
-      TxQueue_(UART::UART<HYDROLIB_SP_RX_BUFFER_CAPACITY,
-                          HYDROLIB_SP_TX_BUFFER_CAPACITY> &UART);
+      TxQueue_(UART &UART);
 
     private:
-      UART::UART<HYDROLIB_SP_RX_BUFFER_CAPACITY, HYDROLIB_SP_TX_BUFFER_CAPACITY>
-          &UART_;
+      UART &UART_;
 
     public:
       hydrolib_ReturnCode Push(void *buffer, uint32_t length) override;
@@ -50,13 +49,10 @@ namespace hydrv::serialProtocol
   public:
     SerialProtocolDriver(
         uint8_t address, MessageProcessor::PublicMemoryInterface &public_memory,
-        const UART::UARTLow::UARTPreset &UART_preset,
-        hydrv::GPIO::GPIOLow &rx_pin, hydrv::GPIO::GPIOLow &tx_pin,
-        uint32_t IRQ_priority);
+        UART &UART);
 
   private:
-    UART::UART<HYDROLIB_SP_RX_BUFFER_CAPACITY, HYDROLIB_SP_TX_BUFFER_CAPACITY>
-        USART_;
+    UART &UART_;
 
     RxQueue_ rx_queue_;
     TxQueue_ tx_queue_;

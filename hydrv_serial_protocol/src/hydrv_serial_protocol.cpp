@@ -6,14 +6,12 @@ namespace hydrv::serialProtocol
 
   SerialProtocolDriver::SerialProtocolDriver(
       uint8_t address, MessageProcessor::PublicMemoryInterface &public_memory,
-      const UART::UARTLow::UARTPreset &UART_preset,
-      hydrv::GPIO::GPIOLow &rx_pin, hydrv::GPIO::GPIOLow &tx_pin,
-      uint32_t IRQ_priority)
-      : USART_(UART_preset, rx_pin, tx_pin, IRQ_priority),
-        rx_queue_(USART_), tx_queue_(USART_),
+      UART &UART)
+      : UART_(UART),
+        rx_queue_(UART), tx_queue_(UART),
         processor_(address, tx_queue_, rx_queue_, public_memory) {}
 
-  void SerialProtocolDriver::IRQHandler() { USART_.IRQcallback(); }
+  void SerialProtocolDriver::IRQHandler() { UART_.IRQcallback(); }
 
   bool SerialProtocolDriver::ProcessRx() { return processor_.ProcessRx(); }
 
@@ -33,8 +31,7 @@ namespace hydrv::serialProtocol
     return processor_.TransmitRead(device_address, memory_address, length, buffer);
   }
 
-  SerialProtocolDriver::RxQueue_::RxQueue_(UART::UART<HYDROLIB_SP_RX_BUFFER_CAPACITY,
-                                                      HYDROLIB_SP_TX_BUFFER_CAPACITY> &UART) : UART_(UART)
+  SerialProtocolDriver::RxQueue_::RxQueue_(UART &UART) : UART_(UART)
   {
   }
 
@@ -55,8 +52,7 @@ namespace hydrv::serialProtocol
     UART_.ClearRx();
   }
 
-  SerialProtocolDriver::TxQueue_::TxQueue_(UART::UART<HYDROLIB_SP_RX_BUFFER_CAPACITY,
-                                                      HYDROLIB_SP_TX_BUFFER_CAPACITY> &UART)
+  SerialProtocolDriver::TxQueue_::TxQueue_(UART &UART)
       : UART_(UART)
   {
   }
