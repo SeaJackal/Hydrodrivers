@@ -17,12 +17,12 @@ namespace hydrv::UART
     static constexpr uint32_t REAL_TX_BUFFER_CAPACITY_ = TX_BUFFER_CAPACITY + 1;
 
   public:
-    UART(const UARTLow::UARTPreset &UART_preset, GPIO_TypeDef *rx_GPIOx, hydrv_GPIOpinNumber rx_pin,
-         GPIO_TypeDef *tx_GPIOx, hydrv_GPIOpinNumber tx_pin,
+    UART(const UARTLow::UARTPreset &UART_preset,
+         hydrv::GPIO::GPIOLow &rx_pin,
+         hydrv::GPIO::GPIOLow &tx_pin,
          uint32_t IRQ_priority)
         : UART_handler_(UART_preset, IRQ_priority,
-                        rx_GPIOx, rx_pin,
-                        tx_GPIOx, tx_pin),
+                        rx_pin, tx_pin),
           rx_head_(0), rx_tail_(0),
           tx_head_(0), tx_tail_(0),
           status_(HYDROLIB_RETURN_OK)

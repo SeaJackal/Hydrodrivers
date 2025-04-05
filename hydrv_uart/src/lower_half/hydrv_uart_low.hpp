@@ -6,9 +6,9 @@
 extern "C"
 {
 #include "stm32f4xx.h"
-
-#include "hydrv_gpio.h"
 }
+
+#include "hydrv_gpio_low.hpp"
 
 #define ENABLE_UART_CLOCK(RCC_ADDRESS, EN_BIT)                              \
     do                                                                      \
@@ -47,8 +47,7 @@ namespace hydrv::UART
 
     public:
         UARTLow(const UARTPreset &preset, uint32_t IRQ_priority,
-                GPIO_TypeDef *rx_GPIOx, hydrv_GPIOpinNumber rx_pin,
-                GPIO_TypeDef *tx_GPIOx, hydrv_GPIOpinNumber tx_pin)
+                hydrv::GPIO::GPIOLow &rx_pin, hydrv::GPIO::GPIOLow &tx_pin)
             : USARTx_(preset.USARTx),
               GPIO_alt_func_(preset.GPIO_alt_func),
               RCC_APBENR_UARTxEN_(preset.RCC_APBENR_UARTxEN),
@@ -87,10 +86,8 @@ namespace hydrv::UART
 
             SET_BIT(USARTx_->CR1, USART_CR1_UE);
 
-            HYDRV_ENABLE_GPIO_CLOCK(GPIOC);
-
-            hydrv_GPIOinitAltFunc(rx_GPIOx, rx_pin, GPIO_alt_func_);
-            hydrv_GPIOinitAltFunc(tx_GPIOx, tx_pin, GPIO_alt_func_);
+            rx_pin.InitAsUART(preset.GPIO_alt_func);
+            tx_pin.InitAsUART(preset.GPIO_alt_func);
         }
 
     public:

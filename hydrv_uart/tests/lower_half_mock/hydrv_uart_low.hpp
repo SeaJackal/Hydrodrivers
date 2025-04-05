@@ -5,9 +5,12 @@
 
 #include <cstring>
 
-struct GPIO_TypeDef
+namespace hydrv::GPIO
 {
-};
+    struct GPIOLow
+    {
+    };
+}
 
 typedef uint32_t hydrv_GPIOpinNumber;
 
@@ -106,14 +109,11 @@ namespace hydrv::UART
 
     public:
         UARTLow(const UARTPreset &preset, uint32_t IRQ_priority,
-                GPIO_TypeDef *rx_GPIOx, hydrv_GPIOpinNumber rx_pin,
-                GPIO_TypeDef *tx_GPIOx, hydrv_GPIOpinNumber tx_pin)
+                hydrv::GPIO::GPIOLow &rx_pin, hydrv::GPIO::GPIOLow &tx_pin)
             : mock_(preset.mock)
         {
             (void)IRQ_priority;
-            (void)rx_GPIOx;
             (void)rx_pin;
-            (void)tx_GPIOx;
             (void)tx_pin;
         }
 

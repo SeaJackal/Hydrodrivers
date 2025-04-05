@@ -24,27 +24,23 @@ namespace hydrv::GPIO
             static constexpr std::size_t PIN_COUNT = 16;
 
         public:
-            GPIOGroup(GPIO_TypeDef *const GPIOx,
-                      const uint32_t RCC_AHB1ENR_GPIOxEN)
+            GPIOGroup(GPIO_TypeDef *const GPIOx, const uint32_t RCC_AHB1ENR_GPIOxEN)
                 : GPIOx_(GPIOx),
                   RCC_AHB1ENR_GPIOxEN_(RCC_AHB1ENR_GPIOxEN)
 
             {
-                for (std::size_t i = 0; i < PIN_COUNT; i++)
-                {
-                    inited_pins_[0] = false;
-                }
-            };
+            }
 
         private:
             GPIO_TypeDef *const GPIOx_;
             const uint32_t RCC_AHB1ENR_GPIOxEN_;
 
-            bool inited_pins_[PIN_COUNT];
+            bool inited_pins_[PIN_COUNT] = {0};
         };
 
     public:
         static GPIOGroup GPIOD_group;
+        static GPIOGroup GPIOC_group;
 
     public:
         GPIOLow(GPIOGroup &GPIO_group, unsigned pin)

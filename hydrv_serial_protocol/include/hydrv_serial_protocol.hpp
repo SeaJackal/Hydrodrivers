@@ -51,8 +51,7 @@ namespace hydrv::serialProtocol
     SerialProtocolDriver(
         uint8_t address, MessageProcessor::PublicMemoryInterface &public_memory,
         const UART::UARTLow::UARTPreset &UART_preset,
-        GPIO_TypeDef *rx_GPIOx, hydrv_GPIOpinNumber rx_pin,
-        GPIO_TypeDef *tx_GPIOx, hydrv_GPIOpinNumber tx_pin,
+        hydrv::GPIO::GPIOLow &rx_pin, hydrv::GPIO::GPIOLow &tx_pin,
         uint32_t IRQ_priority);
 
   private:
