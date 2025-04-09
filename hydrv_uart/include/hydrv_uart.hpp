@@ -17,15 +17,20 @@ namespace hydrv::UART
     static constexpr uint32_t REAL_TX_BUFFER_CAPACITY_ = TX_BUFFER_CAPACITY + 1;
 
   public:
+    typedef void (*ExternalIRQCallback)(void);
+
+  public:
     UART(const UARTLow::UARTPreset &UART_preset,
          hydrv::GPIO::GPIOLow &rx_pin,
          hydrv::GPIO::GPIOLow &tx_pin,
-         uint32_t IRQ_priority)
+         uint32_t IRQ_priority,
+         ExternalIRQCallback rx_callback = nullptr)
         : UART_handler_(UART_preset, IRQ_priority,
                         rx_pin, tx_pin),
           rx_head_(0), rx_tail_(0),
           tx_head_(0), tx_tail_(0),
-          status_(HYDROLIB_RETURN_OK)
+          status_(HYDROLIB_RETURN_OK),
+          rx_callback_(rx_callback)
     {
     }
 
@@ -148,6 +153,11 @@ namespace hydrv::UART
 
       rx_buffer_[rx_tail_] = UART_handler_.GetRx();
       rx_tail_ = next_tail;
+
+      if (rx_callback_)
+      {
+        rx_callback_();
+      }
     }
 
     void ProcessTx_()
@@ -179,6 +189,8 @@ namespace hydrv::UART
     uint32_t tx_tail_;
 
     hydrolib_ReturnCode status_;
+
+    ExternalIRQCallback rx_callback_;
   };
 
 } // namespace hydrv::UART
