@@ -2,11 +2,6 @@
 
 namespace hydrv::GPIO
 {
-    GPIOLow::GPIOGroup GPIOLow::GPIOD_group{
-        GPIOD,
-        RCC_AHB1ENR_GPIODEN};
-
-    GPIOLow::GPIOGroup GPIOLow::GPIOC_group{
-        GPIOC,
-        RCC_AHB1ENR_GPIOCEN};
+    bool GPIOLow::GPIOC_inited_pins_[GPIOGroup::PIN_COUNT] = {0};
+    bool GPIOLow::GPIOD_inited_pins_[GPIOGroup::PIN_COUNT] = {0};
 }

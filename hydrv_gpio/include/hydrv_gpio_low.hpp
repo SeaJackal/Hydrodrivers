@@ -18,32 +18,32 @@ namespace hydrv::GPIO
     public:
         struct GPIOGroup
         {
-            friend class GPIOLow;
-
         public:
             static constexpr std::size_t PIN_COUNT = 16;
 
         public:
-            GPIOGroup(GPIO_TypeDef *const GPIOx, const uint32_t RCC_AHB1ENR_GPIOxEN)
-                : GPIOx_(GPIOx),
-                  RCC_AHB1ENR_GPIOxEN_(RCC_AHB1ENR_GPIOxEN)
-
-            {
-            }
-
-        private:
             GPIO_TypeDef *const GPIOx_;
             const uint32_t RCC_AHB1ENR_GPIOxEN_;
 
-            bool inited_pins_[PIN_COUNT] = {0};
+            bool *const inited_pins_;
         };
 
-    public:
-        static GPIOGroup GPIOD_group;
-        static GPIOGroup GPIOC_group;
+    private:
+        static bool GPIOC_inited_pins_[GPIOGroup::PIN_COUNT];
+        static bool GPIOD_inited_pins_[GPIOGroup::PIN_COUNT];
 
     public:
-        GPIOLow(GPIOGroup &GPIO_group, unsigned pin)
+        static constexpr GPIOGroup GPIOC_group{
+            GPIOC,
+            RCC_AHB1ENR_GPIOCEN,
+            GPIOC_inited_pins_};
+        static constexpr GPIOGroup GPIOD_group{
+            GPIOD,
+            RCC_AHB1ENR_GPIODEN,
+            GPIOD_inited_pins_};
+
+    public:
+        GPIOLow(const GPIOGroup &GPIO_group, unsigned pin)
             : is_inited_(GPIO_group.inited_pins_[pin]),
               GPIOx_(GPIO_group.GPIOx_),
               pin_(pin),
