@@ -60,8 +60,6 @@ namespace hydrv::serialProtocol
     MessageProcessor processor_;
 
   public:
-    void IRQHandler();
-
     bool ProcessRx();
 
     hydrolib_ReturnCode TransmitWrite(uint8_t device_address,

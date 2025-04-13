@@ -11,8 +11,6 @@ namespace hydrv::serialProtocol
         rx_queue_(UART), tx_queue_(UART),
         processor_(address, tx_queue_, rx_queue_, public_memory) {}
 
-  void SerialProtocolDriver::IRQHandler() { UART_.IRQcallback(); }
-
   bool SerialProtocolDriver::ProcessRx() { return processor_.ProcessRx(); }
 
   hydrolib_ReturnCode SerialProtocolDriver::TransmitWrite(uint8_t device_address,
