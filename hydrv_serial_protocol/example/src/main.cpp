@@ -37,7 +37,6 @@ public:
 
 private:
     uint8_t buffer_[BUFFER_LENGTH];
-    unsigned length_ = 0;
 };
 
 hydrv::GPIO::GPIOLow led_pin(hydrv::GPIO::GPIOLow::GPIOD_group, 15);
