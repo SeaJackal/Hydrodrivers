@@ -118,29 +118,29 @@ namespace hydrv::UART
         }
 
     public:
-        inline bool IsRxDone()
+        bool IsRxDone()
         {
             return mock_.IsReceived();
         }
-        inline bool IsTxDone()
+        bool IsTxDone()
         {
             return true;
         }
 
-        inline uint8_t GetRx()
+        uint8_t GetRx()
         {
             return mock_.GetRx();
         }
-        inline void SetTx(uint8_t byte)
+        void SetTx(uint8_t byte)
         {
             mock_.SetTx(byte);
         }
 
-        inline void EnableTxInterruption()
+        void EnableTxInterruption()
         {
             mock_.EnableTxIRQ();
         }
-        inline void DisableTxInterruption()
+        void DisableTxInterruption()
         {
             mock_.DisableTxIRQ();
         }
