@@ -16,7 +16,7 @@ namespace hydrv::GPIO
     class GPIOLow
     {
     public:
-        struct GPIOGroup
+        struct GPIOPort
         {
         public:
             static constexpr std::size_t PIN_COUNT = 16;
@@ -29,21 +29,31 @@ namespace hydrv::GPIO
         };
 
     private:
-        static bool GPIOC_inited_pins_[GPIOGroup::PIN_COUNT];
-        static bool GPIOD_inited_pins_[GPIOGroup::PIN_COUNT];
+        static bool GPIOA_inited_pins_[GPIOPort::PIN_COUNT];
+        static bool GPIOB_inited_pins_[GPIOPort::PIN_COUNT];
+        static bool GPIOC_inited_pins_[GPIOPort::PIN_COUNT];
+        static bool GPIOD_inited_pins_[GPIOPort::PIN_COUNT];
 
     public:
-        static constexpr GPIOGroup GPIOC_group{
+        static constexpr GPIOPort GPIOA_port{
+            GPIOA,
+            RCC_AHB1ENR_GPIOAEN,
+            GPIOA_inited_pins_};
+        static constexpr GPIOPort GPIOB_port{
+            GPIOB,
+            RCC_AHB1ENR_GPIOBEN,
+            GPIOB_inited_pins_};
+        static constexpr GPIOPort GPIOC_port{
             GPIOC,
             RCC_AHB1ENR_GPIOCEN,
             GPIOC_inited_pins_};
-        static constexpr GPIOGroup GPIOD_group{
+        static constexpr GPIOPort GPIOD_port{
             GPIOD,
             RCC_AHB1ENR_GPIODEN,
             GPIOD_inited_pins_};
 
     public:
-        GPIOLow(const GPIOGroup &GPIO_group, unsigned pin)
+        GPIOLow(const GPIOPort &GPIO_group, unsigned pin)
             : is_inited_(GPIO_group.inited_pins_[pin]),
               GPIOx_(GPIO_group.GPIOx_),
               pin_(pin),

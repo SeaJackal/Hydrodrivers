@@ -29,6 +29,7 @@ extern "C" {
 /* Includes ------------------------------------------------------------------*/
 
 void UART3IRQHandler(void);
+void UART1IRQHandler(void);
 
 void Error_Handler(void);
 

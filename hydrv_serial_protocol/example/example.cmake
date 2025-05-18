@@ -37,9 +37,9 @@ add_executable(STMprogramTest
     ${CMAKE_CURRENT_LIST_DIR}/src/stm32f4xx_it.c)
 
 target_link_libraries(STMprogramTest
-    HydrodriversCommon HydrodriversClock HydrodriversSerialProtocol HydrodriversGPIO)
+    HydrodriversCommon HydrodriversClock HydrodriversUART HydrodriversGPIO)
 
-target_link_libraries(STMprogramTest HydrolibCommon)
+target_link_libraries(STMprogramTest HydrolibCommon HydrolibSerialProtocol)
 
 target_include_directories(STMprogramTest PUBLIC ${CMAKE_CURRENT_LIST_DIR}/include)
 

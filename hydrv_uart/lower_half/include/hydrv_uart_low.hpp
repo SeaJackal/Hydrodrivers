@@ -39,11 +39,23 @@ namespace hydrv::UART
       volatile uint32_t *const RCC_address;
 
       const IRQn_Type USARTx_IRQn;
+
+      unsigned mantissa;
+      unsigned fraction;
     };
 
   public:
+    static constexpr UARTPreset USART1_LOW{USART1, 7, RCC_APB2ENR_USART1EN,
+                                           &(RCC->APB2ENR), USART1_IRQn, 45, 9};
+
+    static constexpr UARTPreset USART1_HS_LOW{USART1, 7, RCC_APB2ENR_USART1EN,
+                                              &(RCC->APB2ENR), USART1_IRQn, 5, 11};
+
     static constexpr UARTPreset USART3_LOW{USART3, 7, RCC_APB1ENR_USART3EN,
-                                           &(RCC->APB1ENR), USART3_IRQn};
+                                           &(RCC->APB1ENR), USART3_IRQn, 22, 13};
+
+    static constexpr UARTPreset USART3_HS_LOW{USART3, 7, RCC_APB1ENR_USART3EN,
+                                           &(RCC->APB1ENR), USART3_IRQn, 2, 14};
 
   public:
     UARTLow(const UARTPreset &preset, uint32_t IRQ_priority,
@@ -58,8 +70,8 @@ namespace hydrv::UART
 
       CLEAR_BIT(USARTx_->CR1, USART_CR1_UE);
 
-      SET_BIT(USARTx_->CR1, USART_CR1_M);       // 9 bits including parity
-      SET_BIT(USARTx_->CR1, USART_CR1_PCE);     // parity enable
+      CLEAR_BIT(USARTx_->CR1, USART_CR1_M);       // 8 bits including parity
+      CLEAR_BIT(USARTx_->CR1, USART_CR1_PCE);   // parity disable
       SET_BIT(USARTx_->CR1, USART_CR1_PS);      // odd parity
       CLEAR_BIT(USARTx_->CR1, USART_CR1_OVER8); // 16-bit oversampling
       MODIFY_REG(USARTx_->CR2, USART_CR2_STOP, USART_CR2_STOP_1bit);
@@ -67,20 +79,25 @@ namespace hydrv::UART
       SET_BIT(USARTx_->CR1, USART_CR1_TE);
       SET_BIT(USARTx_->CR1, USART_CR1_RE);
 
-      if (USARTx_ == USART1 || USARTx_ == USART6)
-      {
-        MODIFY_REG(USARTx_->BRR, USART_BRR_DIV_Fraction,
-                   USART_BRR_DIV_Fraction_Val(9));
-        MODIFY_REG(USARTx_->BRR, USART_BRR_DIV_Mantissa,
-                   USART_BRR_DIV_Mantissa_Val(45));
-      }
-      else
-      {
-        MODIFY_REG(USARTx_->BRR, USART_BRR_DIV_Fraction,
-                   USART_BRR_DIV_Fraction_Val(13));
-        MODIFY_REG(USARTx_->BRR, USART_BRR_DIV_Mantissa,
-                   USART_BRR_DIV_Mantissa_Val(22));
-      }
+      // if (USARTx_ == USART1 || USARTx_ == USART6)
+      // {
+      //   MODIFY_REG(USARTx_->BRR, USART_BRR_DIV_Fraction,
+      //              USART_BRR_DIV_Fraction_Val(9));
+      //   MODIFY_REG(USARTx_->BRR, USART_BRR_DIV_Mantissa,
+      //              USART_BRR_DIV_Mantissa_Val(45));
+      // }
+      // else
+      // {
+      //   MODIFY_REG(USARTx_->BRR, USART_BRR_DIV_Fraction,
+      //              USART_BRR_DIV_Fraction_Val(13));
+      //   MODIFY_REG(USARTx_->BRR, USART_BRR_DIV_Mantissa,
+      //              USART_BRR_DIV_Mantissa_Val(22));
+      // }
+
+      MODIFY_REG(USARTx_->BRR, USART_BRR_DIV_Fraction,
+                 USART_BRR_DIV_Fraction_Val(preset.fraction));
+      MODIFY_REG(USARTx_->BRR, USART_BRR_DIV_Mantissa,
+                 USART_BRR_DIV_Mantissa_Val(preset.mantissa));
 
       SET_BIT(USARTx_->CR1, USART_CR1_UE);
 

@@ -1,52 +1,67 @@
+#include "hydrolib_common.h"
+#include <cstdint>
 #include <string.h>
 
 extern "C"
 {
-
 #include "stm32f4xx.h"
 
 #include "hydrv_clock.h"
 #include "hydrv_common.h"
 }
 
+#include "hydrolib_log_distributor.hpp"
+#include "hydrolib_logger.hpp"
+#include "hydrolib_serial_protocol_slave.hpp"
 #include "hydrv_gpio_low.hpp"
-#include "hydrv_serial_protocol.hpp"
+#include "hydrv_uart.hpp"
 
 #define BUFFER_LENGTH 5
 
-class Memory : public hydrolib::serialProtocol::MessageProcessor::PublicMemoryInterface
+class Memory
 {
-
 public:
-    hydrolib_ReturnCode Read(void *buffer, uint32_t address,
-                             uint32_t length) override
+    const uint8_t *Read(uint32_t address, uint32_t length)
     {
-        memcpy(buffer, buffer_ + address, length);
-        return HYDROLIB_RETURN_OK;
+        if (length + address > BUFFER_LENGTH)
+        {
+            return nullptr;
+        }
+        return buffer_ + address;
     }
     hydrolib_ReturnCode Write(const void *buffer, uint32_t address,
-                              uint32_t length) override
+                              uint32_t length)
     {
+        if (address + length > BUFFER_LENGTH)
+        {
+            return HYDROLIB_RETURN_FAIL;
+        }
         memcpy(buffer_ + address, buffer, length);
         return HYDROLIB_RETURN_OK;
     }
-    uint32_t Size() override
-    {
-        return BUFFER_LENGTH;
-    }
+    uint32_t Size() { return BUFFER_LENGTH; }
 
 private:
     uint8_t buffer_[BUFFER_LENGTH];
 };
 
-hydrv::GPIO::GPIOLow led_pin(hydrv::GPIO::GPIOLow::GPIOD_group, 15);
-hydrv::GPIO::GPIOLow rx_pin(hydrv::GPIO::GPIOLow::GPIOC_group, 11);
-hydrv::GPIO::GPIOLow tx_pin(hydrv::GPIO::GPIOLow::GPIOC_group, 10);
-hydrv::serialProtocol::SerialProtocolDriver::UART uart(
-    hydrv::UART::UARTLow::USART3_LOW, rx_pin, tx_pin, 7);
+hydrv::GPIO::GPIOLow led_pin(hydrv::GPIO::GPIOLow::GPIOD_port, 15);
+hydrv::GPIO::GPIOLow rx_pin3(hydrv::GPIO::GPIOLow::GPIOC_port, 11);
+hydrv::GPIO::GPIOLow tx_pin3(hydrv::GPIO::GPIOLow::GPIOC_port, 10);
+hydrv::UART::UART<1024, 1024> uart3(hydrv::UART::UARTLow::USART3_LOW, rx_pin3,
+                                    tx_pin3, 7);
+
+hydrv::GPIO::GPIOLow rx_pin1(hydrv::GPIO::GPIOLow::GPIOB_port, 7);
+hydrv::GPIO::GPIOLow tx_pin1(hydrv::GPIO::GPIOLow::GPIOB_port, 6);
+hydrv::UART::UART<1024, 1024> uart1(hydrv::UART::UARTLow::USART1_LOW, rx_pin1,
+                                    tx_pin1, 7);
+
+hydrolib::logger::LogDistributor distributor("[%s] [%l] %m\n\r", uart3);
+hydrolib::logger::Logger logger("Serial protocol", 0, distributor);
 
 Memory public_memory;
-hydrv::serialProtocol::SerialProtocolDriver serial_protocol(2, public_memory, uart);
+hydrolib::serial_protocol::Slave serial_protocol(2, uart1, public_memory,
+                                                 logger);
 
 int main(void)
 {
@@ -57,8 +72,7 @@ int main(void)
     while (1)
     {
         serial_protocol.ProcessRx();
-        uint8_t byte;
-        public_memory.Read(&byte, 0, 1);
+        uint8_t byte = *public_memory.Read(0, 1);
         if (byte == 'a')
         {
             led_pin.Set();
@@ -72,10 +86,8 @@ int main(void)
 
 extern "C"
 {
-    void UART3IRQHandler(void)
-    {
-        uart.IRQcallback();
-    }
+    void UART3IRQHandler(void) { uart3.IRQcallback(); }
+    void UART1IRQHandler(void) { uart1.IRQcallback(); }
 }
 
 void Error_Handler(void)
@@ -98,8 +110,8 @@ void assert_failed(uint8_t *file, uint32_t line)
 {
     /* USER CODE BEGIN 6 */
     /* User can add his own implementation to report the file name and line
-       number, ex: printf("Wrong parameters value: file %s on line %d\r\n", file,
-       line) */
+       number, ex: printf("Wrong parameters value: file %s on line %d\r\n",
+       file, line) */
     /* USER CODE END 6 */
 }
 #endif /* USE_FULL_ASSERT */
