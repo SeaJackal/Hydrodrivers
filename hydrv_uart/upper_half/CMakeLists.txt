@@ -7,7 +7,7 @@ add_library(HydrodriversUART INTERFACE)
 
 target_include_directories(HydrodriversUART INTERFACE include)
 
-target_link_libraries(HydrodriversUART INTERFACE HydrolibCommon)
+target_link_libraries(HydrodriversUART INTERFACE HydrolibCommon HydrolibConcepts)
 
 if(BUILD_TESTING)
     target_link_libraries(HydrodriversUART INTERFACE HydrodriversUARTLowMock)

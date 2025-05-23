@@ -11,7 +11,7 @@ extern "C"
 
 #include "hydrv_gpio_low.hpp"
 
-hydrv::GPIO::GPIOLow led_pin(hydrv::GPIO::GPIOLow::GPIOD_group, 15);
+hydrv::GPIO::GPIOLow led_pin(hydrv::GPIO::GPIOLow::GPIOD_port, 15);
 
 int main(void)
 {

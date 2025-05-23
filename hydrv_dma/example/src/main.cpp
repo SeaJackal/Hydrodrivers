@@ -13,8 +13,8 @@ extern "C"
 #include "hydrv_uart_low.hpp"
 #include "hydrv_dma.hpp"
 
-hydrv::GPIO::GPIOLow rx_pin(hydrv::GPIO::GPIOLow::GPIOC_group, 11);
-hydrv::GPIO::GPIOLow tx_pin(hydrv::GPIO::GPIOLow::GPIOC_group, 10);
+hydrv::GPIO::GPIOLow rx_pin(hydrv::GPIO::GPIOLow::GPIOC_port, 11);
+hydrv::GPIO::GPIOLow tx_pin(hydrv::GPIO::GPIOLow::GPIOC_port, 10);
 hydrv::UART::UARTLow uart(hydrv::UART::UARTLow::USART3_LOW, 7,
                           rx_pin, tx_pin);
 hydrv::DMA::DMAStream dma_stream(hydrv::DMA::DMAStream::USART3_TX_DMA, 6);

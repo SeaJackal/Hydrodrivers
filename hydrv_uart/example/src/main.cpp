@@ -14,9 +14,9 @@ extern "C"
 
 #define BUFFER_LENGTH 5
 
-hydrv::GPIO::GPIOLow led_pin(hydrv::GPIO::GPIOLow::GPIOD_group, 15);
-hydrv::GPIO::GPIOLow rx_pin(hydrv::GPIO::GPIOLow::GPIOC_group, 11);
-hydrv::GPIO::GPIOLow tx_pin(hydrv::GPIO::GPIOLow::GPIOC_group, 10);
+hydrv::GPIO::GPIOLow led_pin(hydrv::GPIO::GPIOLow::GPIOD_port, 15);
+hydrv::GPIO::GPIOLow rx_pin(hydrv::GPIO::GPIOLow::GPIOC_port, 11);
+hydrv::GPIO::GPIOLow tx_pin(hydrv::GPIO::GPIOLow::GPIOC_port, 10);
 hydrv::UART::UART<255, 255> uart(hydrv::UART::UARTLow::USART3_LOW,
                                  rx_pin, tx_pin, 7);
 
