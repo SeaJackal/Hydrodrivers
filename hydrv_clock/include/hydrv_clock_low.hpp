@@ -106,7 +106,7 @@ private:
     int32_t systick_counter_ = 0;
 };
 
-constexpr unsigned ClockLow::MhzToKhz_(unsigned freq) { return freq * 1000; };
+constexpr unsigned ClockLow::MhzToKhz_(unsigned freq) { return freq * 1000; }
 
 ClockLow::ClockLow(ClockPreset preset)
 {
@@ -252,7 +252,7 @@ hydrolib_ReturnCode ClockLow::ConfigurePLL_(const ClockPreset *preset,
                                             uint8_t *output_mhz)
 {
     CLEAR_BIT(RCC->CR, RCC_CR_PLLON);
-    MODIFY_REG(RCC->PLLCFGR, RCC_PLLCFGR_PLLSRC, config->source);
+    MODIFY_REG(RCC->PLLCFGR, RCC_PLLCFGR_PLLSRC, preset->source);
     MODIFY_REG(RCC->PLLCFGR, RCC_PLLCFGR_PLLM,
                preset->M << RCC_PLLCFGR_PLLM_Pos);
     MODIFY_REG(RCC->PLLCFGR, RCC_PLLCFGR_PLLN,
@@ -261,7 +261,6 @@ hydrolib_ReturnCode ClockLow::ConfigurePLL_(const ClockPreset *preset,
                ((preset->P >> 1) - 1) << RCC_PLLCFGR_PLLP_Pos);
     SET_BIT(RCC->CR, RCC_CR_PLLON);
 
-    hydrolib_ReturnCode pll_status;
     uint32_t start = GetSystickCounter_();
     while (!IsPLLready_())
     {

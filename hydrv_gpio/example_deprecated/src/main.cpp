@@ -1,31 +1,30 @@
-#include "hydrv_clock_low.hpp"
 #include <string.h>
 
 extern "C"
 {
 
 #include "stm32f4xx.h"
+
+#include "hydrv_clock.h"
 #include "hydrv_common.h"
 }
 
-#include "hydrv_clock_low.hpp"
 #include "hydrv_gpio_low.hpp"
 
-
-hydrv::clock::ClockLow clock(hydrv::clock::ClockLow::HSI_DEFAULT);
 hydrv::GPIO::GPIOLow led_pin(hydrv::GPIO::GPIOLow::GPIOD_port, 15);
 
 int main(void)
 {
+    hydrv_Clock_ConfigureHSI();
     NVIC_SetPriorityGrouping(0);
     led_pin.InitAsOutput();
 
     while (1)
     {
         led_pin.Set();
-        clock.Delay(500);
+        hydrv_Clock_Delay(500);
         led_pin.Reset();
-        clock.Delay(500);
+        hydrv_Clock_Delay(500);
     }
 }
 
