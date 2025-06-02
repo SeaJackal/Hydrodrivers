@@ -68,6 +68,14 @@ public:
         .frequency_hse_mhz = 0,
     };
 
+    static constexpr ClockPreset HSE_DEFAULT{
+        .source = HSE,
+        .M = 4,
+        .N = 168,
+        .P = 2,
+        .frequency_hse_mhz = 8,
+    };
+
     static constexpr uint32_t TIMEOUT_MS = 1000;
 
 private:
@@ -90,6 +98,7 @@ private:
     void SetPowerVoltageScale_(void);
 
     hydrolib_ReturnCode EnableHSI_(void);
+    hydrolib_ReturnCode EnableHSE_(void);
     void ConfigureSystemClock_(void);
     hydrolib_ReturnCode ConfigurePLL_(const ClockPreset *config,
                                       uint8_t *output_mhz);
@@ -131,7 +140,12 @@ ClockLow::ClockLow(ClockPreset preset)
     }
     else
     {
-        return;
+        hydrolib_ReturnCode hse_rc = EnableHSE_();
+        clock_status_.hse = hse_rc != HYDROLIB_RETURN_OK;
+        if (clock_status_.hse)
+        {
+            return;
+        }
     }
 
     hydrolib_ReturnCode pll_rc = ConfigurePLL_(&preset, &system_clock_mhz_);
@@ -222,6 +236,21 @@ void ClockLow::SetPowerVoltageScale_(void)
 hydrolib_ReturnCode ClockLow::EnableHSI_(void)
 {
     SET_BIT(RCC->CR, RCC_CR_HSION);
+
+    uint32_t start = GetSystickCounter_();
+    while (!IsHSIready_())
+    {
+        if (GetSystickCounter_() - start > TIMEOUT_MS)
+        {
+            return HYDROLIB_RETURN_FAIL;
+        }
+    }
+    return HYDROLIB_RETURN_OK;
+}
+
+hydrolib_ReturnCode ClockLow::EnableHSE_(void)
+{
+    SET_BIT(RCC->CR, RCC_CR_HSEON);
 
     uint32_t start = GetSystickCounter_();
     while (!IsHSIready_())
