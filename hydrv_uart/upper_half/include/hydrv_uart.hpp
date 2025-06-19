@@ -29,17 +29,11 @@ public:
 
     void IRQcallback();
 
-    hydrolib_ReturnCode Transmit(const void *data, uint32_t data_length);
+    int Transmit(const void *data, unsigned data_length);
     hydrolib_ReturnCode Push(const void *data, unsigned length);
 
-    hydrolib_ReturnCode ReadRx(void *data, uint32_t data_length,
-                               uint32_t shift) const;
-    hydrolib_ReturnCode Read(void *data, uint32_t data_length,
-                             uint32_t shift) const;
-    hydrolib_ReturnCode DropRx(uint32_t drop_length);
-    hydrolib_ReturnCode Drop(uint32_t drop_length);
+    int Read(void *data, unsigned data_length);
     void ClearRx();
-    void Clear();
 
     uint32_t GetRxLength() const;
     uint32_t GetTxLength() const;
@@ -66,6 +60,14 @@ private:
 
     CallbackType rx_callback_;
 };
+
+template <int RX_BUFFER_CAPACITY, int TX_BUFFER_CAPACITY, typename CallbackType>
+int read(UART<RX_BUFFER_CAPACITY, TX_BUFFER_CAPACITY, CallbackType> &stream,
+         void *dest, unsigned length);
+
+template <int RX_BUFFER_CAPACITY, int TX_BUFFER_CAPACITY, typename CallbackType>
+int write(UART<RX_BUFFER_CAPACITY, TX_BUFFER_CAPACITY, CallbackType> &stream,
+          const void *dest, unsigned length);
 
 template <int RX_BUFFER_CAPACITY, int TX_BUFFER_CAPACITY, typename CallbackType>
 constexpr UART<RX_BUFFER_CAPACITY, TX_BUFFER_CAPACITY, CallbackType>::UART(
@@ -98,15 +100,14 @@ void UART<RX_BUFFER_CAPACITY, TX_BUFFER_CAPACITY, CallbackType>::IRQcallback()
 }
 
 template <int RX_BUFFER_CAPACITY, int TX_BUFFER_CAPACITY, typename CallbackType>
-hydrolib_ReturnCode
-UART<RX_BUFFER_CAPACITY, TX_BUFFER_CAPACITY, CallbackType>::Transmit(
-    const void *data, uint32_t data_length)
+int UART<RX_BUFFER_CAPACITY, TX_BUFFER_CAPACITY, CallbackType>::Transmit(
+    const void *data, unsigned data_length)
 {
     uint32_t length = GetTxLength();
 
     if (length + data_length > TX_BUFFER_CAPACITY)
     {
-        return HYDROLIB_RETURN_FAIL;
+        data_length = TX_BUFFER_CAPACITY - length;
     }
 
     uint32_t forward_length = REAL_TX_BUFFER_CAPACITY_ - tx_tail_;
@@ -124,90 +125,50 @@ UART<RX_BUFFER_CAPACITY, TX_BUFFER_CAPACITY, CallbackType>::Transmit(
 
     UART_handler_.EnableTxInterruption();
 
-    return HYDROLIB_RETURN_OK;
+    return data_length;
 }
 
 template <int RX_BUFFER_CAPACITY, int TX_BUFFER_CAPACITY, typename CallbackType>
 hydrolib_ReturnCode
 UART<RX_BUFFER_CAPACITY, TX_BUFFER_CAPACITY, CallbackType>::Push(
-    const void *data, unsigned length)
+    const void *data, unsigned length) // TODO: Remove
 {
-    return Transmit(data, length);
-}
-
-template <int RX_BUFFER_CAPACITY, int TX_BUFFER_CAPACITY, typename CallbackType>
-hydrolib_ReturnCode
-UART<RX_BUFFER_CAPACITY, TX_BUFFER_CAPACITY, CallbackType>::ReadRx(
-    void *data, uint32_t data_length, uint32_t shift) const
-{
-    uint32_t length = GetRxLength();
-
-    if (shift + data_length > length)
+    if (Transmit(data, length) != static_cast<int>(length))
     {
         return HYDROLIB_RETURN_FAIL;
     }
-    uint16_t forward_length = RX_BUFFER_CAPACITY - rx_head_;
-    if (forward_length > shift)
+    return HYDROLIB_RETURN_OK;
+}
+
+template <int RX_BUFFER_CAPACITY, int TX_BUFFER_CAPACITY, typename CallbackType>
+int UART<RX_BUFFER_CAPACITY, TX_BUFFER_CAPACITY, CallbackType>::Read(
+    void *data, unsigned data_length)
+{
+    uint32_t length = GetRxLength();
+
+    if (data_length > length)
     {
-        if (shift + data_length > forward_length)
-        {
-            memcpy(data, rx_buffer_ + rx_head_ + shift, forward_length - shift);
-            memcpy(static_cast<uint8_t *>(data) + forward_length - shift,
-                   rx_buffer_, data_length - (forward_length - shift));
-        }
-        else
-        {
-            memcpy(data, rx_buffer_ + rx_head_ + shift, data_length);
-        }
+        data_length = length;
+    }
+    unsigned forward_length = RX_BUFFER_CAPACITY - rx_head_;
+    if (data_length > forward_length)
+    {
+        memcpy(data, rx_buffer_ + rx_head_, forward_length);
+        memcpy(static_cast<uint8_t *>(data) + forward_length, rx_buffer_,
+               data_length - forward_length);
     }
     else
     {
-        memcpy(data, rx_buffer_ + shift - forward_length, data_length);
+        memcpy(data, rx_buffer_ + rx_head_, data_length);
     }
-    return HYDROLIB_RETURN_OK;
-}
-
-template <int RX_BUFFER_CAPACITY, int TX_BUFFER_CAPACITY, typename CallbackType>
-hydrolib_ReturnCode
-UART<RX_BUFFER_CAPACITY, TX_BUFFER_CAPACITY, CallbackType>::Read(
-    void *data, uint32_t data_length, uint32_t shift) const
-{
-    return ReadRx(data, data_length, shift);
-}
-
-template <int RX_BUFFER_CAPACITY, int TX_BUFFER_CAPACITY, typename CallbackType>
-hydrolib_ReturnCode
-UART<RX_BUFFER_CAPACITY, TX_BUFFER_CAPACITY, CallbackType>::DropRx(
-    uint32_t drop_length)
-{
-    uint32_t length = GetRxLength();
-
-    if (drop_length > length)
-    {
-        return HYDROLIB_RETURN_FAIL;
-    }
-    rx_head_ = (rx_head_ + drop_length) % REAL_RX_BUFFER_CAPACITY_;
-    return HYDROLIB_RETURN_OK;
-}
-
-template <int RX_BUFFER_CAPACITY, int TX_BUFFER_CAPACITY, typename CallbackType>
-hydrolib_ReturnCode
-UART<RX_BUFFER_CAPACITY, TX_BUFFER_CAPACITY, CallbackType>::Drop(
-    uint32_t drop_length)
-{
-    return DropRx(drop_length);
+    rx_head_ = (rx_head_ + data_length) % REAL_RX_BUFFER_CAPACITY_;
+    return data_length;
 }
 
 template <int RX_BUFFER_CAPACITY, int TX_BUFFER_CAPACITY, typename CallbackType>
 void UART<RX_BUFFER_CAPACITY, TX_BUFFER_CAPACITY, CallbackType>::ClearRx()
 {
     rx_head_ = rx_tail_;
-}
-
-template <int RX_BUFFER_CAPACITY, int TX_BUFFER_CAPACITY, typename CallbackType>
-void UART<RX_BUFFER_CAPACITY, TX_BUFFER_CAPACITY, CallbackType>::Clear()
-{
-    ClearRx();
 }
 
 template <int RX_BUFFER_CAPACITY, int TX_BUFFER_CAPACITY, typename CallbackType>
@@ -292,6 +253,20 @@ void UART<RX_BUFFER_CAPACITY, TX_BUFFER_CAPACITY, CallbackType>::ProcessTx_()
 
     UART_handler_.SetTx(tx_buffer_[tx_head_]);
     tx_head_ = (tx_head_ + 1) % REAL_TX_BUFFER_CAPACITY_;
+}
+
+template <int RX_BUFFER_CAPACITY, int TX_BUFFER_CAPACITY, typename CallbackType>
+int read(UART<RX_BUFFER_CAPACITY, TX_BUFFER_CAPACITY, CallbackType> &stream,
+         void *dest, unsigned length)
+{
+    return stream.Read(dest, length);
+}
+
+template <int RX_BUFFER_CAPACITY, int TX_BUFFER_CAPACITY, typename CallbackType>
+int write(UART<RX_BUFFER_CAPACITY, TX_BUFFER_CAPACITY, CallbackType> &stream,
+          const void *dest, unsigned length)
+{
+    return stream.Transmit(dest, length);
 }
 
 } // namespace hydrv::UART

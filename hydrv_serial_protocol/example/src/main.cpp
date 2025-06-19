@@ -21,13 +21,14 @@ extern "C"
 class Memory
 {
 public:
-    const uint8_t *Read(uint32_t address, uint32_t length)
+    hydrolib_ReturnCode Read(void *buffer, uint32_t address, uint32_t length)
     {
         if (length + address > BUFFER_LENGTH)
         {
-            return nullptr;
+            return HYDROLIB_RETURN_FAIL;
         }
-        return buffer_ + address;
+        memcpy(buffer, buffer_ + address, length);
+        return HYDROLIB_RETURN_OK;
     }
     hydrolib_ReturnCode Write(const void *buffer, uint32_t address,
                               uint32_t length)
@@ -72,7 +73,8 @@ int main(void)
     while (1)
     {
         serial_protocol.ProcessRx();
-        uint8_t byte = *public_memory.Read(0, 1);
+        uint8_t byte;
+        public_memory.Read(&byte, 0, 1);
         if (byte == 'a')
         {
             led_pin.Set();
