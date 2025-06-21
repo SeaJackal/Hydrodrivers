@@ -175,13 +175,14 @@ template <int RX_BUFFER_CAPACITY, int TX_BUFFER_CAPACITY, typename CallbackType>
 uint32_t
 UART<RX_BUFFER_CAPACITY, TX_BUFFER_CAPACITY, CallbackType>::GetRxLength() const
 {
-    if (rx_tail_ >= rx_head_)
+    unsigned tail = rx_tail_;
+    if (tail >= rx_head_)
     {
-        return rx_tail_ - rx_head_;
+        return tail - rx_head_;
     }
     else
     {
-        return rx_tail_ + REAL_RX_BUFFER_CAPACITY_ - rx_head_;
+        return tail + REAL_RX_BUFFER_CAPACITY_ - rx_head_;
     }
 }
 
