@@ -28,13 +28,14 @@ int main(void)
     NVIC_SetPriorityGrouping(0);
     led_pin.InitAsOutput();
 
+    uart.StartRx();
+
     while (1)
     {
         uint32_t rx_length = uart.GetRxLength();
         if (rx_length >= 5)
         {
-            uart.ReadRx(buffer, BUFFER_LENGTH, 0);
-            uart.DropRx(BUFFER_LENGTH);
+            uart.Read(buffer, BUFFER_LENGTH);
             uart.Transmit(buffer, BUFFER_LENGTH);
         }
     }

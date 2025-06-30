@@ -53,7 +53,8 @@ int main(void)
     hydrv_Clock_Delay(500);
     vector_nav.Init();
 
-    uart1.ClearRx();
+    uart1.StartRx();
+    
     unsigned last_log = 0;
     unsigned counter = 0;
     unsigned wrong_crc = 0;

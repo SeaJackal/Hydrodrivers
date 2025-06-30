@@ -57,7 +57,7 @@ hydrv::GPIO::GPIOLow tx_pin1(hydrv::GPIO::GPIOLow::GPIOB_port, 6);
 hydrv::UART::UART<1024, 1024> uart1(hydrv::UART::UARTLow::USART1_LOW, rx_pin1,
                                     tx_pin1, 7);
 
-hydrolib::logger::LogDistributor distributor("[%s] [%l] %m\n\r", uart3);
+hydrolib::logger::LogDistributor distributor("[%s] [%l] %m\n\r", uart1);
 hydrolib::logger::Logger logger("Serial protocol", 0, distributor);
 
 Memory public_memory;
@@ -69,6 +69,8 @@ int main(void)
     hydrv_Clock_ConfigureHSI();
     NVIC_SetPriorityGrouping(0);
     led_pin.InitAsOutput();
+
+    uart1.StartRx();
 
     while (1)
     {

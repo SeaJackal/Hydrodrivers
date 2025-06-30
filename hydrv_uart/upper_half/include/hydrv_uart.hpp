@@ -29,6 +29,8 @@ public:
 
     void IRQcallback();
 
+    void StartRx();
+
     int Transmit(const void *data, unsigned data_length);
     hydrolib_ReturnCode Push(const void *data, unsigned length);
 
@@ -97,6 +99,12 @@ void UART<RX_BUFFER_CAPACITY, TX_BUFFER_CAPACITY, CallbackType>::IRQcallback()
 {
     ProcessRx_();
     ProcessTx_();
+}
+
+template <int RX_BUFFER_CAPACITY, int TX_BUFFER_CAPACITY, typename CallbackType>
+void UART<RX_BUFFER_CAPACITY, TX_BUFFER_CAPACITY, CallbackType>::StartRx()
+{
+    UART_handler_.EnableRxInterruption();
 }
 
 template <int RX_BUFFER_CAPACITY, int TX_BUFFER_CAPACITY, typename CallbackType>
@@ -229,6 +237,7 @@ void UART<RX_BUFFER_CAPACITY, TX_BUFFER_CAPACITY, CallbackType>::ProcessRx_()
     {
         UART_handler_.GetRx();
         status_ = HYDROLIB_RETURN_FAIL;
+        rx_callback_();
         return;
     }
 
