@@ -1,6 +1,9 @@
-[submodule "drvs/CMSIS_DEVICE_F4"]
-	path = CMSIS/CMSIS_DEVICE_F4
+[submodule "CMSIS_DEVICE_F4"]
+	path = libs/CMSIS/CMSIS_DEVICE_F4
 	url = https://github.com/STMicroelectronics/cmsis-device-f4.git
-[submodule "drvs/CMSIS_5"]
-	path = CMSIS/CMSIS_5
+[submodule "CMSIS_5"]
+	path = libs/CMSIS/CMSIS_5
 	url = https://github.com/ARM-software/CMSIS_5.git
+[submodule "Hydrolib-soft"]
+	path = libs/Hydrolib-soft
+	url = https://github.com/SeaJackal/Hydrolib-soft.git
