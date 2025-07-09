@@ -3,10 +3,11 @@ cmake_minimum_required(VERSION 3.10)
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
 
-add_library(HydrodriversTimerLow INTERFACE)
+add_library(HydrodriversThruster INTERFACE)
 
-target_link_libraries(HydrodriversTimerLow INTERFACE HydrolibCommon)
-target_link_libraries(HydrodriversTimerLow INTERFACE HydrodriversGPIO)
-target_link_libraries(HydrodriversTimerLow INTERFACE CMSIS)
+target_link_libraries(HydrodriversThruster INTERFACE HydrolibCommon)
+target_link_libraries(HydrodriversThruster INTERFACE HydrodriversGPIO)
+target_link_libraries(HydrodriversThruster INTERFACE HydrodriversTimerLow)
+target_link_libraries(HydrodriversThruster INTERFACE CMSIS)
 
-target_include_directories(HydrodriversTimerLow INTERFACE include)
+target_include_directories(HydrodriversThruster INTERFACE include)

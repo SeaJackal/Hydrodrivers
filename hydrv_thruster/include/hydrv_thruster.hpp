@@ -27,10 +27,9 @@ private:
     static constexpr unsigned MhzToHz(unsigned mhz);
 
 public:
-    Thruster(unsigned thruster_tim_clock_mhz, unsigned thruster_pwm_clock_hz,
-             unsigned thruster_max_speed, unsigned thruster_tim_channel,
-             hydrv::timer::TimerLow::TimerPreset tim_preset,
-             hydrv::GPIO::GPIOLow &thruster_tim_port);
+    Thruster(unsigned thruster_max_speed, unsigned thruster_tim_channel,
+             hydrv::timer::TimerLow *thruster_tim,
+             hydrv::GPIO::GPIOLow *thruster_tim_pin);
     hydrolib_ReturnCode SetSpeed(int speed);
     int GetSpeed();
 
@@ -46,8 +45,8 @@ private:
 
 inline Thruster::Thruster(unsigned thruster_max_speed,
                           unsigned thruster_tim_channel,
-                          hydrv::timer::TimerLow &thruster_tim,
-                          hydrv::GPIO::GPIOLow &thruster_tim_pin)
+                          hydrv::timer::TimerLow *thruster_tim,
+                          hydrv::GPIO::GPIOLow *thruster_tim_pin)
 {
     tim = thruster_tim;
     tim_pin = thruster_tim_pin;
