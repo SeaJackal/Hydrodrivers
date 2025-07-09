@@ -11,3 +11,5 @@ target_link_libraries(HydrodriversGPIO PUBLIC HydrolibCommon)
 target_link_libraries(HydrodriversGPIO PUBLIC CMSIS)
 
 target_include_directories(HydrodriversGPIO PUBLIC include)
+
+add_subdirectory(example)
