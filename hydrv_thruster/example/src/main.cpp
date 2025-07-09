@@ -6,12 +6,11 @@ extern "C"
 #include "hydrv_thruster.hpp"
 
 hydrv::GPIO::GPIOLow tim_pin(hydrv::GPIO::GPIOLow::GPIOA_port, 0);
-hydrv::timer::TimerLow
-    tim(hydrv::timer::TimerLow::TIM5_low,
-        hydrv::thruster::Thruster::PrescalerCalc(168, 50, 1000),
-        hydrv::thruster::Thruster::TimCounterPeriodCalc(1000));
+hydrv::timer::TimerLow tim(hydrv::timer::TimerLow::TIM5_low,
+                           hydrv::thruster::Thruster::tim_prescaler,
+                           hydrv::thruster::Thruster::tim_counter_period);
 
-hydrv::thruster::Thruster thruster(1000, 0, &tim, &tim_pin);
+hydrv::thruster::Thruster thruster(0, &tim, &tim_pin);
 
 int main(void)
 {
@@ -21,10 +20,11 @@ int main(void)
     while (1)
     {
         thruster.SetSpeed(1000);
-        hydrv_Clock_Delay(500);
+        hydrv_Clock_Delay(2000);
         thruster.SetSpeed(-1000);
-        hydrv_Clock_Delay(500);
+        hydrv_Clock_Delay(2000);
         thruster.SetSpeed(0);
+        hydrv_Clock_Delay(2000);
     }
 }
 

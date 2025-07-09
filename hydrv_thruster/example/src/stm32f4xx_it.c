@@ -161,12 +161,3 @@ void SysTick_Handler(void)
   /* USER CODE END SysTick_IRQn 0 */
   hydrv_Clock_SysTickHandler();
 }
-
-void USART3_IRQHandler(void)
-{
-  UART3IRQHandler();
-}
-void USART1_IRQHandler(void)
-{
-  UART1IRQHandler();
-}

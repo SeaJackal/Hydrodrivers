@@ -15,19 +15,19 @@ class Thruster
 {
 public:
     static constexpr int speed_null{0};
+    static constexpr int max_speed{1000};
 
-public:
-    static constexpr unsigned PrescalerCalc(unsigned tim_clock_mhz,
-                                            unsigned pwm_clock_hz,
-                                            unsigned max_speed);
-    static constexpr unsigned TimCounterPeriodCalc(unsigned max_speed);
+    static constexpr unsigned tim_prescaler{42};
+    static constexpr unsigned tim_counter_period{40000};
+    static constexpr unsigned tim_clock_mhz{168};
+
+    static constexpr unsigned pwm_null{3000};
 
 private:
-    static constexpr unsigned SpeedToPWM(int speed, unsigned max_speed);
-    static constexpr unsigned MhzToHz(unsigned mhz);
+    static constexpr unsigned SpeedToPWM_(int speed);
 
 public:
-    Thruster(unsigned thruster_max_speed, unsigned thruster_tim_channel,
+    Thruster(unsigned thruster_tim_channel,
              hydrv::timer::TimerLow *thruster_tim,
              hydrv::GPIO::GPIOLow *thruster_tim_pin);
     hydrolib_ReturnCode SetSpeed(int speed);
@@ -35,36 +35,32 @@ public:
 
 private:
     int speed;
-    unsigned max_speed;
 
-    timer::TimerLow &tim;
+    timer::TimerLow *tim;
     unsigned tim_channel;
-
-    GPIO::GPIOLow &tim_pin;
+    GPIO::GPIOLow *tim_pin;
 };
 
-inline Thruster::Thruster(unsigned thruster_max_speed,
-                          unsigned thruster_tim_channel,
+inline Thruster::Thruster(unsigned thruster_tim_channel,
                           hydrv::timer::TimerLow *thruster_tim,
                           hydrv::GPIO::GPIOLow *thruster_tim_pin)
 {
     tim = thruster_tim;
     tim_pin = thruster_tim_pin;
     tim_channel = thruster_tim_channel;
-    max_speed = thruster_max_speed;
     speed = speed_null;
 
-    tim->ConfigurePWM(tim_channel, tim_pin);
-    tim->SetCaptureCompare(tim_channel, SpeedToPWM(speed_null, max_speed));
+    tim->ConfigurePWM(tim_channel, *tim_pin);
+    tim->SetCaptureCompare(tim_channel, SpeedToPWM_(speed_null));
     tim->StartTimer();
 }
 
-inline void Thruster::SetSpeed(int thruster_speed)
+inline hydrolib_ReturnCode Thruster::SetSpeed(int thruster_speed)
 {
     if (thruster_speed <= max_speed && thruster_speed >= -max_speed)
     {
         speed = thruster_speed;
-        tim.SetCaptureCompare(tim_channel, SpeedToPWM(speed, max_speed));
+        tim->SetCaptureCompare(tim_channel, SpeedToPWM_(speed));
         return HYDROLIB_RETURN_OK;
     }
     else
@@ -75,27 +71,11 @@ inline void Thruster::SetSpeed(int thruster_speed)
 
 inline int Thruster::GetSpeed() { return speed; }
 
-inline constexpr unsigned Thruster::TimCounterPeriodCalc(unsigned max_speed)
+inline constexpr unsigned Thruster::SpeedToPWM_(int speed)
 {
-    return 2 * max_speed;
-}
-
-inline constexpr unsigned Thruster::PrescalerCalc(unsigned tim_clock_mhz,
-                                                  unsigned pwm_clock_hz,
-                                                  unsigned max_speed)
-{
-    return (Thruster::MhzToHz(tim_clock_mhz) / pwm_clock_hz) /
-           (TimCounterPeriodCalc(max_speed));
-}
-
-inline constexpr unsigned Thruster::MhzToHz(unsigned mhz)
-{
-    return mhz * 1000000;
-}
-
-inline constexpr unsigned SpeedToPWM(int speed, unsigned max_speed)
-{
-    return max_speed + speed;
+    return pwm_null + speed;
 }
 
 } // namespace hydrv::thruster
+
+#endif
