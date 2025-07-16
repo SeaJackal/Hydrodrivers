@@ -1,4 +1,3 @@
-#include "hydrv_clock.h"
 #include "hydrv_clock_low.hpp"
 #include <string.h>
 

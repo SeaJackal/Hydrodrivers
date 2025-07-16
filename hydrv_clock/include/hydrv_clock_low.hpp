@@ -35,13 +35,7 @@ public:
         HSE = RCC_PLLCFGR_PLLSRC_HSE,
         HSI = RCC_PLLCFGR_PLLSRC_HSI
     };
-    // struct PLLconfig
-    // {
-    //     enum PLLsource source;
-    //     uint32_t M;
-    //     uint32_t N;
-    //     uint32_t P;
-    // };
+    
     struct ClockPreset
     {
         enum PLLsource source;
@@ -50,15 +44,8 @@ public:
         uint32_t P;
         unsigned frequency_hse_mhz;
     };
-    // сделать универсальную переменную для частоты hsi hse
 
 public:
-    // static constexpr PLLconfig HSI_DEFAULT{
-    //     .source = HSI,
-    //     .M = 8,
-    //     .N = 168,
-    //     .P = 2,
-    // };
 
     static constexpr ClockPreset HSI_DEFAULT{
         .source = HSI,
@@ -163,45 +150,6 @@ ClockLow::ClockLow(ClockPreset preset)
         return;
     }
 }
-
-// hydrolib_ReturnCode ClockLow::ConfigureHSI(void)
-// {
-//     clear_status();
-//     clock_status_.default_tick =
-//     SysTick_Config(mhz_to_khz(FREQUENCY_HSI_MHZ)); if
-//     (clock_status_.default_tick)
-//     {
-//         return HYDROLIB_RETURN_FAIL;
-//     }
-
-//     EnablePowerClock_();
-//     SetPowerVoltageScale_();
-
-//     hydrolib_ReturnCode hsi_rc = EnableHSI_();
-//     clock_status_.hsi = hsi_rc != HYDROLIB_RETURN_OK;
-//     if (clock_status_.hsi)
-//     {
-//         return HYDROLIB_RETURN_FAIL;
-//     }
-
-//     hydrolib_ReturnCode pll_rc =
-//         ConfigurePLL_(&HSI_DEFAULT, &system_clock_mhz_);
-//     clock_status_.pll = pll_rc != HYDROLIB_RETURN_OK;
-//     if (clock_status_.pll)
-//     {
-//         return HYDROLIB_RETURN_FAIL;
-//     }
-
-//     ConfigureSystemClock_();
-
-//     clock_status_.sys_tick = SysTick_Config(mhz_to_khz(system_clock_mhz_));
-//     if (clock_status_.sys_tick)
-//     {
-//         return HYDROLIB_RETURN_FAIL;
-//     }
-
-//     return HYDROLIB_RETURN_OK;
-// }
 
 void ClockLow::SysTickHandler() { systick_counter_++; }
 
