@@ -1,5 +1,5 @@
-#ifndef HYDRV_CLOCK_LOW_H_
-#define HYDRV_CLOCK_LOW_H_
+#ifndef HYDRV_CLOCK_H_
+#define HYDRV_CLOCK_H_
 
 #include <cstdint>
 #include <stdbool.h>
@@ -15,7 +15,7 @@ extern "C"
 namespace hydrv::clock
 {
 
-class ClockLow
+class Clock
 {
 public:
     union ClockStatus
@@ -73,7 +73,7 @@ private:
     static constexpr unsigned MhzToKhz_(unsigned freq);
 
 public:
-    ClockLow(ClockPreset preset);
+    Clock(ClockPreset preset);
     hydrolib_ReturnCode ConfigureHSI(void);
 
     void SysTickHandler(void);
@@ -102,9 +102,9 @@ private:
     int32_t systick_counter_ = 0;
 };
 
-constexpr unsigned ClockLow::MhzToKhz_(unsigned freq) { return freq * 1000; }
+constexpr unsigned Clock::MhzToKhz_(unsigned freq) { return freq * 1000; }
 
-ClockLow::ClockLow(ClockPreset preset)
+Clock::Clock(ClockPreset preset)
 {
     ClearStatus_();
     clock_status_.default_tick = SysTick_Config(MhzToKhz_(FREQUENCY_HSI_MHZ));
@@ -151,11 +151,11 @@ ClockLow::ClockLow(ClockPreset preset)
     }
 }
 
-void ClockLow::SysTickHandler() { systick_counter_++; }
+void Clock::SysTickHandler() { systick_counter_++; }
 
-uint32_t ClockLow::GetSystemTime(void) { return GetSystickCounter_(); }
+uint32_t Clock::GetSystemTime(void) { return GetSystickCounter_(); }
 
-void ClockLow::Delay(uint32_t time_ms)
+void Clock::Delay(uint32_t time_ms)
 {
     uint32_t start_counter = GetSystickCounter_();
     volatile uint32_t current_counter = GetSystickCounter_();
@@ -165,7 +165,7 @@ void ClockLow::Delay(uint32_t time_ms)
     }
 }
 
-void ClockLow::EnablePowerClock_(void)
+void Clock::EnablePowerClock_(void)
 {
     volatile uint32_t tmpreg = 0x00U;
     SET_BIT(RCC->APB1ENR, RCC_APB1ENR_PWREN);
@@ -173,7 +173,7 @@ void ClockLow::EnablePowerClock_(void)
     (void)tmpreg;
 }
 
-void ClockLow::SetPowerVoltageScale_(void)
+void Clock::SetPowerVoltageScale_(void)
 {
     volatile uint32_t tmpreg = 0x00U;
     MODIFY_REG(PWR->CR, PWR_CR_VOS, PWR_REGULATOR_VOLTAGE_SCALE1);
@@ -181,7 +181,7 @@ void ClockLow::SetPowerVoltageScale_(void)
     (void)tmpreg;
 }
 
-hydrolib_ReturnCode ClockLow::EnableHSI_(void)
+hydrolib_ReturnCode Clock::EnableHSI_(void)
 {
     SET_BIT(RCC->CR, RCC_CR_HSION);
 
@@ -196,7 +196,7 @@ hydrolib_ReturnCode ClockLow::EnableHSI_(void)
     return HYDROLIB_RETURN_OK;
 }
 
-hydrolib_ReturnCode ClockLow::EnableHSE_(void)
+hydrolib_ReturnCode Clock::EnableHSE_(void)
 {
     SET_BIT(RCC->CR, RCC_CR_HSEON);
 
@@ -211,7 +211,7 @@ hydrolib_ReturnCode ClockLow::EnableHSE_(void)
     return HYDROLIB_RETURN_OK;
 }
 
-void ClockLow::ConfigureSystemClock_(void)
+void Clock::ConfigureSystemClock_(void)
 {
     MODIFY_REG(FLASH->ACR, FLASH_ACR_LATENCY, FLASH_ACR_LATENCY_5WS);
 
@@ -225,7 +225,7 @@ void ClockLow::ConfigureSystemClock_(void)
     MODIFY_REG(RCC->CFGR, RCC_CFGR_PPRE2, RCC_CFGR_PPRE2_DIV2);
 }
 
-hydrolib_ReturnCode ClockLow::ConfigurePLL_(const ClockPreset *preset,
+hydrolib_ReturnCode Clock::ConfigurePLL_(const ClockPreset *preset,
                                             uint8_t *output_mhz)
 {
     CLEAR_BIT(RCC->CR, RCC_CR_PLLON);
@@ -262,16 +262,16 @@ hydrolib_ReturnCode ClockLow::ConfigurePLL_(const ClockPreset *preset,
     return HYDROLIB_RETURN_OK;
 }
 
-uint32_t ClockLow::GetSystickCounter_(void)
+uint32_t Clock::GetSystickCounter_(void)
 {
-    return ClockLow::systick_counter_;
+    return Clock::systick_counter_;
 }
 
-bool ClockLow::IsHSIready_() { return READ_BIT(RCC->CR, RCC_CR_HSIRDY); }
+bool Clock::IsHSIready_() { return READ_BIT(RCC->CR, RCC_CR_HSIRDY); }
 
-bool ClockLow::IsPLLready_() { return READ_BIT(RCC->CR, RCC_CR_PLLRDY); }
+bool Clock::IsPLLready_() { return READ_BIT(RCC->CR, RCC_CR_PLLRDY); }
 
-constexpr void ClockLow::ClearStatus_() { clock_status_.summary = 0xFFFFFFFF; }
+constexpr void Clock::ClearStatus_() { clock_status_.summary = 0xFFFFFFFF; }
 
 } // namespace hydrv::clock
 
