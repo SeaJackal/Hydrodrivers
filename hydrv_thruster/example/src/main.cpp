@@ -10,7 +10,7 @@ hydrv::timer::TimerLow tim(hydrv::timer::TimerLow::TIM5_low,
                            hydrv::thruster::Thruster::tim_prescaler,
                            hydrv::thruster::Thruster::tim_counter_period);
 
-hydrv::thruster::Thruster thruster(0, &tim, &tim_pin);
+hydrv::thruster::Thruster thruster(0, tim, tim_pin);
 
 int main(void)
 {
