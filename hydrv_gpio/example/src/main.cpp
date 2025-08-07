@@ -1,4 +1,3 @@
-#include "hydrv_clock_low.hpp"
 #include <string.h>
 
 extern "C"
@@ -8,7 +7,7 @@ extern "C"
 #include "stm32f4xx.h"
 }
 
-#include "hydrv_clock_low.hpp"
+#include "hydrv_clock.hpp"
 #include "hydrv_gpio_low.hpp"
 
 extern "C"
@@ -16,7 +15,7 @@ extern "C"
     void SysTickHandler();
 }
 
-hydrv::clock::ClockLow clock(hydrv::clock::ClockLow::HSI_DEFAULT);
+hydrv::clock::Clock clock(hydrv::clock::Clock::HSI_DEFAULT);
 hydrv::GPIO::GPIOLow led_pin(hydrv::GPIO::GPIOLow::GPIOD_port, 15);
 
 int main(void)
