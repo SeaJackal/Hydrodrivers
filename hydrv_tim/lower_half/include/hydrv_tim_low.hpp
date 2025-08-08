@@ -45,6 +45,7 @@ public:
     void ConfigurePWM(unsigned channel, hydrv::GPIO::GPIOLow &pin);
 
     void StartTimer();
+    void StopTimer();
 
     void SetCaptureCompare(unsigned channel, uint32_t value);
 
@@ -105,6 +106,7 @@ inline void TimerLow::ConfigurePWM(unsigned channel, hydrv::GPIO::GPIOLow &pin)
 }
 
 inline void TimerLow::StartTimer() { SET_BIT(TIMx_->CR1, TIM_CR1_CEN); }
+inline void TimerLow::StopTimer() { CLEAR_BIT(TIMx_->CR1, TIM_CR1_CEN); }
 
 inline void TimerLow::SetCaptureCompare(unsigned channel, uint32_t value)
 {
