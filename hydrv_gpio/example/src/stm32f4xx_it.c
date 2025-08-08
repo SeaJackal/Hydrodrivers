@@ -21,8 +21,6 @@
 #include "stm32f4xx_it.h"
 #include "stm32f4xx.h"
 
-#include "hydrv_clock.h"
-
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 /* USER CODE END Includes */
@@ -160,7 +158,7 @@ void SysTick_Handler(void)
   /* USER CODE BEGIN SysTick_IRQn 0 */
 
   /* USER CODE END SysTick_IRQn 0 */
-  hydrv_Clock_SysTickHandler();
+  SysTickHandler();
 }
 
 void USART3_IRQHandler(void) {}
