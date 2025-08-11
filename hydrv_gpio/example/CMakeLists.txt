@@ -7,7 +7,7 @@ add_executable(${TARGET_NAME}
     ${CMAKE_CURRENT_LIST_DIR}/src/stm32f4xx_it.c)
 
 target_link_libraries(${TARGET_NAME}
-    HydrodriversCommon HydrodriversClock HydrodriversGPIO)
+    HydrodriversCommon HydrodriversClockCPP HydrodriversGPIO)
 
 target_link_libraries(${TARGET_NAME} HydrolibCommon)
 
