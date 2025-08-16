@@ -1,5 +1,4 @@
-#ifndef HYDRV_UART_H_
-#define HYDRV_UART_H_
+#pragma once
 
 #include <cstring>
 
@@ -10,38 +9,33 @@
 
 namespace hydrv::UART
 {
-using namespace hydrolib;
-
 template <int RX_BUFFER_CAPACITY, int TX_BUFFER_CAPACITY,
-          typename CallbackType = decltype(&concepts::func::DummyFunc<void>)>
-requires concepts::func::FuncConcept<CallbackType, void>
+          typename CallbackType =
+              decltype(&hydrolib::concepts::func::DummyFunc<void>)>
+requires hydrolib::concepts::func::FuncConcept<CallbackType, void>
 class UART
 {
 private:
-    static constexpr uint32_t REAL_RX_BUFFER_CAPACITY_ = RX_BUFFER_CAPACITY + 1;
-    static constexpr uint32_t REAL_TX_BUFFER_CAPACITY_ = TX_BUFFER_CAPACITY + 1;
+    static constexpr unsigned REAL_RX_BUFFER_CAPACITY_ = RX_BUFFER_CAPACITY + 1;
+    static constexpr unsigned REAL_TX_BUFFER_CAPACITY_ = TX_BUFFER_CAPACITY + 1;
 
 public:
     constexpr UART(const UARTLow::UARTPreset &UART_preset,
                    hydrv::GPIO::GPIOLow &rx_pin, hydrv::GPIO::GPIOLow &tx_pin,
-                   uint32_t IRQ_priority,
-                   CallbackType rx_callback = concepts::func::DummyFunc<void>);
+                   unsigned IRQ_priority,
+                   CallbackType rx_callback = hydrolib::concepts::func::DummyFunc<void>);
 
-    void IRQcallback();
+    void Init();
 
-    void StartRx();
+    void IRQCallback();
 
     int Transmit(const void *data, unsigned data_length);
-    hydrolib_ReturnCode Push(const void *data, unsigned length);
 
     int Read(void *data, unsigned data_length);
     void ClearRx();
 
-    uint32_t GetRxLength() const;
-    uint32_t GetTxLength() const;
-
-    hydrolib_ReturnCode Open();
-    hydrolib_ReturnCode Close();
+    unsigned GetRxLength() const;
+    unsigned GetTxLength() const;
 
 private:
     void ProcessRx_();
@@ -51,12 +45,12 @@ private:
     UARTLow UART_handler_;
 
     uint8_t rx_buffer_[REAL_RX_BUFFER_CAPACITY_];
-    uint32_t rx_head_;
-    volatile uint32_t rx_tail_;
+    unsigned rx_head_;
+    volatile unsigned rx_tail_;
 
     uint8_t tx_buffer_[REAL_TX_BUFFER_CAPACITY_];
-    volatile uint32_t tx_head_;
-    uint32_t tx_tail_;
+    volatile unsigned tx_head_;
+    unsigned tx_tail_;
 
     hydrolib_ReturnCode status_;
 
@@ -72,53 +66,51 @@ int write(UART<RX_BUFFER_CAPACITY, TX_BUFFER_CAPACITY, CallbackType> &stream,
           const void *dest, unsigned length);
 
 template <int RX_BUFFER_CAPACITY, int TX_BUFFER_CAPACITY, typename CallbackType>
+requires hydrolib::concepts::func::FuncConcept<CallbackType, void>
 constexpr UART<RX_BUFFER_CAPACITY, TX_BUFFER_CAPACITY, CallbackType>::UART(
     const UARTLow::UARTPreset &UART_preset, hydrv::GPIO::GPIOLow &rx_pin,
-    hydrv::GPIO::GPIOLow &tx_pin, uint32_t IRQ_priority,
+    hydrv::GPIO::GPIOLow &tx_pin, unsigned IRQ_priority,
     CallbackType rx_callback)
-    : UART_handler_(UART_preset, IRQ_priority, rx_pin, tx_pin),
+    : UART_handler_(UART_preset, rx_pin, tx_pin, IRQ_priority),
+      rx_buffer_{},
       rx_head_(0),
       rx_tail_(0),
+      tx_buffer_{},
       tx_head_(0),
       tx_tail_(0),
       status_(HYDROLIB_RETURN_OK),
       rx_callback_(rx_callback)
 {
-    for (unsigned i = 0; i < REAL_RX_BUFFER_CAPACITY_; i++)
-    {
-        rx_buffer_[i] = 0;
-    }
-    for (unsigned i = 0; i < REAL_TX_BUFFER_CAPACITY_; i++)
-    {
-        tx_buffer_[i] = 0;
-    }
 }
 
 template <int RX_BUFFER_CAPACITY, int TX_BUFFER_CAPACITY, typename CallbackType>
-void UART<RX_BUFFER_CAPACITY, TX_BUFFER_CAPACITY, CallbackType>::IRQcallback()
+requires hydrolib::concepts::func::FuncConcept<CallbackType, void>
+void UART<RX_BUFFER_CAPACITY, TX_BUFFER_CAPACITY, CallbackType>::Init()
+{
+    UART_handler_.Init();
+}
+
+template <int RX_BUFFER_CAPACITY, int TX_BUFFER_CAPACITY, typename CallbackType>
+requires hydrolib::concepts::func::FuncConcept<CallbackType, void>
+void UART<RX_BUFFER_CAPACITY, TX_BUFFER_CAPACITY, CallbackType>::IRQCallback()
 {
     ProcessRx_();
     ProcessTx_();
 }
 
 template <int RX_BUFFER_CAPACITY, int TX_BUFFER_CAPACITY, typename CallbackType>
-void UART<RX_BUFFER_CAPACITY, TX_BUFFER_CAPACITY, CallbackType>::StartRx()
-{
-    UART_handler_.EnableRxInterruption();
-}
-
-template <int RX_BUFFER_CAPACITY, int TX_BUFFER_CAPACITY, typename CallbackType>
+requires hydrolib::concepts::func::FuncConcept<CallbackType, void>
 int UART<RX_BUFFER_CAPACITY, TX_BUFFER_CAPACITY, CallbackType>::Transmit(
     const void *data, unsigned data_length)
 {
-    uint32_t length = GetTxLength();
+    unsigned length = GetTxLength();
 
     if (length + data_length > TX_BUFFER_CAPACITY)
     {
         data_length = TX_BUFFER_CAPACITY - length;
     }
 
-    uint32_t forward_length = REAL_TX_BUFFER_CAPACITY_ - tx_tail_;
+    unsigned forward_length = REAL_TX_BUFFER_CAPACITY_ - tx_tail_;
     if (forward_length >= data_length)
     {
         memcpy(tx_buffer_ + tx_tail_, data, data_length);
@@ -137,22 +129,11 @@ int UART<RX_BUFFER_CAPACITY, TX_BUFFER_CAPACITY, CallbackType>::Transmit(
 }
 
 template <int RX_BUFFER_CAPACITY, int TX_BUFFER_CAPACITY, typename CallbackType>
-hydrolib_ReturnCode
-UART<RX_BUFFER_CAPACITY, TX_BUFFER_CAPACITY, CallbackType>::Push(
-    const void *data, unsigned length) // TODO: Remove
-{
-    if (Transmit(data, length) != static_cast<int>(length))
-    {
-        return HYDROLIB_RETURN_FAIL;
-    }
-    return HYDROLIB_RETURN_OK;
-}
-
-template <int RX_BUFFER_CAPACITY, int TX_BUFFER_CAPACITY, typename CallbackType>
+requires hydrolib::concepts::func::FuncConcept<CallbackType, void>
 int UART<RX_BUFFER_CAPACITY, TX_BUFFER_CAPACITY, CallbackType>::Read(
     void *data, unsigned data_length)
 {
-    uint32_t length = GetRxLength();
+    unsigned length = GetRxLength();
 
     if (data_length > length)
     {
@@ -174,13 +155,15 @@ int UART<RX_BUFFER_CAPACITY, TX_BUFFER_CAPACITY, CallbackType>::Read(
 }
 
 template <int RX_BUFFER_CAPACITY, int TX_BUFFER_CAPACITY, typename CallbackType>
+requires hydrolib::concepts::func::FuncConcept<CallbackType, void>
 void UART<RX_BUFFER_CAPACITY, TX_BUFFER_CAPACITY, CallbackType>::ClearRx()
 {
     rx_head_ = rx_tail_;
 }
 
 template <int RX_BUFFER_CAPACITY, int TX_BUFFER_CAPACITY, typename CallbackType>
-uint32_t
+requires hydrolib::concepts::func::FuncConcept<CallbackType, void>
+unsigned
 UART<RX_BUFFER_CAPACITY, TX_BUFFER_CAPACITY, CallbackType>::GetRxLength() const
 {
     unsigned tail = rx_tail_;
@@ -195,7 +178,8 @@ UART<RX_BUFFER_CAPACITY, TX_BUFFER_CAPACITY, CallbackType>::GetRxLength() const
 }
 
 template <int RX_BUFFER_CAPACITY, int TX_BUFFER_CAPACITY, typename CallbackType>
-uint32_t
+requires hydrolib::concepts::func::FuncConcept<CallbackType, void>
+unsigned
 UART<RX_BUFFER_CAPACITY, TX_BUFFER_CAPACITY, CallbackType>::GetTxLength() const
 {
     unsigned head = tx_head_;
@@ -210,20 +194,7 @@ UART<RX_BUFFER_CAPACITY, TX_BUFFER_CAPACITY, CallbackType>::GetTxLength() const
 }
 
 template <int RX_BUFFER_CAPACITY, int TX_BUFFER_CAPACITY, typename CallbackType>
-hydrolib_ReturnCode
-UART<RX_BUFFER_CAPACITY, TX_BUFFER_CAPACITY, CallbackType>::Open()
-{
-    return HYDROLIB_RETURN_OK;
-}
-
-template <int RX_BUFFER_CAPACITY, int TX_BUFFER_CAPACITY, typename CallbackType>
-hydrolib_ReturnCode
-UART<RX_BUFFER_CAPACITY, TX_BUFFER_CAPACITY, CallbackType>::Close()
-{
-    return HYDROLIB_RETURN_OK;
-}
-
-template <int RX_BUFFER_CAPACITY, int TX_BUFFER_CAPACITY, typename CallbackType>
+requires hydrolib::concepts::func::FuncConcept<CallbackType, void>
 void UART<RX_BUFFER_CAPACITY, TX_BUFFER_CAPACITY, CallbackType>::ProcessRx_()
 {
     if (!UART_handler_.IsRxDone())
@@ -231,7 +202,7 @@ void UART<RX_BUFFER_CAPACITY, TX_BUFFER_CAPACITY, CallbackType>::ProcessRx_()
         return;
     }
 
-    uint32_t next_tail = (rx_tail_ + 1) % REAL_RX_BUFFER_CAPACITY_;
+    unsigned next_tail = (rx_tail_ + 1) % REAL_RX_BUFFER_CAPACITY_;
 
     if (next_tail == rx_head_)
     {
@@ -248,6 +219,7 @@ void UART<RX_BUFFER_CAPACITY, TX_BUFFER_CAPACITY, CallbackType>::ProcessRx_()
 }
 
 template <int RX_BUFFER_CAPACITY, int TX_BUFFER_CAPACITY, typename CallbackType>
+requires hydrolib::concepts::func::FuncConcept<CallbackType, void>
 void UART<RX_BUFFER_CAPACITY, TX_BUFFER_CAPACITY, CallbackType>::ProcessTx_()
 {
     if (!UART_handler_.IsTxDone())
@@ -280,5 +252,3 @@ int write(UART<RX_BUFFER_CAPACITY, TX_BUFFER_CAPACITY, CallbackType> &stream,
 }
 
 } // namespace hydrv::UART
-
-#endif

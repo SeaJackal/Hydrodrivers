@@ -6,26 +6,39 @@
             "hidden": true,
             "generator": "Unix Makefiles",
             "binaryDir": "${sourceDir}/build",
-            "toolchainFile": "${sourceDir}/resources/gcc-arm-none-eabi.cmake",
             "cacheVariables": {
                 "CMAKE_C_STANDARD": "11",
                 "CMAKE_CXX_STANDARD": "20",
-                "CMAKE_EXPORT_COMPILE_COMMANDS": "ON",
+                "CMAKE_EXPORT_COMPILE_COMMANDS": "ON"
+            }
+        },
+        {
+            "name": "host",
+            "inherits": "default"
+        },
+        {
+            "name": "target",
+            "inherits": "default",
+            "toolchainFile": "${sourceDir}/resources/gcc-arm-none-eabi.cmake",
+            "cacheVariables": {
                 "BUILD_TESTING": "OFF"
             }
         },
         {
             "name": "F4",
+            "inherits": "target",
             "hidden": true,
             "cacheVariables": {
-                "CMAKE_C_FLAGS": "-DSTM32F407xx"
+                "CMAKE_C_FLAGS": "-DSTM32F407xx",
+                "CMAKE_CXX_FLAGS": "-DSTM32F407xx"
             }
         },
         {
             "name": "Debug",
             "inherits": "default",
             "cacheVariables": {
-                "CMAKE_BUILD_TYPE": "Debug"
+                "CMAKE_BUILD_TYPE": "Debug",
+                "BUILD_TESTS": "ON"
             }
         },
         {
@@ -51,12 +64,17 @@
         },
         {
             "name": "DebugF4",
-            "inherits": [
-                "default",
-                "F4"
-            ],
+            "inherits": "F4",
             "cacheVariables": {
                 "CMAKE_BUILD_TYPE": "Debug"
+            }
+        },
+        {
+            "name": "Testing",
+            "inherits": "host",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Debug",
+                "BUILD_TESTS": "ON"
             }
         }
     ],

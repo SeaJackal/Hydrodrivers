@@ -1,5 +1,4 @@
-#ifndef HYDRV_UART_LOW_H_
-#define HYDRV_UART_LOW_H_
+#pragma once
 
 #include <cstdint>
 
@@ -45,93 +44,137 @@ public:
     };
 
 public:
-    static constexpr UARTPreset USART1_LOW{
+    static constexpr UARTPreset USART1_115200_LOW{
         USART1, 7, RCC_APB2ENR_USART1EN, &(RCC->APB2ENR), USART1_IRQn, 45, 9};
 
-    static constexpr UARTPreset USART1_HS_LOW{
+    static constexpr UARTPreset USART1_921600_LOW{
         USART1, 7, RCC_APB2ENR_USART1EN, &(RCC->APB2ENR), USART1_IRQn, 5, 11};
 
-    static constexpr UARTPreset USART3_LOW{
+    static constexpr UARTPreset USART3_115200_LOW{
         USART3, 7, RCC_APB1ENR_USART3EN, &(RCC->APB1ENR), USART3_IRQn, 22, 13};
 
-    static constexpr UARTPreset USART3_HS_LOW{
+    static constexpr UARTPreset USART3_921600_LOW{
         USART3, 7, RCC_APB1ENR_USART3EN, &(RCC->APB1ENR), USART3_IRQn, 2, 14};
 
 public:
-    UARTLow(const UARTPreset &preset, uint32_t IRQ_priority,
-            hydrv::GPIO::GPIOLow &rx_pin, hydrv::GPIO::GPIOLow &tx_pin)
-        : USARTx_(preset.USARTx),
-          GPIO_alt_func_(preset.GPIO_alt_func),
-          RCC_APBENR_UARTxEN_(preset.RCC_APBENR_UARTxEN),
-          RCC_address_(preset.RCC_address),
-          USARTx_IRQn_(preset.USARTx_IRQn)
-    {
-        ENABLE_UART_CLOCK(RCC_address_, RCC_APBENR_UARTxEN_);
-        NVIC_SetPriority(USARTx_IRQn_, IRQ_priority);
-        NVIC_EnableIRQ(USARTx_IRQn_);
-
-        CLEAR_BIT(USARTx_->CR1, USART_CR1_UE);
-
-        CLEAR_BIT(USARTx_->CR1, USART_CR1_M);     // 8 bits including parity
-        CLEAR_BIT(USARTx_->CR1, USART_CR1_PCE);   // parity disable
-        SET_BIT(USARTx_->CR1, USART_CR1_PS);      // odd parity
-        CLEAR_BIT(USARTx_->CR1, USART_CR1_OVER8); // 16-bit oversampling
-        MODIFY_REG(USARTx_->CR2, USART_CR2_STOP, USART_CR2_STOP_1bit);
-        SET_BIT(USARTx_->CR1, USART_CR1_TE);
-        SET_BIT(USARTx_->CR1, USART_CR1_RE);
-
-        // if (USARTx_ == USART1 || USARTx_ == USART6)
-        // {
-        //   MODIFY_REG(USARTx_->BRR, USART_BRR_DIV_Fraction,
-        //              USART_BRR_DIV_Fraction_Val(9));
-        //   MODIFY_REG(USARTx_->BRR, USART_BRR_DIV_Mantissa,
-        //              USART_BRR_DIV_Mantissa_Val(45));
-        // }
-        // else
-        // {
-        //   MODIFY_REG(USARTx_->BRR, USART_BRR_DIV_Fraction,
-        //              USART_BRR_DIV_Fraction_Val(13));
-        //   MODIFY_REG(USARTx_->BRR, USART_BRR_DIV_Mantissa,
-        //              USART_BRR_DIV_Mantissa_Val(22));
-        // }
-
-        MODIFY_REG(USARTx_->BRR, USART_BRR_DIV_Fraction,
-                   USART_BRR_DIV_Fraction_Val(preset.fraction));
-        MODIFY_REG(USARTx_->BRR, USART_BRR_DIV_Mantissa,
-                   USART_BRR_DIV_Mantissa_Val(preset.mantissa));
-
-        SET_BIT(USARTx_->CR1, USART_CR1_UE);
-
-        rx_pin.InitAsUART(preset.GPIO_alt_func);
-        tx_pin.InitAsUART(preset.GPIO_alt_func);
-    }
+    constexpr UARTLow(const UARTPreset &preset, hydrv::GPIO::GPIOLow &rx_pin,
+                      hydrv::GPIO::GPIOLow &tx_pin, unsigned IRQ_priority);
 
 public:
-    bool IsRxDone() { return READ_BIT(USARTx_->SR, USART_SR_RXNE); }
-    bool IsTxDone() { return READ_BIT(USARTx_->SR, USART_SR_TC); }
+    void Init();
+    bool IsRxDone();
+    bool IsTxDone();
 
-    uint8_t GetRx() { return USARTx_->DR; }
-    void SetTx(uint8_t byte) { USARTx_->DR = byte; }
+    uint8_t GetRx();
+    void SetTx(uint8_t byte);
 
-    void EnableTxInterruption() { SET_BIT(USARTx_->CR1, USART_CR1_TCIE); }
-    void DisableTxInterruption() { CLEAR_BIT(USARTx_->CR1, USART_CR1_TCIE); }
-    void EnableRxInterruption() { SET_BIT(USARTx_->CR1, USART_CR1_RXNEIE); }
-    void DisableRxInterruption() { CLEAR_BIT(USARTx_->CR1, USART_CR1_RXNEIE); }
+    void EnableTxInterruption();
+    void DisableTxInterruption();
+    void EnableRxInterruption();
+    void DisableRxInterruption();
 
-    void EnableDMATransmit() { SET_BIT(USARTx_->CR3, USART_CR3_DMAT); }
-
-    void EnableDMAReceive() { SET_BIT(USARTx_->CR3, USART_CR3_DMAR); }
+    void EnableDMATransmit();
+    void EnableDMAReceive();
 
 private:
-    USART_TypeDef *USARTx_;
+    static constexpr uint32_t CountCR1Mask_();
+    static constexpr uint32_t CountCR2Mask_();
+    static constexpr uint32_t CountBRRMask_(const UARTPreset &preset);
 
-    const uint8_t GPIO_alt_func_;
+private:
+    UARTPreset preset_;
+    unsigned IRQ_priority_;
+    hydrv::GPIO::GPIOLow &rx_pin_;
+    hydrv::GPIO::GPIOLow &tx_pin_;
 
-    const uint32_t RCC_APBENR_UARTxEN_;
-    volatile uint32_t *const RCC_address_;
-
-    const IRQn_Type USARTx_IRQn_;
+    const uint32_t cr1_;
+    const uint32_t cr2_;
+    const uint32_t brr_;
 };
-} // namespace hydrv::UART
 
-#endif
+constexpr UARTLow::UARTLow(const UARTPreset &preset,
+                           hydrv::GPIO::GPIOLow &rx_pin,
+                           hydrv::GPIO::GPIOLow &tx_pin, unsigned IRQ_priority)
+    : preset_(preset),
+      IRQ_priority_(IRQ_priority),
+      rx_pin_(rx_pin),
+      tx_pin_(tx_pin),
+      cr1_(CountCR1Mask_()),
+      cr2_(CountCR2Mask_()),
+      brr_(CountBRRMask_(preset))
+{
+}
+
+void UARTLow::Init()
+{
+    ENABLE_UART_CLOCK(preset_.RCC_address, preset_.RCC_APBENR_UARTxEN);
+    NVIC_SetPriority(preset_.USARTx_IRQn, IRQ_priority_);
+    NVIC_EnableIRQ(preset_.USARTx_IRQn);
+
+    CLEAR_BIT(preset_.USARTx->CR1, USART_CR1_UE);
+
+    preset_.USARTx->CR1 = cr1_;
+    preset_.USARTx->CR2 = cr2_;
+    preset_.USARTx->BRR = brr_;
+
+    SET_BIT(preset_.USARTx->CR1, USART_CR1_UE);
+
+    rx_pin_.InitAsUART(preset_.GPIO_alt_func);
+    tx_pin_.InitAsUART(preset_.GPIO_alt_func);
+}
+
+bool UARTLow::IsRxDone() { return READ_BIT(preset_.USARTx->SR, USART_SR_RXNE); }
+bool UARTLow::IsTxDone() { return READ_BIT(preset_.USARTx->SR, USART_SR_TC); }
+uint8_t UARTLow::GetRx() { return preset_.USARTx->DR; }
+void UARTLow::SetTx(uint8_t byte) { preset_.USARTx->DR = byte; }
+void UARTLow::EnableTxInterruption()
+{
+    SET_BIT(preset_.USARTx->CR1, USART_CR1_TCIE);
+}
+void UARTLow::DisableTxInterruption()
+{
+    CLEAR_BIT(preset_.USARTx->CR1, USART_CR1_TCIE);
+}
+
+void UARTLow::EnableDMATransmit()
+{
+    SET_BIT(preset_.USARTx->CR3, USART_CR3_DMAT);
+}
+
+void UARTLow::EnableDMAReceive()
+{
+    SET_BIT(preset_.USARTx->CR3, USART_CR3_DMAR);
+}
+
+constexpr uint32_t UARTLow::CountCR1Mask_()
+{
+    uint32_t cr1 = 0;
+    CLEAR_BIT(cr1, USART_CR1_M);     // 8 bits including parity
+    CLEAR_BIT(cr1, USART_CR1_PCE);   // parity disable
+    SET_BIT(cr1, USART_CR1_PS);      // odd parity
+    CLEAR_BIT(cr1, USART_CR1_OVER8); // 16-bit oversampling
+    SET_BIT(cr1, USART_CR1_TE);
+    SET_BIT(cr1, USART_CR1_RE);
+    SET_BIT(cr1, USART_CR1_RXNEIE);
+
+    return cr1;
+}
+
+constexpr uint32_t UARTLow::CountCR2Mask_()
+{
+    uint32_t cr2 = 0;
+    MODIFY_REG(cr2, USART_CR2_STOP, USART_CR2_STOP_1bit);
+    return cr2;
+}
+
+constexpr uint32_t UARTLow::CountBRRMask_(const UARTPreset &preset)
+{
+    uint32_t brr = 0;
+    MODIFY_REG(brr, USART_BRR_DIV_Fraction,
+               USART_BRR_DIV_Fraction_Val(preset.fraction));
+    MODIFY_REG(brr, USART_BRR_DIV_Mantissa,
+               USART_BRR_DIV_Mantissa_Val(preset.mantissa));
+    return brr;
+}
+
+} // namespace hydrv::UART

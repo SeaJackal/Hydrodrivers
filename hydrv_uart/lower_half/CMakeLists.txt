@@ -11,6 +11,6 @@ target_link_libraries(HydrodriversUARTLow INTERFACE CMSIS)
 
 target_include_directories(HydrodriversUARTLow INTERFACE include)
 
-if(BUILD_TESTING)
+if(BUILD_TESTS)
     add_subdirectory(mock)
 endif()

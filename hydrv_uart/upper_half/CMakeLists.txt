@@ -1,33 +1,14 @@
-cmake_minimum_required(VERSION 3.10)
+set(LIBRARY_NAME HydrodriversUART)
 
-set(CMAKE_CXX_STANDARD 20)
-set(CMAKE_CXX_STANDARD_REQUIRED True)
+add_library(${LIBRARY_NAME} INTERFACE)
 
-add_library(HydrodriversUART INTERFACE)
+target_include_directories(${LIBRARY_NAME} INTERFACE include)
 
-target_include_directories(HydrodriversUART INTERFACE include)
+target_link_libraries(${LIBRARY_NAME} INTERFACE HydrolibCommon HydrolibConcepts)
 
-target_link_libraries(HydrodriversUART INTERFACE HydrolibCommon HydrolibConcepts)
-
-if(BUILD_TESTING)
-    target_link_libraries(HydrodriversUART INTERFACE HydrodriversUARTLowMock)
+if(BUILD_TESTS)
+    target_link_libraries(${LIBRARY_NAME} INTERFACE HydrodriversUARTLowMock)
+    add_subdirectory(tests)
 else()
-    target_link_libraries(HydrodriversUART INTERFACE HydrodriversUARTLow)
-endif()
-
-if(BUILD_TESTING)
-    find_package(GTest REQUIRED)
-    include(GoogleTest)
-
-    file(GLOB TESTS tests/*.cpp)
-    add_executable(TestUART ${TESTS})
-    set_target_properties(TestUART
-        PROPERTIES
-        RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/Testing"
-    )
-    target_compile_features(TestUART PUBLIC cxx_std_20)
-    target_compile_options(TestUART PRIVATE -Wall -Wextra -Wpedantic -Wc++20-compat -Wno-format-security
-        -Woverloaded-virtual -Wsuggest-override -g)
-    target_link_libraries(TestUART HydrodriversUART GTest::gtest GTest::gtest_main -pthread)
-    gtest_discover_tests(TestUART)
+    target_link_libraries(${LIBRARY_NAME} INTERFACE HydrodriversUARTLow)
 endif()

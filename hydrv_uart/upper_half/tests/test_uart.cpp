@@ -32,7 +32,7 @@ protected:
   uint8_t buffer[TEST_BUFFER_LENGTH];
 };
 
-void IRQHandler(void) { uart_global->IRQcallback(); }
+void IRQHandler(void) { uart_global->IRQCallback(); }
 
 TEST_F(TestHydrvUART, RxTest) {
   const int GROUP_LENGTH = 5;
@@ -50,7 +50,7 @@ TEST_F(TestHydrvUART, RxTest) {
 
     uint8_t rx_buffer[GROUP_LENGTH];
 
-    uart.ReadRx(rx_buffer, GROUP_LENGTH, 0);
+    uart.Read(rx_buffer, GROUP_LENGTH);
     uart.ClearRx();
 
     for (int i = 0; i < GROUP_LENGTH; i++) {
@@ -66,10 +66,10 @@ TEST_F(TestHydrvUART, TxTest) {
   int tx_counter = 0;
   int rx_counter = 0;
   while (tx_counter + GROUP_LENGTH < TEST_BUFFER_LENGTH) {
-    hydrolib_ReturnCode tx_return =
+    int tx_return =
         uart.Transmit(buffer + tx_counter, GROUP_LENGTH);
 
-    ASSERT_EQ(tx_return, HYDROLIB_RETURN_OK);
+    ASSERT_EQ(tx_return, GROUP_LENGTH);
 
     while (low_half_mock.IsTxIRQEnabled()) {
       IRQHandler();
