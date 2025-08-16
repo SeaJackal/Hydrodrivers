@@ -14,10 +14,12 @@
         },
         {
             "name": "host",
+            "hidden": true,
             "inherits": "default"
         },
         {
             "name": "target",
+            "hidden": true,
             "inherits": "default",
             "toolchainFile": "${sourceDir}/resources/gcc-arm-none-eabi.cmake",
             "cacheVariables": {
