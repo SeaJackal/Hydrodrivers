@@ -21,6 +21,9 @@ hydrv::GPIO::GPIOLow led_pin(hydrv::GPIO::GPIOLow::GPIOD_port, 15);
 int main(void)
 {
     NVIC_SetPriorityGrouping(0);
+    
+    clock.Init();
+
     led_pin.InitAsOutput();
 
     while (1)
