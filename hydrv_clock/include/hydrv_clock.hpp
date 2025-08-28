@@ -41,7 +41,7 @@ public:
       .frequency_hse_mhz = 8,
   };
 
-  static constexpr uint32_t TIMEOUT_MS = 1000;
+  static constexpr unsigned TIMEOUT_MS = 1000;
 
 private:
   bool default_tick_failed_;
