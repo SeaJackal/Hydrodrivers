@@ -25,6 +25,7 @@ int main(void)
     clock.Init();
 
     led_pin.InitAsOutput();
+//    hydrv::GPIO::GPIOLow led_pin2(hydrv::GPIO::GPIOLow::GPIOD_port, 15);
 
     while (1)
     {
