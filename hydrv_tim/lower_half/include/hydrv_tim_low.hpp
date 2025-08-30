@@ -1,5 +1,4 @@
-#ifndef HYDRV_TIM_LOW_H_
-#define HYDRV_TIM_LOW_H_
+#pragma once
 
 #include <cstdint>
 
@@ -14,8 +13,9 @@ extern "C"
     do                                                                         \
     {                                                                          \
         __IO uint32_t tmpreg = 0x00U;                                          \
-        SET_BIT(*RCC_ADDRESS,                                                  \
-                EN_BIT); /* Delay after an RCC peripheral clock enabling */    \
+        TIMx_ SET_BIT(                                                         \
+            *RCC_ADDRESS,                                                      \
+            EN_BIT); /* Delay after an RCC peripheral clock enabling */        \
         tmpreg = READ_BIT(*RCC_ADDRESS, EN_BIT);                               \
         (void)tmpreg;                                                          \
     } while (0U);
@@ -39,9 +39,10 @@ public:
                                           &(RCC->APB1ENR)};
 
 public:
-    TimerLow(TimerPreset preset, unsigned prescaler, uint32_t period);
+    constexpr TimerLow(TimerPreset preset, unsigned prescaler, uint32_t period);
 
 public:
+    void Init();
     void ConfigurePWM(unsigned channel, hydrv::GPIO::GPIOLow &pin);
 
     void StartTimer();
@@ -50,27 +51,34 @@ public:
     void SetCaptureCompare(unsigned channel, uint32_t value);
 
 private:
+    static constexpr uint32_t CountCR1Mask_();
+
+private:
     TIM_TypeDef *const TIMx_;
+    unsigned prescaler_;
+    uint32_t period_;
     const uint8_t GPIO_alt_func_;
+    const uint32_t cr1_;
 };
 
-inline TimerLow::TimerLow(TimerPreset preset, unsigned prescaler,
-                          uint32_t period)
-    : TIMx_(preset.TIMx), GPIO_alt_func_(preset.GPIO_alt_func)
+inline constexpr TimerLow::TimerLow(TimerPreset preset, unsigned prescaler,
+                                    uint32_t period)
+    : TIMx_(preset.TIMx),
+      GPIO_alt_func_(preset.GPIO_alt_func),
+      prescaler_(prescaler),
+      period_(period),
+      cr1_(CountCR1Mask_())
+{
+}
+
+inline void TimerLow::Init()
 {
     ENABLE_TIM_CLOCK(preset.RCC_address, preset.RCC_APBENR_TIMxEN);
 
-    uint32_t cr1 = 0;
-    CLEAR_BIT(cr1, TIM_CR1_DIR);     // Upcounting
-    MODIFY_REG(cr1, TIM_CR1_CMS, 0); // No center alingment
-    MODIFY_REG(cr1, TIM_CR1_CKD, 0); // No internal clock divider
-    SET_BIT(cr1, TIM_CR1_URS);       // No update because of pulse change
-    SET_BIT(cr1, TIM_CR1_ARPE);      // Autoreload preload
+    TIMx_->CR1 = cr1_;
 
-    TIMx_->CR1 = cr1;
-
-    TIMx_->ARR = period;
-    TIMx_->PSC = prescaler - 1;
+    TIMx_->ARR = period_;
+    TIMx_->PSC = prescaler_ - 1;
 
     SET_BIT(TIMx_->EGR, TIM_EGR_UG);
 }
@@ -127,6 +135,16 @@ inline void TimerLow::SetCaptureCompare(unsigned channel, uint32_t value)
     }
 }
 
-} // namespace hydrv::timer
+inline constexpr uint32_t TimerLow::CountCR1Mask()
+{
+    uint32_t cr1 = 0;
+    CLEAR_BIT(cr1, TIM_CR1_DIR);     // Upcounting
+    MODIFY_REG(cr1, TIM_CR1_CMS, 0); // No center alingment
+    MODIFY_REG(cr1, TIM_CR1_CKD, 0); // No internal clock divider
+    SET_BIT(cr1, TIM_CR1_URS);       // No update because of pulse change
+    SET_BIT(cr1, TIM_CR1_ARPE);
 
-#endif
+    return cr1;
+}
+
+} // namespace hydrv::timer
