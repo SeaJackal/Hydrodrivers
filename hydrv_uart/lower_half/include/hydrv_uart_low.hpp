@@ -119,8 +119,8 @@ void UARTLow::Init()
 
     SET_BIT(preset_.USARTx->CR1, USART_CR1_UE);
 
-    rx_pin_.InitAsUART(preset_.GPIO_alt_func);
-    tx_pin_.InitAsUART(preset_.GPIO_alt_func);
+    rx_pin_.Init(preset_.GPIO_alt_func);
+    tx_pin_.Init(preset_.GPIO_alt_func);
 }
 
 bool UARTLow::IsRxDone() { return READ_BIT(preset_.USARTx->SR, USART_SR_RXNE); }

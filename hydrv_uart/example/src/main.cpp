@@ -8,9 +8,9 @@ extern "C"
 
 #define BUFFER_LENGTH 5
 
-hydrv::GPIO::GPIOLow led_pin(hydrv::GPIO::GPIOLow::GPIOD_port, 15);
-hydrv::GPIO::GPIOLow rx_pin(hydrv::GPIO::GPIOLow::GPIOC_port, 11);
-hydrv::GPIO::GPIOLow tx_pin(hydrv::GPIO::GPIOLow::GPIOC_port, 10);
+hydrv::GPIO::GPIOLow led_pin(hydrv::GPIO::GPIOLow::GPIOD_port, 15, hydrv::GPIO::GPIOLow::OUTPUT);
+hydrv::GPIO::GPIOLow rx_pin(hydrv::GPIO::GPIOLow::GPIOC_port, 11, hydrv::GPIO::GPIOLow::UART);
+hydrv::GPIO::GPIOLow tx_pin(hydrv::GPIO::GPIOLow::GPIOC_port, 10, hydrv::GPIO::GPIOLow::UART);
 hydrv::UART::UART<255, 255> uart(hydrv::UART::UARTLow::USART3_115200_LOW,
                                  rx_pin, tx_pin, 7);
 
@@ -20,7 +20,7 @@ int main(void)
 {
     hydrv_Clock_ConfigureHSI();
     NVIC_SetPriorityGrouping(0);
-    led_pin.InitAsOutput();
+    led_pin.Init(0);
     uart.Init();
 
     while (1)

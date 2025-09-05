@@ -15,6 +15,12 @@ namespace hydrv::GPIO
 class GPIOLow
 {
 public:
+    enum GPIOFunc
+    {
+        OUTPUT = 0,
+        UART,
+        TIMER
+    };
     struct GPIOPort
     {
     public:
@@ -26,6 +32,9 @@ public:
 
         bool *const inited_pins_;
     };
+
+public:
+    const enum GPIOFunc pin_function;
 
 private:
     static constinit bool GPIOA_inited_pins_[GPIOPort::PIN_COUNT];
@@ -44,14 +53,11 @@ public:
                                          GPIOD_inited_pins_};
 
 public:
-    constexpr GPIOLow(const GPIOPort &GPIO_group, unsigned pin);
+    constexpr GPIOLow(const GPIOPort &GPIO_group, unsigned pin,
+                      enum GPIOFunc function);
 
 public:
-    hydrolib_ReturnCode InitAsOutput();
-
-    hydrolib_ReturnCode InitAsUART(uint32_t altfunc);
-
-    hydrolib_ReturnCode InitAsTimer(uint32_t altfunc);
+    hydrolib_ReturnCode Init(uint32_t altfunc);
 
     bool IsInited();
 
@@ -103,8 +109,10 @@ inline bool GPIOLow::GPIOB_inited_pins_[GPIOPort::PIN_COUNT] = {};
 inline bool GPIOLow::GPIOC_inited_pins_[GPIOPort::PIN_COUNT] = {};
 inline bool GPIOLow::GPIOD_inited_pins_[GPIOPort::PIN_COUNT] = {};
 
-constexpr inline GPIOLow::GPIOLow(const GPIOPort &GPIO_group, unsigned pin)
+constexpr inline GPIOLow::GPIOLow(const GPIOPort &GPIO_group, unsigned pin,
+                                  enum GPIOFunc function)
     : is_inited_(GPIO_group.inited_pins_[pin]),
+      pin_function(function),
       GPIOx_(GPIO_group.GPIOx_),
       pin_(pin),
       RCC_AHB1ENR_GPIOxEN_(GPIO_group.RCC_AHB1ENR_GPIOxEN_),
@@ -124,7 +132,7 @@ constexpr inline GPIOLow::GPIOLow(const GPIOPort &GPIO_group, unsigned pin)
 {
 }
 
-inline hydrolib_ReturnCode GPIOLow::InitAsOutput()
+inline hydrolib_ReturnCode GPIOLow::Init(uint32_t altfunc)
 {
     if (is_inited_)
     {
@@ -133,44 +141,24 @@ inline hydrolib_ReturnCode GPIOLow::InitAsOutput()
 
     EnableGPIOxClock_(RCC_AHB1ENR_GPIOxEN_);
 
-    SetPinConfig_(output_speed_reg_value_low_, false, push_pull_reg_value_no_);
-    SetModeOutput_();
-
-    is_inited_ = true;
-
-    return HYDROLIB_RETURN_OK;
-}
-
-inline hydrolib_ReturnCode GPIOLow::InitAsUART(uint32_t altfunc)
-{
-    if (is_inited_)
+    if (pin_function == UART)
     {
-        return HYDROLIB_RETURN_FAIL;
+        SetPinConfig_(output_speed_reg_value_very_high_, false,
+                      push_pull_reg_value_no_);
+        SetModeAltfunc_(altfunc);
     }
-
-    EnableGPIOxClock_(RCC_AHB1ENR_GPIOxEN_);
-
-    SetPinConfig_(output_speed_reg_value_very_high_, false,
-                  push_pull_reg_value_no_);
-    SetModeAltfunc_(altfunc);
-
-    is_inited_ = true;
-
-    return HYDROLIB_RETURN_OK;
-}
-
-inline hydrolib_ReturnCode GPIOLow::InitAsTimer(uint32_t altfunc)
-{
-    if (is_inited_)
+    else if (pin_function == TIMER)
     {
-        return HYDROLIB_RETURN_FAIL;
+        SetPinConfig_(output_speed_reg_value_low_, false,
+                      push_pull_reg_value_no_);
+        SetModeAltfunc_(altfunc);
     }
-
-    EnableGPIOxClock_(RCC_AHB1ENR_GPIOxEN_);
-
-    SetPinConfig_(output_speed_reg_value_low_, false, push_pull_reg_value_no_);
-    SetModeAltfunc_(altfunc);
-
+    else
+    {
+        SetPinConfig_(output_speed_reg_value_low_, false,
+                      push_pull_reg_value_no_);
+        SetModeOutput_();
+    }
     is_inited_ = true;
 
     return HYDROLIB_RETURN_OK;
