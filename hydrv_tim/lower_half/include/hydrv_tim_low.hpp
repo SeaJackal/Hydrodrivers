@@ -13,9 +13,8 @@ extern "C"
     do                                                                         \
     {                                                                          \
         __IO uint32_t tmpreg = 0x00U;                                          \
-        TIMx_ SET_BIT(                                                         \
-            *RCC_ADDRESS,                                                      \
-            EN_BIT); /* Delay after an RCC peripheral clock enabling */        \
+        SET_BIT(*RCC_ADDRESS,                                                  \
+                EN_BIT); /* Delay after an RCC peripheral clock enabling */    \
         tmpreg = READ_BIT(*RCC_ADDRESS, EN_BIT);                               \
         (void)tmpreg;                                                          \
     } while (0U);
@@ -57,6 +56,8 @@ private:
     TIM_TypeDef *const TIMx_;
     unsigned prescaler_;
     uint32_t period_;
+    const uint32_t RCC_APBENR_TIMxEN_;
+    volatile uint32_t *const RCC_address_;
     const uint8_t GPIO_alt_func_;
     const uint32_t cr1_;
 };
@@ -64,16 +65,18 @@ private:
 inline constexpr TimerLow::TimerLow(TimerPreset preset, unsigned prescaler,
                                     uint32_t period)
     : TIMx_(preset.TIMx),
-      GPIO_alt_func_(preset.GPIO_alt_func),
       prescaler_(prescaler),
       period_(period),
+      RCC_APBENR_TIMxEN_(preset.RCC_APBENR_TIMxEN),
+      RCC_address_(preset.RCC_address),
+      GPIO_alt_func_(preset.GPIO_alt_func),
       cr1_(CountCR1Mask_())
 {
 }
 
 inline void TimerLow::Init()
 {
-    ENABLE_TIM_CLOCK(preset.RCC_address, preset.RCC_APBENR_TIMxEN);
+    ENABLE_TIM_CLOCK(RCC_address_, RCC_APBENR_TIMxEN_);
 
     TIMx_->CR1 = cr1_;
 
@@ -82,7 +85,7 @@ inline void TimerLow::Init()
 
     SET_BIT(TIMx_->EGR, TIM_EGR_UG);
 }
-
+// TODO move to init, pass to constructor by array of channel presets
 inline void TimerLow::ConfigurePWM(unsigned channel, hydrv::GPIO::GPIOLow &pin)
 {
     CLEAR_BIT(TIMx_->CCER, 0x1UL << channel);
@@ -110,7 +113,7 @@ inline void TimerLow::ConfigurePWM(unsigned channel, hydrv::GPIO::GPIOLow &pin)
 
     SET_BIT(TIMx_->CCER, 0x1UL << channel);
 
-    pin.InitAsTimer(GPIO_alt_func_);
+    pin.Init(GPIO_alt_func_);
 }
 
 inline void TimerLow::StartTimer() { SET_BIT(TIMx_->CR1, TIM_CR1_CEN); }
@@ -135,7 +138,7 @@ inline void TimerLow::SetCaptureCompare(unsigned channel, uint32_t value)
     }
 }
 
-inline constexpr uint32_t TimerLow::CountCR1Mask()
+inline constexpr uint32_t TimerLow::CountCR1Mask_()
 {
     uint32_t cr1 = 0;
     CLEAR_BIT(cr1, TIM_CR1_DIR);     // Upcounting

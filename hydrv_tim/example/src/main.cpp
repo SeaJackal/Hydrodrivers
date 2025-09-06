@@ -5,7 +5,8 @@ extern "C"
 
 #include "hydrv_tim_low.hpp"
 
-hydrv::GPIO::GPIOLow tim_pin(hydrv::GPIO::GPIOLow::GPIOA_port, 0);
+hydrv::GPIO::GPIOLow tim_pin(hydrv::GPIO::GPIOLow::GPIOA_port, 0,
+                             hydrv::GPIO::GPIOLow::GPIO_Timer);
 hydrv::timer::TimerLow tim(hydrv::timer::TimerLow::TIM5_low, 1680, 10000);
 
 int main(void)
