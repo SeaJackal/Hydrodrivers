@@ -17,7 +17,7 @@ extern "C"
 
 hydrv::clock::Clock clock(hydrv::clock::Clock::HSI_DEFAULT);
 hydrv::GPIO::GPIOLow led_pin(hydrv::GPIO::GPIOLow::GPIOD_port, 15,
-                             hydrv::GPIO::GPIOLow::OUTPUT);
+                             hydrv::GPIO::GPIOLow::GPIO_Output);
 
 int main(void)
 {
@@ -25,7 +25,7 @@ int main(void)
 
     clock.Init();
 
-    led_pin.Init(0);
+    led_pin.Init();
     //    hydrv::GPIO::GPIOLow led_pin2(hydrv::GPIO::GPIOLow::GPIOD_port, 15);
 
     while (1)

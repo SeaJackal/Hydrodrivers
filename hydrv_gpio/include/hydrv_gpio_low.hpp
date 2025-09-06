@@ -33,8 +33,10 @@ public:
         bool *const inited_pins_;
     };
 
-public:
-    const enum GPIOFunc pin_function;
+    struct GPIOPreset
+    {
+        const enum GPIOFunc pin_function;
+    };
 
 private:
     static constinit bool GPIOA_inited_pins_[GPIOPort::PIN_COUNT];
@@ -51,10 +53,13 @@ public:
                                          GPIOC_inited_pins_};
     static constexpr GPIOPort GPIOD_port{GPIOD, RCC_AHB1ENR_GPIODEN,
                                          GPIOD_inited_pins_};
+    static constexpr GPIOPreset GPIO_Output{OUTPUT};
+    static constexpr GPIOPreset GPIO_UART{UART};
+    static constexpr GPIOPreset GPIO_Timer{TIMER};
 
 public:
     constexpr GPIOLow(const GPIOPort &GPIO_group, unsigned pin,
-                      enum GPIOFunc function);
+                      GPIOPreset preset);
 
 public:
     hydrolib_ReturnCode Init(uint32_t altfunc);
@@ -69,6 +74,7 @@ private:
     bool &is_inited_;
     GPIO_TypeDef *const GPIOx_;
     const unsigned pin_;
+    const enum GPIOFunc pin_func_;
     const uint32_t RCC_AHB1ENR_GPIOxEN_;
 
     const uint32_t output_speed_reg_mask_;
@@ -110,9 +116,9 @@ inline bool GPIOLow::GPIOC_inited_pins_[GPIOPort::PIN_COUNT] = {};
 inline bool GPIOLow::GPIOD_inited_pins_[GPIOPort::PIN_COUNT] = {};
 
 constexpr inline GPIOLow::GPIOLow(const GPIOPort &GPIO_group, unsigned pin,
-                                  enum GPIOFunc function)
+                                  GPIOPreset preset)
     : is_inited_(GPIO_group.inited_pins_[pin]),
-      pin_function(function),
+      pin_func_(preset.pin_function),
       GPIOx_(GPIO_group.GPIOx_),
       pin_(pin),
       RCC_AHB1ENR_GPIOxEN_(GPIO_group.RCC_AHB1ENR_GPIOxEN_),
@@ -132,7 +138,7 @@ constexpr inline GPIOLow::GPIOLow(const GPIOPort &GPIO_group, unsigned pin,
 {
 }
 
-inline hydrolib_ReturnCode GPIOLow::Init(uint32_t altfunc)
+inline hydrolib_ReturnCode GPIOLow::Init(uint32_t altfunc = 0)
 {
     if (is_inited_)
     {
@@ -141,24 +147,28 @@ inline hydrolib_ReturnCode GPIOLow::Init(uint32_t altfunc)
 
     EnableGPIOxClock_(RCC_AHB1ENR_GPIOxEN_);
 
-    if (pin_function == UART)
+    switch (pin_func_)
     {
+    case UART:
         SetPinConfig_(output_speed_reg_value_very_high_, false,
                       push_pull_reg_value_no_);
         SetModeAltfunc_(altfunc);
-    }
-    else if (pin_function == TIMER)
-    {
+        break;
+    case TIMER:
         SetPinConfig_(output_speed_reg_value_low_, false,
                       push_pull_reg_value_no_);
         SetModeAltfunc_(altfunc);
-    }
-    else
-    {
+        break;
+    case OUTPUT:
         SetPinConfig_(output_speed_reg_value_low_, false,
                       push_pull_reg_value_no_);
         SetModeOutput_();
+        break;
+    default:
+        return HYDROLIB_RETURN_FAIL;
     }
+    // TODO move to constructor output_speed_reg_value_low_, false,
+    // push_pull_reg_value_no_
     is_inited_ = true;
 
     return HYDROLIB_RETURN_OK;
