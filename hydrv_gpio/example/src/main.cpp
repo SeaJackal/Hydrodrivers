@@ -16,15 +16,17 @@ extern "C"
 }
 
 hydrv::clock::Clock clock(hydrv::clock::Clock::HSI_DEFAULT);
-hydrv::GPIO::GPIOLow led_pin(hydrv::GPIO::GPIOLow::GPIOD_port, 15);
+hydrv::GPIO::GPIOLow led_pin(hydrv::GPIO::GPIOLow::GPIOD_port, 15,
+                             hydrv::GPIO::GPIOLow::GPIO_Output);
 
 int main(void)
 {
     NVIC_SetPriorityGrouping(0);
-    
+
     clock.Init();
 
-    led_pin.InitAsOutput();
+    led_pin.Init();
+    //    hydrv::GPIO::GPIOLow led_pin2(hydrv::GPIO::GPIOLow::GPIOD_port, 15);
 
     while (1)
     {
