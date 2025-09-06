@@ -35,7 +35,7 @@ public:
 
     struct GPIOPreset
     {
-        const enum GPIOFunc pin_function;
+        const GPIOFunc pin_function;
     };
 
 private:
@@ -74,7 +74,7 @@ private:
     bool &is_inited_;
     GPIO_TypeDef *const GPIOx_;
     const unsigned pin_;
-    const enum GPIOFunc pin_func_;
+    const GPIOFunc pin_func_;
     const uint32_t RCC_AHB1ENR_GPIOxEN_;
 
     const uint32_t output_speed_reg_mask_;
