@@ -1,13 +1,10 @@
-extern "C"
-{
-#include "hydrv_clock.h"
-}
-
+#include "hydrv_clock.hpp"
 #include "hydrv_gpio_low.hpp"
 #include "hydrv_uart.hpp"
 
 #define BUFFER_LENGTH 5
 
+hydrv::clock::Clock clock(hydrv::clock::Clock::HSI_DEFAULT);
 hydrv::GPIO::GPIOLow led_pin(hydrv::GPIO::GPIOLow::GPIOD_port, 15,
                              hydrv::GPIO::GPIOLow::GPIO_Output);
 hydrv::GPIO::GPIOLow rx_pin(hydrv::GPIO::GPIOLow::GPIOC_port, 11,
@@ -19,27 +16,23 @@ hydrv::UART::UART<255, 255> uart(hydrv::UART::UARTLow::USART3_115200_LOW,
 
 uint8_t buffer[BUFFER_LENGTH];
 
-int main(void)
-{
-    hydrv_Clock_ConfigureHSI();
-    NVIC_SetPriorityGrouping(0);
-    led_pin.Init();
-    uart.Init();
+int main(void) {
+  clock.Init();
+  NVIC_SetPriorityGrouping(0);
+  led_pin.Init();
+  uart.Init();
 
-    while (1)
-    {
-        unsigned rx_length = uart.GetRxLength();
-        if (rx_length >= 5)
-        {
-            uart.Read(buffer, BUFFER_LENGTH);
-            uart.Transmit(buffer, BUFFER_LENGTH);
-        }
+  while (1) {
+    unsigned rx_length = uart.GetRxLength();
+    if (rx_length >= 5) {
+      uart.Read(buffer, BUFFER_LENGTH);
+      uart.Transmit(buffer, BUFFER_LENGTH);
     }
+  }
 }
 
-extern "C"
-{
-    void SysTick_Handler(void) { hydrv_Clock_SysTickHandler(); }
+void SysTick_Handler(void) { clock.SysTickHandler(); }
 
-    void USART3_IRQHandler(void) { uart.IRQCallback(); }
+extern "C" {
+void USART3_IRQHandler(void) { uart.IRQCallback(); }
 }
