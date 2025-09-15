@@ -4,6 +4,7 @@ set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
 
 add_library(HydrodriversThruster INTERFACE)
+add_subdirectory(example)
 
 target_link_libraries(HydrodriversThruster INTERFACE HydrolibCommon)
 target_link_libraries(HydrodriversThruster INTERFACE HydrodriversGPIO)
