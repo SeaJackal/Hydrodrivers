@@ -1,5 +1,4 @@
-#ifndef HYDRV_TIM_LOW_H_
-#define HYDRV_TIM_LOW_H_
+#pragma once
 
 #include <cstdint>
 
@@ -39,9 +38,10 @@ public:
                                           &(RCC->APB1ENR)};
 
 public:
-    TimerLow(TimerPreset preset, unsigned prescaler, uint32_t period);
+    constexpr TimerLow(TimerPreset preset, unsigned prescaler, uint32_t period);
 
 public:
+    void Init();
     void ConfigurePWM(unsigned channel, hydrv::GPIO::GPIOLow &pin);
 
     void StartTimer();
@@ -50,31 +50,42 @@ public:
     void SetCaptureCompare(unsigned channel, uint32_t value);
 
 private:
+    static constexpr uint32_t CountCR1Mask_();
+
+private:
     TIM_TypeDef *const TIMx_;
+    unsigned prescaler_;
+    uint32_t period_;
+    const uint32_t RCC_APBENR_TIMxEN_;
+    volatile uint32_t *const RCC_address_;
     const uint8_t GPIO_alt_func_;
+    const uint32_t cr1_;
 };
 
-inline TimerLow::TimerLow(TimerPreset preset, unsigned prescaler,
-                          uint32_t period)
-    : TIMx_(preset.TIMx), GPIO_alt_func_(preset.GPIO_alt_func)
+inline constexpr TimerLow::TimerLow(TimerPreset preset, unsigned prescaler,
+                                    uint32_t period)
+    : TIMx_(preset.TIMx),
+      prescaler_(prescaler),
+      period_(period),
+      RCC_APBENR_TIMxEN_(preset.RCC_APBENR_TIMxEN),
+      RCC_address_(preset.RCC_address),
+      GPIO_alt_func_(preset.GPIO_alt_func),
+      cr1_(CountCR1Mask_())
 {
-    ENABLE_TIM_CLOCK(preset.RCC_address, preset.RCC_APBENR_TIMxEN);
+}
 
-    uint32_t cr1 = 0;
-    CLEAR_BIT(cr1, TIM_CR1_DIR);     // Upcounting
-    MODIFY_REG(cr1, TIM_CR1_CMS, 0); // No center alingment
-    MODIFY_REG(cr1, TIM_CR1_CKD, 0); // No internal clock divider
-    SET_BIT(cr1, TIM_CR1_URS);       // No update because of pulse change
-    SET_BIT(cr1, TIM_CR1_ARPE);      // Autoreload preload
+inline void TimerLow::Init()
+{
+    ENABLE_TIM_CLOCK(RCC_address_, RCC_APBENR_TIMxEN_);
 
-    TIMx_->CR1 = cr1;
+    TIMx_->CR1 = cr1_;
 
-    TIMx_->ARR = period;
-    TIMx_->PSC = prescaler - 1;
+    TIMx_->ARR = period_;
+    TIMx_->PSC = prescaler_ - 1;
 
     SET_BIT(TIMx_->EGR, TIM_EGR_UG);
 }
-
+// TODO move to init, pass to constructor by array of channel presets
 inline void TimerLow::ConfigurePWM(unsigned channel, hydrv::GPIO::GPIOLow &pin)
 {
     CLEAR_BIT(TIMx_->CCER, 0x1UL << channel);
@@ -102,7 +113,7 @@ inline void TimerLow::ConfigurePWM(unsigned channel, hydrv::GPIO::GPIOLow &pin)
 
     SET_BIT(TIMx_->CCER, 0x1UL << channel);
 
-    pin.InitAsTimer(GPIO_alt_func_);
+    pin.Init(GPIO_alt_func_);
 }
 
 inline void TimerLow::StartTimer() { SET_BIT(TIMx_->CR1, TIM_CR1_CEN); }
@@ -127,6 +138,16 @@ inline void TimerLow::SetCaptureCompare(unsigned channel, uint32_t value)
     }
 }
 
-} // namespace hydrv::timer
+inline constexpr uint32_t TimerLow::CountCR1Mask_()
+{
+    uint32_t cr1 = 0;
+    CLEAR_BIT(cr1, TIM_CR1_DIR);     // Upcounting
+    MODIFY_REG(cr1, TIM_CR1_CMS, 0); // No center alingment
+    MODIFY_REG(cr1, TIM_CR1_CKD, 0); // No internal clock divider
+    SET_BIT(cr1, TIM_CR1_URS);       // No update because of pulse change
+    SET_BIT(cr1, TIM_CR1_ARPE);
 
-#endif
+    return cr1;
+}
+
+} // namespace hydrv::timer

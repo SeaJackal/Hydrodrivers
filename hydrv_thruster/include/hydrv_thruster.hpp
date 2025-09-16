@@ -1,6 +1,4 @@
-#ifndef HYDRV_THRUSTER_H_
-#define HYDRV_THRUSTER_H_
-
+#pragma once
 #include "hydrv_tim_low.hpp"
 
 extern "C"
@@ -24,9 +22,12 @@ public:
     static constexpr unsigned pwm_null{3000};
 
 public:
-    Thruster(unsigned thruster_tim_channel,
+    constexpr Thruster(unsigned thruster_tim_channel,
              hydrv::timer::TimerLow &thruster_tim,
              hydrv::GPIO::GPIOLow &thruster_tim_pin);
+
+    void Init();
+
     hydrolib_ReturnCode SetSpeed(int speed);
     int GetSpeed();
 
@@ -41,13 +42,18 @@ private:
     GPIO::GPIOLow &tim_pin;
 };
 
-inline Thruster::Thruster(unsigned thruster_tim_channel,
+inline constexpr Thruster::Thruster(unsigned thruster_tim_channel,
                           hydrv::timer::TimerLow &thruster_tim,
                           hydrv::GPIO::GPIOLow &thruster_tim_pin)
     : tim_channel(thruster_tim_channel), tim(thruster_tim),
       tim_pin(thruster_tim_pin),
       speed(speed_null)
 {
+}
+
+inline void Thruster::Init()
+{
+    tim.Init();
     tim.ConfigurePWM(tim_channel, tim_pin);
     tim.SetCaptureCompare(tim_channel, SpeedToPWM_(speed_null));
     tim.StartTimer();
@@ -75,5 +81,3 @@ inline constexpr unsigned Thruster::SpeedToPWM_(int speed)
 }
 
 } // namespace hydrv::thruster
-
-#endif

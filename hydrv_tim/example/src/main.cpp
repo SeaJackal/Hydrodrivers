@@ -1,18 +1,23 @@
-extern "C"
-{
-#include "hydrv_clock.h"
-}
+#include "hydrv_clock.hpp"
+
 
 #include "hydrv_tim_low.hpp"
 
-hydrv::GPIO::GPIOLow tim_pin(hydrv::GPIO::GPIOLow::GPIOA_port, 0);
-hydrv::timer::TimerLow tim(hydrv::timer::TimerLow::TIM5_low, 1680, 10000);
+extern "C"
+{
+    void SysTick_Handler();
+}
+hydrv::clock::Clock clock(hydrv::clock::Clock::HSI_DEFAULT);
+hydrv::GPIO::GPIOLow tim_pin(hydrv::GPIO::GPIOLow::GPIOA_port, 0,
+                             hydrv::GPIO::GPIOLow::GPIO_Timer);
+hydrv::timer::TimerLow tim(hydrv::timer::TimerLow::TIM5_low, 168, 10000);
 
 int main(void)
 {
-    hydrv_Clock_ConfigureHSI();
-    NVIC_SetPriorityGrouping(0);
+     NVIC_SetPriorityGrouping(0);
+    clock.Init();
 
+    tim.Init();
     tim.ConfigurePWM(0, tim_pin);
     tim.StartTimer();
 
@@ -20,9 +25,9 @@ int main(void)
 
     while (1)
     {
-        hydrv_Clock_Delay(500);
+        clock.Delay(500);
         tim.SetCaptureCompare(0, 7500);
-        hydrv_Clock_Delay(500);
+        clock.Delay(500);
         tim.SetCaptureCompare(0, 2500);
     }
 }
@@ -33,6 +38,11 @@ void Error_Handler(void)
     while (1)
     {
     }
+}
+
+extern "C"
+{
+    void SysTick_Handler() { clock.SysTickHandler(); }
 }
 
 #ifdef USE_FULL_ASSERT
