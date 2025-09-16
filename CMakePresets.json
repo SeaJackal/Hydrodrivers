@@ -21,7 +21,6 @@
             "name": "target",
             "hidden": true,
             "inherits": "default",
-            "toolchainFile": "${sourceDir}/resources/gcc-arm-none-eabi.cmake",
             "cacheVariables": {
                 "BUILD_TESTING": "OFF"
             }
@@ -30,9 +29,22 @@
             "name": "F4",
             "inherits": "target",
             "hidden": true,
+            "toolchainFile": "${sourceDir}/resources/gcc-arm-none-eabi-f4.cmake",
             "cacheVariables": {
                 "CMAKE_C_FLAGS": "-DSTM32F407xx",
-                "CMAKE_CXX_FLAGS": "-DSTM32F407xx"
+                "CMAKE_CXX_FLAGS": "-DSTM32F407xx",
+                "MCU_FAMILY": "F4"
+            }
+        },
+        {
+            "name": "F1",
+            "inherits": "target",
+            "hidden": true,
+            "toolchainFile": "${sourceDir}/resources/gcc-arm-none-eabi-f1.cmake",
+            "cacheVariables": {
+                "CMAKE_C_FLAGS": "-DSTM32F103xB",
+                "CMAKE_CXX_FLAGS": "-DSTM32F103xB",
+                "MCU_FAMILY": "F1"
             }
         },
         {
@@ -67,6 +79,13 @@
         {
             "name": "DebugF4",
             "inherits": "F4",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Debug"
+            }
+        },
+        {
+            "name": "DebugF1",
+            "inherits": "F1",
             "cacheVariables": {
                 "CMAKE_BUILD_TYPE": "Debug"
             }

@@ -118,9 +118,9 @@ inline bool GPIOLow::GPIOD_inited_pins_[GPIOPort::PIN_COUNT] = {};
 constexpr inline GPIOLow::GPIOLow(const GPIOPort &GPIO_group, unsigned pin,
                                   GPIOPreset preset)
     : is_inited_(GPIO_group.inited_pins_[pin]),
-      pin_func_(preset.pin_function),
       GPIOx_(GPIO_group.GPIOx_),
       pin_(pin),
+      pin_func_(preset.pin_function),
       RCC_AHB1ENR_GPIOxEN_(GPIO_group.RCC_AHB1ENR_GPIOxEN_),
       output_speed_reg_mask_(0x3UL << (2 * pin)),
       output_speed_reg_value_low_(0x0UL),

@@ -7,3 +7,6 @@
 [submodule "libs/Hydrolib-soft"]
 	path = libs/Hydrolib-soft
 	url = https://github.com/SeaJackal/Hydrolib-soft.git
+[submodule "libs/CMSIS/cmsis-device-f1"]
+	path = libs/CMSIS/cmsis-device-f1
+	url = https://github.com/STMicroelectronics/cmsis-device-f1

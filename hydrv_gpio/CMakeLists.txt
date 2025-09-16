@@ -1,15 +1,24 @@
 cmake_minimum_required(VERSION 3.10)
 
-project(HydrodriversGPIO VERSION 1.0)
+set(LIBRARY_NAME HydrodriversGPIO)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
 
-add_library(HydrodriversGPIO INTERFACE)
+if(MCU_FAMILY STREQUAL "F1" OR MCU_FAMILY STREQUAL "F4")
+    add_library(${LIBRARY_NAME} INTERFACE)
+    target_link_libraries(${LIBRARY_NAME} INTERFACE HydrolibCommon)
+    target_link_libraries(${LIBRARY_NAME} INTERFACE CMSIS)
+    
+    if(MCU_FAMILY STREQUAL "F1")
+        target_include_directories(${LIBRARY_NAME} INTERFACE f1/include)
+    elseif(MCU_FAMILY STREQUAL "F4")
+        target_include_directories(${LIBRARY_NAME} INTERFACE f4/include)
+    endif()
+    
+    add_subdirectory(example)
 
-target_link_libraries(HydrodriversGPIO INTERFACE HydrolibCommon)
-target_link_libraries(HydrodriversGPIO INTERFACE CMSIS)
-
-target_include_directories(HydrodriversGPIO INTERFACE include)
-
-add_subdirectory(example)
+    message(STATUS "${LIBRARY_NAME} target added for MCU_FAMILY: ${MCU_FAMILY}")
+else()
+    message(WARNING "${LIBRARY_NAME} target is not supported for MCU_FAMILY: ${MCU_FAMILY}")
+endif()
