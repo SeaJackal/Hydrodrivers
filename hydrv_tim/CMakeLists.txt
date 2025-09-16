@@ -3,6 +3,8 @@ cmake_minimum_required(VERSION 3.10)
 if(MCU_FAMILY STREQUAL "F4")
     # add_subdirectory(upper_half)
     add_subdirectory(lower_half)
+
+    add_subdirectory(example)
     
     message(STATUS "hydrv_tim subdirectories added for MCU_FAMILY: ${MCU_FAMILY}")
 else()
