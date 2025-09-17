@@ -30,17 +30,8 @@ public:
     };
 
 public:
-    static constexpr UARTPreset USART1_115200_LOW{
-        USART1, 7, RCC_APB2ENR_USART1EN, &(RCC->APB2ENR), USART1_IRQn, 45, 9};
-
-    static constexpr UARTPreset USART1_921600_LOW{
-        USART1, 7, RCC_APB2ENR_USART1EN, &(RCC->APB2ENR), USART1_IRQn, 5, 11};
-
     static constexpr UARTPreset USART3_115200_LOW{
         USART3, 7, RCC_APB1ENR_USART3EN, &(RCC->APB1ENR), USART3_IRQn, 17, 6};
-
-    static constexpr UARTPreset USART3_921600_LOW{
-        USART3, 7, RCC_APB1ENR_USART3EN, &(RCC->APB1ENR), USART3_IRQn, 2, 14};
 
 public:
     constexpr UARTLow(const UARTPreset &preset, hydrv::GPIO::GPIOLow &rx_pin,
