@@ -20,7 +20,7 @@ private:
     static constexpr unsigned REAL_TX_BUFFER_CAPACITY_ = TX_BUFFER_CAPACITY + 1;
 
 public:
-    constexpr UART(const UARTLow::UARTPreset &UART_preset,
+    consteval UART(const UARTLow::UARTPreset &UART_preset,
                    hydrv::GPIO::GPIOLow &rx_pin, hydrv::GPIO::GPIOLow &tx_pin,
                    unsigned IRQ_priority,
                    CallbackType rx_callback = hydrolib::concepts::func::DummyFunc<void>);
@@ -67,7 +67,7 @@ int write(UART<RX_BUFFER_CAPACITY, TX_BUFFER_CAPACITY, CallbackType> &stream,
 
 template <int RX_BUFFER_CAPACITY, int TX_BUFFER_CAPACITY, typename CallbackType>
 requires hydrolib::concepts::func::FuncConcept<CallbackType, void>
-constexpr UART<RX_BUFFER_CAPACITY, TX_BUFFER_CAPACITY, CallbackType>::UART(
+consteval UART<RX_BUFFER_CAPACITY, TX_BUFFER_CAPACITY, CallbackType>::UART(
     const UARTLow::UARTPreset &UART_preset, hydrv::GPIO::GPIOLow &rx_pin,
     hydrv::GPIO::GPIOLow &tx_pin, unsigned IRQ_priority,
     CallbackType rx_callback)
