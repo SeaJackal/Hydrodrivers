@@ -37,7 +37,7 @@ add_executable(STMprogramTest
     ${CMAKE_CURRENT_LIST_DIR}/src/stm32f4xx_it.c)
 
 target_link_libraries(STMprogramTest
-    HydrodriversCommon HydrodriversClock HydrodriversUART HydrolibLogger HydrolibVectorNAV)
+    HydrodriversCommon HydrodriversClockCPP HydrodriversUART HydrolibLogger HydrolibVectorNAV)
 
 target_link_libraries(STMprogramTest HydrolibCommon)
 

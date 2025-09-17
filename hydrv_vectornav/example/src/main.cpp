@@ -1,3 +1,4 @@
+#include "hydrv_gpio_low.hpp"
 #include <string.h>
 #include <sys/_types.h>
 
@@ -9,7 +10,7 @@ extern "C"
 #include "stm32f407xx.h"
 #include "stm32f4xx.h"
 
-#include "hydrv_clock.h"
+// #include "hydrv_clock.h"
 #include "hydrv_common.h"
 
 #ifdef __cplusplus
@@ -19,17 +20,23 @@ extern "C"
 #include "hydrolib_log_distributor.hpp"
 #include "hydrolib_logger.hpp"
 #include "hydrolib_vectronav.hpp"
+#include "hydrv_clock.hpp"
 #include "hydrv_uart.hpp"
 
-hydrv::GPIO::GPIOLow rx_pin3(hydrv::GPIO::GPIOLow::GPIOC_port, 11);
-hydrv::GPIO::GPIOLow tx_pin3(hydrv::GPIO::GPIOLow::GPIOC_port, 10);
-hydrv::UART::UART<255, 255> uart3(hydrv::UART::UARTLow::USART3_HS_LOW, rx_pin3,
-                                  tx_pin3, 7);
+hydrv::clock::Clock clock(hydrv::clock::Clock::HSI_DEFAULT);
+hydrv::GPIO::GPIOLow rx_pin3(hydrv::GPIO::GPIOLow::GPIOC_port, 11,
+                             hydrv::GPIO::GPIOLow::GPIO_UART);
+hydrv::GPIO::GPIOLow tx_pin3(hydrv::GPIO::GPIOLow::GPIOC_port, 10,
+                             hydrv::GPIO::GPIOLow::GPIO_UART);
+hydrv::UART::UART<255, 255> uart3(hydrv::UART::UARTLow::USART3_921600_LOW,
+                                  rx_pin3, tx_pin3, 7);
 
-hydrv::GPIO::GPIOLow rx_pin1(hydrv::GPIO::GPIOLow::GPIOB_port, 7);
-hydrv::GPIO::GPIOLow tx_pin1(hydrv::GPIO::GPIOLow::GPIOB_port, 6);
-hydrv::UART::UART<255, 255> uart1(hydrv::UART::UARTLow::USART1_LOW, rx_pin1,
-                                  tx_pin1, 7);
+hydrv::GPIO::GPIOLow rx_pin1(hydrv::GPIO::GPIOLow::GPIOC_port, 7,
+                             hydrv::GPIO::GPIOLow::GPIO_UART);
+hydrv::GPIO::GPIOLow tx_pin1(hydrv::GPIO::GPIOLow::GPIOC_port, 6,
+                             hydrv::GPIO::GPIOLow::GPIO_UART);
+hydrv::UART::UART<255, 255> uart1(hydrv::UART::UARTLow::USART3_115200_LOW,
+                                  rx_pin3, tx_pin3, 7);
 
 hydrolib::logger::LogDistributor distributor("[%s] [%l] %m\n\r", uart3);
 // hydrolib::logger::LogDistributor distributor("%m", uart3);
@@ -43,18 +50,20 @@ char init_message[] = "$VNWRG,75,2,8,01,0028*XX\r\n";
 
 int main(void)
 {
-    hydrv_Clock_ConfigureHSI();
+    clock.Init();
     NVIC_SetPriorityGrouping(0);
 
     distributor.SetAllFilters(0, hydrolib::logger::LogLevel::ERROR);
     distributor.SetAllFilters(1, hydrolib::logger::LogLevel::INFO);
 
     vector_nav.Reset();
-    hydrv_Clock_Delay(500);
+    clock.Delay(500);
     vector_nav.Init();
 
-    uart1.StartRx();
-    
+    uart1.Init();
+
+    //uart1.StartRx();
+
     unsigned last_log = 0;
     unsigned counter = 0;
     unsigned wrong_crc = 0;
@@ -63,7 +72,7 @@ int main(void)
     while (1)
     {
         vector_nav.Process();
-        if (hydrv_Clock_GetSystemTime() - last_log > 100)
+        if (clock.GetSystemTime() - last_log > 100)
         {
             int yaw = static_cast<int>(vector_nav.GetYaw() * 100);
             int pitch = static_cast<int>(vector_nav.GetPitch() * 100);
@@ -76,7 +85,7 @@ int main(void)
                 (pitch >= 0) ? (pitch % 100) : (-pitch % 100), roll / 100,
                 (roll >= 0) ? (roll % 100) : (-roll % 100));
 
-            last_log = hydrv_Clock_GetSystemTime();
+            last_log = clock.GetSystemTime();
             counter++;
             if (counter == 50)
             {
@@ -100,9 +109,8 @@ int main(void)
 
 extern "C"
 {
-    void UART3IRQHandler() { uart3.IRQcallback(); }
-
-    void UART1IRQHandler() { uart1.IRQcallback(); }
+    void USART3_IRQHandler(void) { uart3.IRQCallback(); }
+    void USART1_IRQHandler(void) { uart1.IRQCallback(); }
 }
 
 void Error_Handler(void)
