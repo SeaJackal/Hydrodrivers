@@ -154,19 +154,3 @@ void DebugMon_Handler(void)
 /**
  * @brief This function handles System tick timer.
  */
-void SysTick_Handler(void)
-{
-  /* USER CODE BEGIN SysTick_IRQn 0 */
-
-  /* USER CODE END SysTick_IRQn 0 */
-  hydrv_Clock_SysTickHandler();
-}
-
-void USART3_IRQHandler(void)
-{
-  UART3IRQHandler();
-}
-void USART1_IRQHandler(void)
-{
-  UART1IRQHandler();
-}
