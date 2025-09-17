@@ -7,10 +7,10 @@
 hydrv::clock::Clock clock(hydrv::clock::Clock::HSI_DEFAULT);
 hydrv::GPIO::GPIOLow led_pin(hydrv::GPIO::GPIOLow::GPIOD_port, 15,
                              hydrv::GPIO::GPIOLow::GPIO_Output);
-hydrv::GPIO::GPIOLow rx_pin(hydrv::GPIO::GPIOLow::GPIOC_port, 11,
-                            hydrv::GPIO::GPIOLow::GPIO_UART);
-hydrv::GPIO::GPIOLow tx_pin(hydrv::GPIO::GPIOLow::GPIOC_port, 10,
-                            hydrv::GPIO::GPIOLow::GPIO_UART);
+hydrv::GPIO::GPIOLow rx_pin(hydrv::GPIO::GPIOLow::GPIOB_port, 11,
+                            hydrv::GPIO::GPIOLow::GPIO_UART_RX);
+hydrv::GPIO::GPIOLow tx_pin(hydrv::GPIO::GPIOLow::GPIOB_port, 10,
+                            hydrv::GPIO::GPIOLow::GPIO_UART_TX);
 hydrv::UART::UART<255, 255> uart(hydrv::UART::UARTLow::USART3_115200_LOW,
                                  rx_pin, tx_pin, 7);
 

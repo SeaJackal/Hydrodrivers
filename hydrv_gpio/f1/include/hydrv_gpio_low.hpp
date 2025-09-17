@@ -70,6 +70,10 @@ public:
                                          GPIOD_inited_pins_};
     static constexpr GPIOPreset GPIO_Output{
         Mode::kOutput2MHz, Configure::kGeneralPurposePushPullOutput};
+    static constexpr GPIOPreset GPIO_UART_TX{
+        Mode::kOutput10MHz, Configure::kAlternateFunctionPushPullOutput};
+    static constexpr GPIOPreset GPIO_UART_RX{Mode::kInput,
+                                             Configure::kFloatingInput};
 
 public:
     constexpr GPIOLow(const GPIOPort &GPIO_group, unsigned pin,

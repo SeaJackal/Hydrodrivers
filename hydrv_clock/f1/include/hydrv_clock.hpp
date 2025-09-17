@@ -230,8 +230,8 @@ void Clock::ConfigureSystemClock_(void)
 
     MODIFY_REG(RCC->CFGR, RCC_CFGR_SW, RCC_CFGR_SW_PLL);
 
-    MODIFY_REG(RCC->CFGR, RCC_CFGR_PPRE1, RCC_CFGR_PPRE1_DIV4);
-    MODIFY_REG(RCC->CFGR, RCC_CFGR_PPRE2, RCC_CFGR_PPRE2_DIV2);
+    MODIFY_REG(RCC->CFGR, RCC_CFGR_PPRE1, RCC_CFGR_PPRE1_DIV2);
+    MODIFY_REG(RCC->CFGR, RCC_CFGR_PPRE2, RCC_CFGR_PPRE2_DIV1);
 }
 
 hydrolib_ReturnCode Clock::ConfigurePLL_(void)
@@ -241,7 +241,7 @@ hydrolib_ReturnCode Clock::ConfigurePLL_(void)
     MODIFY_REG(RCC->CFGR, RCC_CFGR_PLLMULL_Msk,
                (preset_.multiply_factor - 2) << RCC_CFGR_PLLMULL_Pos);
     MODIFY_REG(RCC->CFGR, RCC_CFGR_PLLXTPRE,
-               (preset_.hse_divide_factor - 1) << RCC_CFGR_PLLMULL_Pos);
+               (preset_.hse_divide_factor - 1) << RCC_CFGR_PLLXTPRE_Pos);
     SET_BIT(RCC->CR, RCC_CR_PLLON);
 
     uint32_t start = GetSystickCounter_();

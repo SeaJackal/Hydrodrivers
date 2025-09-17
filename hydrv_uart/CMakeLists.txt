@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.10)
 
-if(MCU_FAMILY STREQUAL "F4")
+if(MCU_FAMILY STREQUAL "F1" OR MCU_FAMILY STREQUAL "F4")
     add_subdirectory(upper_half)
     add_subdirectory(lower_half)
     add_subdirectory(example)

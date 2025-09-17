@@ -54,7 +54,8 @@ public:
     static constexpr GPIOPort GPIOD_port{GPIOD, RCC_AHB1ENR_GPIODEN,
                                          GPIOD_inited_pins_};
     static constexpr GPIOPreset GPIO_Output{OUTPUT};
-    static constexpr GPIOPreset GPIO_UART{UART};
+    static constexpr GPIOPreset GPIO_UART_TX{UART};
+    static constexpr GPIOPreset GPIO_UART_RX{UART};
     static constexpr GPIOPreset GPIO_Timer{TIMER};
 
 public:
