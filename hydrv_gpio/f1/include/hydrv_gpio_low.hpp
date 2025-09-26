@@ -70,10 +70,16 @@ public:
                                          GPIOD_inited_pins_};
     static constexpr GPIOPreset GPIO_Output{
         Mode::kOutput2MHz, Configure::kGeneralPurposePushPullOutput};
+    static constexpr GPIOPreset GPIO_Fast_Output{
+        Mode::kOutput50MHz, Configure::kGeneralPurposePushPullOutput};
     static constexpr GPIOPreset GPIO_UART_TX{
         Mode::kOutput10MHz, Configure::kAlternateFunctionPushPullOutput};
     static constexpr GPIOPreset GPIO_UART_RX{Mode::kInput,
                                              Configure::kFloatingInput};
+    static constexpr GPIOPreset GPIO_SPI_INPUT{Mode::kInput,
+                                               Configure::kFloatingInput};
+    static constexpr GPIOPreset GPIO_SPI_OUTPUT{
+        Mode::kOutput50MHz, Configure::kAlternateFunctionPushPullOutput};
 
 public:
     consteval GPIOLow(const GPIOPort &GPIO_group, unsigned pin,
@@ -134,11 +140,13 @@ inline hydrolib_ReturnCode GPIOLow::Init([[maybe_unused]] uint32_t altfunc = 0)
 
     if (pin_ > 7)
     {
-        MODIFY_REG(reinterpret_cast<GPIO_TypeDef*>(GPIOx_)->CRH, cr_reg_mask_, cr_reg_value_);
+        MODIFY_REG(reinterpret_cast<GPIO_TypeDef *>(GPIOx_)->CRH, cr_reg_mask_,
+                   cr_reg_value_);
     }
     else
     {
-        MODIFY_REG(reinterpret_cast<GPIO_TypeDef*>(GPIOx_)->CRL, cr_reg_mask_, cr_reg_value_);
+        MODIFY_REG(reinterpret_cast<GPIO_TypeDef *>(GPIOx_)->CRL, cr_reg_mask_,
+                   cr_reg_value_);
     }
     is_inited_ = true;
 
@@ -147,9 +155,15 @@ inline hydrolib_ReturnCode GPIOLow::Init([[maybe_unused]] uint32_t altfunc = 0)
 
 inline bool GPIOLow::IsInited() { return is_inited_; }
 
-inline void GPIOLow::Set() { SET_BIT(reinterpret_cast<GPIO_TypeDef*>(GPIOx_)->BSRR, set_reg_mask_); }
+inline void GPIOLow::Set()
+{
+    SET_BIT(reinterpret_cast<GPIO_TypeDef *>(GPIOx_)->BSRR, set_reg_mask_);
+}
 
-inline void GPIOLow::Reset() { SET_BIT(reinterpret_cast<GPIO_TypeDef*>(GPIOx_)->BSRR, reset_reg_mask_); }
+inline void GPIOLow::Reset()
+{
+    SET_BIT(reinterpret_cast<GPIO_TypeDef *>(GPIOx_)->BSRR, reset_reg_mask_);
+}
 
 inline void GPIOLow::EnableGPIOxClock_(const uint32_t RCC_AHB1ENR_GPIOxEN)
 {
