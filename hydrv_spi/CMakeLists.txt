@@ -1,0 +1,3 @@
+add_subdirectory(upper_half)
+add_subdirectory(lower_half)
+add_subdirectory(example)
