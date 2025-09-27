@@ -7,10 +7,10 @@ extern "C"
 {
     void SysTick_Handler();
 }
-hydrv::clock::Clock clock(hydrv::clock::Clock::HSI_DEFAULT);
-hydrv::GPIO::GPIOLow tim_pin(hydrv::GPIO::GPIOLow::GPIOA_port, 0,
+constinit hydrv::clock::Clock clock(hydrv::clock::Clock::HSI_DEFAULT);
+constinit hydrv::GPIO::GPIOLow tim_pin(hydrv::GPIO::GPIOLow::GPIOA_port, 0,
                              hydrv::GPIO::GPIOLow::GPIO_Timer);
-hydrv::timer::TimerLow tim(hydrv::timer::TimerLow::TIM5_low, 168, 10000);
+constinit hydrv::timer::TimerLow tim(hydrv::timer::TimerLow::TIM5_low, 168, 10000);
 
 int main(void)
 {

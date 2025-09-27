@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cstdint>
+#include <cstddef>
 
 extern "C"
 {
@@ -16,12 +17,12 @@ class UARTLow
 public:
     struct UARTPreset
     {
-        USART_TypeDef *const USARTx;
+        const uint32_t USARTx;
 
         const uint8_t GPIO_alt_func;
 
         const uint32_t RCC_APBENR_UARTxEN;
-        volatile uint32_t *const RCC_address;
+        const uint32_t RCC_address;
 
         const IRQn_Type USARTx_IRQn;
 
@@ -31,10 +32,10 @@ public:
 
 public:
     static constexpr UARTPreset USART3_115200_LOW{
-        USART3, 7, RCC_APB1ENR_USART3EN, &(RCC->APB1ENR), USART3_IRQn, 17, 6};
+        USART3_BASE, 7, RCC_APB1ENR_USART3EN, RCC_BASE + offsetof(RCC_TypeDef, APB1ENR), USART3_IRQn, 17, 6};
 
 public:
-    constexpr UARTLow(const UARTPreset &preset, hydrv::GPIO::GPIOLow &rx_pin,
+    consteval UARTLow(const UARTPreset &preset, hydrv::GPIO::GPIOLow &rx_pin,
                       hydrv::GPIO::GPIOLow &tx_pin, unsigned IRQ_priority);
 
 public:
@@ -58,8 +59,7 @@ private:
     static constexpr uint32_t CountCR2Mask_();
     static constexpr uint32_t CountBRRMask_(const UARTPreset &preset);
 
-    static void EnableUARTClock_(volatile uint32_t *rcc_address,
-                                 uint32_t en_bit);
+    static void EnableUARTClock_(uint32_t rcc_address, uint32_t en_bit);
     static constexpr uint32_t USARTBRRDIVFractionVal_(uint32_t val);
     static constexpr uint32_t USARTBRRDIVMantissaVal_(uint32_t val);
     static constexpr uint32_t USARTCR2Stop1bit_();
@@ -75,7 +75,7 @@ private:
     const uint32_t brr_;
 };
 
-constexpr UARTLow::UARTLow(const UARTPreset &preset,
+consteval UARTLow::UARTLow(const UARTPreset &preset,
                            hydrv::GPIO::GPIOLow &rx_pin,
                            hydrv::GPIO::GPIOLow &tx_pin, unsigned IRQ_priority)
     : preset_(preset),
@@ -88,45 +88,53 @@ constexpr UARTLow::UARTLow(const UARTPreset &preset,
 {
 }
 
-void UARTLow::Init()
+inline void UARTLow::Init()
 {
     EnableUARTClock_(preset_.RCC_address, preset_.RCC_APBENR_UARTxEN);
     NVIC_SetPriority(preset_.USARTx_IRQn, IRQ_priority_);
     NVIC_EnableIRQ(preset_.USARTx_IRQn);
 
-    CLEAR_BIT(preset_.USARTx->CR1, USART_CR1_UE);
+    CLEAR_BIT(reinterpret_cast<USART_TypeDef*>(preset_.USARTx)->CR1, USART_CR1_UE);
 
-    preset_.USARTx->CR1 = cr1_;
-    preset_.USARTx->CR2 = cr2_;
-    preset_.USARTx->BRR = brr_;
+    reinterpret_cast<USART_TypeDef*>(preset_.USARTx)->CR1 = cr1_;
+    reinterpret_cast<USART_TypeDef*>(preset_.USARTx)->CR2 = cr2_;
+    reinterpret_cast<USART_TypeDef*>(preset_.USARTx)->BRR = brr_;
 
-    SET_BIT(preset_.USARTx->CR1, USART_CR1_UE);
+    SET_BIT(reinterpret_cast<USART_TypeDef*>(preset_.USARTx)->CR1, USART_CR1_UE);
 
     rx_pin_.Init(preset_.GPIO_alt_func);
     tx_pin_.Init(preset_.GPIO_alt_func);
 }
 
-bool UARTLow::IsRxDone() { return READ_BIT(preset_.USARTx->SR, USART_SR_RXNE); }
-bool UARTLow::IsTxDone() { return READ_BIT(preset_.USARTx->SR, USART_SR_TC); }
-uint8_t UARTLow::GetRx() { return preset_.USARTx->DR; }
-void UARTLow::SetTx(uint8_t byte) { preset_.USARTx->DR = byte; }
-void UARTLow::EnableTxInterruption()
+inline bool UARTLow::IsRxDone() { return READ_BIT(reinterpret_cast<USART_TypeDef*>(preset_.USARTx)->SR, USART_SR_RXNE); }
+inline bool UARTLow::IsTxDone() { return READ_BIT(reinterpret_cast<USART_TypeDef*>(preset_.USARTx)->SR, USART_SR_TC); }
+inline uint8_t UARTLow::GetRx() { return reinterpret_cast<USART_TypeDef*>(preset_.USARTx)->DR; }
+inline void UARTLow::SetTx(uint8_t byte) { reinterpret_cast<USART_TypeDef*>(preset_.USARTx)->DR = byte; }
+inline void UARTLow::EnableTxInterruption()
 {
-    SET_BIT(preset_.USARTx->CR1, USART_CR1_TCIE);
+    SET_BIT(reinterpret_cast<USART_TypeDef*>(preset_.USARTx)->CR1, USART_CR1_TCIE);
 }
-void UARTLow::DisableTxInterruption()
+inline void UARTLow::DisableTxInterruption()
 {
-    CLEAR_BIT(preset_.USARTx->CR1, USART_CR1_TCIE);
+    CLEAR_BIT(reinterpret_cast<USART_TypeDef*>(preset_.USARTx)->CR1, USART_CR1_TCIE);
+}
+inline void UARTLow::EnableRxInterruption()
+{
+    SET_BIT(reinterpret_cast<USART_TypeDef*>(preset_.USARTx)->CR1, USART_CR1_RXNEIE);
+}
+inline void UARTLow::DisableRxInterruption()
+{
+    CLEAR_BIT(reinterpret_cast<USART_TypeDef*>(preset_.USARTx)->CR1, USART_CR1_RXNEIE);
 }
 
-void UARTLow::EnableDMATransmit()
+inline void UARTLow::EnableDMATransmit()
 {
-    SET_BIT(preset_.USARTx->CR3, USART_CR3_DMAT);
+    SET_BIT(reinterpret_cast<USART_TypeDef*>(preset_.USARTx)->CR3, USART_CR3_DMAT);
 }
 
-void UARTLow::EnableDMAReceive()
+inline void UARTLow::EnableDMAReceive()
 {
-    SET_BIT(preset_.USARTx->CR3, USART_CR3_DMAR);
+    SET_BIT(reinterpret_cast<USART_TypeDef*>(preset_.USARTx)->CR3, USART_CR3_DMAR);
 }
 
 constexpr uint32_t UARTLow::CountCR1Mask_()
@@ -159,13 +167,12 @@ constexpr uint32_t UARTLow::CountBRRMask_(const UARTPreset &preset)
     return brr;
 }
 
-inline void UARTLow::EnableUARTClock_(volatile uint32_t *rcc_address,
-                                      uint32_t en_bit)
+inline void UARTLow::EnableUARTClock_(uint32_t rcc_address, uint32_t en_bit)
 {
+    volatile uint32_t* rcc_reg = reinterpret_cast<volatile uint32_t*>(rcc_address);
     __IO uint32_t tmpreg = 0x00U;
-    SET_BIT(*rcc_address,
-            en_bit); /* Delay after an RCC peripheral clock enabling */
-    tmpreg = READ_BIT(*rcc_address, en_bit);
+    SET_BIT(*rcc_reg, en_bit); /* Delay after an RCC peripheral clock enabling */
+    tmpreg = READ_BIT(*rcc_reg, en_bit);
     (void)tmpreg;
 }
 

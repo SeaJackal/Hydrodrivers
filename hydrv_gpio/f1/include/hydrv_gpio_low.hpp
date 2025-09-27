@@ -41,7 +41,7 @@ public:
         static constexpr std::size_t PIN_COUNT = 16;
 
     public:
-        GPIO_TypeDef *const GPIOx;
+        const uint32_t GPIOx;
         const uint32_t RCC_APB2ENR_IOPxEN;
 
         bool *const inited_pins_;
@@ -60,13 +60,13 @@ private:
     static constinit bool GPIOD_inited_pins_[GPIOPort::PIN_COUNT];
 
 public:
-    static constexpr GPIOPort GPIOA_port{GPIOA, RCC_APB2ENR_IOPAEN,
+    static constexpr GPIOPort GPIOA_port{GPIOA_BASE, RCC_APB2ENR_IOPAEN,
                                          GPIOA_inited_pins_};
-    static constexpr GPIOPort GPIOB_port{GPIOB, RCC_APB2ENR_IOPBEN,
+    static constexpr GPIOPort GPIOB_port{GPIOB_BASE, RCC_APB2ENR_IOPBEN,
                                          GPIOB_inited_pins_};
-    static constexpr GPIOPort GPIOC_port{GPIOC, RCC_APB2ENR_IOPCEN,
+    static constexpr GPIOPort GPIOC_port{GPIOC_BASE, RCC_APB2ENR_IOPCEN,
                                          GPIOC_inited_pins_};
-    static constexpr GPIOPort GPIOD_port{GPIOD, RCC_APB2ENR_IOPDEN,
+    static constexpr GPIOPort GPIOD_port{GPIOD_BASE, RCC_APB2ENR_IOPDEN,
                                          GPIOD_inited_pins_};
     static constexpr GPIOPreset GPIO_Output{
         Mode::kOutput2MHz, Configure::kGeneralPurposePushPullOutput};
@@ -76,7 +76,7 @@ public:
                                              Configure::kFloatingInput};
 
 public:
-    constexpr GPIOLow(const GPIOPort &GPIO_group, unsigned pin,
+    consteval GPIOLow(const GPIOPort &GPIO_group, unsigned pin,
                       GPIOPreset preset);
 
 public:
@@ -90,7 +90,7 @@ public:
 
 private:
     bool &is_inited_;
-    GPIO_TypeDef *const GPIOx_;
+    const uint32_t GPIOx_;
     const unsigned pin_;
     const uint32_t RCC_APB2ENR_IOPxEN_;
 
@@ -109,7 +109,7 @@ inline bool GPIOLow::GPIOB_inited_pins_[GPIOPort::PIN_COUNT] = {};
 inline bool GPIOLow::GPIOC_inited_pins_[GPIOPort::PIN_COUNT] = {};
 inline bool GPIOLow::GPIOD_inited_pins_[GPIOPort::PIN_COUNT] = {};
 
-constexpr inline GPIOLow::GPIOLow(const GPIOPort &GPIO_group, unsigned pin,
+consteval inline GPIOLow::GPIOLow(const GPIOPort &GPIO_group, unsigned pin,
                                   GPIOPreset preset)
     : is_inited_(GPIO_group.inited_pins_[pin]),
       GPIOx_(GPIO_group.GPIOx),
@@ -134,11 +134,11 @@ inline hydrolib_ReturnCode GPIOLow::Init([[maybe_unused]] uint32_t altfunc = 0)
 
     if (pin_ > 7)
     {
-        MODIFY_REG(GPIOx_->CRH, cr_reg_mask_, cr_reg_value_);
+        MODIFY_REG(reinterpret_cast<GPIO_TypeDef*>(GPIOx_)->CRH, cr_reg_mask_, cr_reg_value_);
     }
     else
     {
-        MODIFY_REG(GPIOx_->CRL, cr_reg_mask_, cr_reg_value_);
+        MODIFY_REG(reinterpret_cast<GPIO_TypeDef*>(GPIOx_)->CRL, cr_reg_mask_, cr_reg_value_);
     }
     is_inited_ = true;
 
@@ -147,9 +147,9 @@ inline hydrolib_ReturnCode GPIOLow::Init([[maybe_unused]] uint32_t altfunc = 0)
 
 inline bool GPIOLow::IsInited() { return is_inited_; }
 
-inline void GPIOLow::Set() { SET_BIT(GPIOx_->BSRR, set_reg_mask_); }
+inline void GPIOLow::Set() { SET_BIT(reinterpret_cast<GPIO_TypeDef*>(GPIOx_)->BSRR, set_reg_mask_); }
 
-inline void GPIOLow::Reset() { SET_BIT(GPIOx_->BSRR, reset_reg_mask_); }
+inline void GPIOLow::Reset() { SET_BIT(reinterpret_cast<GPIO_TypeDef*>(GPIOx_)->BSRR, reset_reg_mask_); }
 
 inline void GPIOLow::EnableGPIOxClock_(const uint32_t RCC_AHB1ENR_GPIOxEN)
 {

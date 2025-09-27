@@ -2,8 +2,8 @@
 #include "hydrv_gpio_low.hpp"
 
 hydrv::clock::Clock clock(hydrv::clock::Clock::HSI_DEFAULT);
-hydrv::GPIO::GPIOLow led_pin(hydrv::GPIO::GPIOLow::GPIOC_port, 13,
-                             hydrv::GPIO::GPIOLow::GPIO_Output);
+constinit hydrv::GPIO::GPIOLow led_pin(hydrv::GPIO::GPIOLow::GPIOC_port, 13,
+                                       hydrv::GPIO::GPIOLow::GPIO_Output);
 
 int main(void)
 {
