@@ -1,22 +1,8 @@
-#include <string.h>
-
-extern "C"
-{
-
-#include "hydrv_common.h"
-#include "stm32f4xx.h"
-}
-
 #include "hydrv_clock.hpp"
 #include "hydrv_gpio_low.hpp"
 
-extern "C"
-{
-    void SysTickHandler();
-}
-
 hydrv::clock::Clock clock(hydrv::clock::Clock::HSI_DEFAULT);
-hydrv::GPIO::GPIOLow led_pin(hydrv::GPIO::GPIOLow::GPIOD_port, 15,
+hydrv::GPIO::GPIOLow led_pin(hydrv::GPIO::GPIOLow::GPIOC_port, 13,
                              hydrv::GPIO::GPIOLow::GPIO_Output);
 
 int main(void)
@@ -26,7 +12,6 @@ int main(void)
     clock.Init();
 
     led_pin.Init();
-    //    hydrv::GPIO::GPIOLow led_pin2(hydrv::GPIO::GPIOLow::GPIOD_port, 15);
 
     while (1)
     {
@@ -46,7 +31,7 @@ void Error_Handler(void)
 }
 extern "C"
 {
-    void SysTickHandler() { clock.SysTickHandler(); }
+    void SysTick_Handler(void) { clock.SysTickHandler(); }
 }
 
 #ifdef USE_FULL_ASSERT

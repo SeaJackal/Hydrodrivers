@@ -4,11 +4,21 @@ project(Hydrodrivers VERSION 1.0)
 
 enable_language(C CXX ASM)
 
+if(NOT DEFINED MCU_FAMILY)
+    message(FATAL_ERROR "MCU_FAMILY variable is not defined. Please set it to F1 or F4.")
+endif()
+
+if(NOT MCU_FAMILY STREQUAL "F1" AND NOT MCU_FAMILY STREQUAL "F4")
+    message(FATAL_ERROR "Invalid MCU_FAMILY value: ${MCU_FAMILY}. Supported values are: F1, F4")
+endif()
+
+message(STATUS "Building for MCU family: ${MCU_FAMILY}")
+
 if(NOT BUILD_TESTS)
     add_subdirectory(libs/CMSIS CMSIS)
     add_subdirectory(hydrv_common)
     add_subdirectory(hydrv_clock)
-    add_subdirectory(hydrv_clock_deprecated)
+    # add_subdirectory(hydrv_clock_deprecated)
     add_subdirectory(hydrv_gpio)
     add_subdirectory(hydrv_dma)
     add_subdirectory(hydrv_tim)

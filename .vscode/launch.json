@@ -5,23 +5,23 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "Cortex Debug GPIO",
+            "name": "Cortex Debug f1",
             "cwd": "${workspaceFolder}",
-            "executable": "${workspaceFolder}/build/hydrv_gpio/example/HydrvGPIOExample.elf",
+            "executable": "${workspaceFolder}/build/hydrv_uart/example/HydrvUARTExample.elf",
             "request": "launch",
             "type": "cortex-debug",
             "runToEntryPoint": "main",
             "servertype": "openocd",
-            "device": "stm32f4x",
-            "svdFile": "resources/STM32F407.svd",
+            "device": "stm32f1x",
+            "svdFile": "resources/STM32F103.svd",
             "showDevDebugOutput": "raw",
             "configFiles": [
                 "interface/stlink.cfg",
-                "target/stm32f4x.cfg"
+                "target/stm32f1x.cfg"
             ]
         },
         {
-            "name": "Cortex Debug UART",
+            "name": "Cortex Debug f4",
             "cwd": "${workspaceFolder}",
             "executable": "${workspaceFolder}/build/hydrv_uart/example/HydrvUARTExample.elf",
             "request": "launch",
@@ -36,37 +36,37 @@
                 "target/stm32f4x.cfg"
             ]
         }
-        {
-            "name": "Cortex Debug Timer",
-            "cwd": "${workspaceFolder}",
-            "executable": "${workspaceFolder}/build/hydrv_tim/example/HydrvTIMERExample.elf",
-            "request": "launch",
-            "type": "cortex-debug",
-            "runToEntryPoint": "main",
-            "servertype": "openocd",
-            "device": "stm32f4x",
-            "svdFile": "resources/STM32F407.svd",
-            "showDevDebugOutput": "raw",
-            "configFiles": [
-                "interface/stlink.cfg",
-                "target/stm32f4x.cfg"
-            ]
-        },
-        {
-            "name": "Cortex Debug Thruster",
-            "cwd": "${workspaceFolder}",
-            "executable": "${workspaceFolder}/build/hydrv_thruster/example/HydrvThrusterExample.elf",
-            "request": "launch",
-            "type": "cortex-debug",
-            "runToEntryPoint": "main",
-            "servertype": "openocd",
-            "device": "stm32f4x",
-            "svdFile": "resources/STM32F407.svd",
-            "showDevDebugOutput": "raw",
-            "configFiles": [
-                "interface/stlink.cfg",
-                "target/stm32f4x.cfg"
-            ]
-        },
+        // {
+        //     "name": "Cortex Debug Timer",
+        //     "cwd": "${workspaceFolder}",
+        //     "executable": "${workspaceFolder}/build/hydrv_tim/example/HydrvTIMERExample.elf",
+        //     "request": "launch",
+        //     "type": "cortex-debug",
+        //     "runToEntryPoint": "main",
+        //     "servertype": "openocd",
+        //     "device": "stm32f4x",
+        //     "svdFile": "resources/STM32F407.svd",
+        //     "showDevDebugOutput": "raw",
+        //     "configFiles": [
+        //         "interface/stlink.cfg",
+        //         "target/stm32f4x.cfg"
+        //     ]
+        // },
+        // {
+        //     "name": "Cortex Debug Thruster",
+        //     "cwd": "${workspaceFolder}",
+        //     "executable": "${workspaceFolder}/build/hydrv_thruster/example/HydrvThrusterExample.elf",
+        //     "request": "launch",
+        //     "type": "cortex-debug",
+        //     "runToEntryPoint": "main",
+        //     "servertype": "openocd",
+        //     "device": "stm32f4x",
+        //     "svdFile": "resources/STM32F407.svd",
+        //     "showDevDebugOutput": "raw",
+        //     "configFiles": [
+        //         "interface/stlink.cfg",
+        //         "target/stm32f4x.cfg"
+        //     ]
+        // },
     ]
 }
