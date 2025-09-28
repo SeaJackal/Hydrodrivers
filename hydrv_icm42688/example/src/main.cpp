@@ -25,10 +25,6 @@ constinit hydrv::GPIO::GPIOLow
 constinit hydrv::GPIO::GPIOLow cs_pin(hydrv::GPIO::GPIOLow::GPIOA_port, 4,
                                       hydrv::GPIO::GPIOLow::GPIO_Fast_Output);
 
-// ICM42688 instance
-constinit hydrv::icm42688::ICM42688 icm42688(spi_sclk_pin, spi_miso_pin,
-                                             spi_mosi_pin, cs_pin, 64000, 5);
-
 constinit hydrv::GPIO::GPIOLow rx_pin3(hydrv::GPIO::GPIOLow::GPIOB_port, 11,
                                        hydrv::GPIO::GPIOLow::GPIO_UART_RX);
 constinit hydrv::GPIO::GPIOLow tx_pin3(hydrv::GPIO::GPIOLow::GPIOB_port, 10,
@@ -40,28 +36,41 @@ constinit hydrolib::logger::LogDistributor distributor("[%s] [%l] %m\n\r",
                                                        uart3);
 // hydrolib::logger::LogDistributor distributor("%m", uart3);
 constinit hydrolib::logger::Logger logger1("System", 0, distributor);
+constinit hydrolib::logger::Logger logger2("ICM42688", 1, distributor);
+// ICM42688 instance
+constinit hydrv::icm42688::ICM42688 icm42688(spi_sclk_pin, spi_miso_pin,
+                                             spi_mosi_pin, cs_pin, 64000, 5,
+                                             logger2);
 
 int main(void)
 {
     NVIC_SetPriorityGrouping(0);
 
+    distributor.SetAllFilters(0, hydrolib::logger::LogLevel::ERROR);
     distributor.SetAllFilters(0, hydrolib::logger::LogLevel::DEBUG);
 
     clock.Init();
     uart3.Init();
-    icm42688.Init();
 
     while (1)
     {
-        icm42688.RequestData();
+        auto result = icm42688.Process();
+        if (result == hydrolib::ReturnCode::OK)
+        {
+            LOG(logger1, hydrolib::logger::LogLevel::INFO, "Accel X: {}",
+                icm42688.GetAccelerationX());
+            LOG(logger1, hydrolib::logger::LogLevel::INFO, "Accel Y: {}",
+                icm42688.GetAccelerationY());
+            LOG(logger1, hydrolib::logger::LogLevel::INFO, "Accel Z: {}",
+                icm42688.GetAccelerationZ());
+            LOG(logger1, hydrolib::logger::LogLevel::INFO, "Gyro X: {}",
+                icm42688.GetGyroscopeX());
+            LOG(logger1, hydrolib::logger::LogLevel::INFO, "Gyro Y: {}",
+                icm42688.GetGyroscopeY());
+            LOG(logger1, hydrolib::logger::LogLevel::INFO, "Gyro Z: {}",
+                icm42688.GetGyroscopeZ());
+        }
         clock.Delay(100);
-        icm42688.ProcessData();
-        LOG(logger1, hydrolib::logger::LogLevel::INFO, "Accel X: {}",
-            icm42688.GetAccelerationX());
-        LOG(logger1, hydrolib::logger::LogLevel::INFO, "Accel Y: {}",
-            icm42688.GetAccelerationY());
-        LOG(logger1, hydrolib::logger::LogLevel::INFO, "Accel Z: {}",
-            icm42688.GetAccelerationZ());
     }
 }
 

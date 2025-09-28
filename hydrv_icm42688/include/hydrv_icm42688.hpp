@@ -1,6 +1,7 @@
 #pragma once
 
 #include "hydrolib_func_concepts.hpp"
+#include "hydrolib_logger.hpp"
 #include "hydrolib_return_codes.hpp"
 #include "hydrv_gpio_low.hpp"
 #include "hydrv_spi.hpp"
@@ -10,11 +11,38 @@ namespace hydrv::icm42688
 {
 
 template <typename CallbackType =
-              decltype(&hydrolib::concepts::func::DummyFunc<void>)>
+              decltype(&hydrolib::concepts::func::DummyFunc<void>),
+          typename Logger = void *>
 requires hydrolib::concepts::func::FuncConcept<CallbackType, void>
 class ICM42688
 {
+public:
+    class CallbackManager
+    {
+    public:
+        consteval CallbackManager(ICM42688<CallbackType, Logger> &icm42688,
+                                  CallbackType callback);
+
+    public:
+        void operator()();
+
+    private:
+        ICM42688<CallbackType, Logger> &icm42688_;
+        CallbackType callback_;
+    };
+
 private: // ICM-42688-P Register Map
+    enum class State
+    {
+        NOT_INITIALIZED,
+        WAITING_NAME,
+        WAITING_SWITCHING_OFF,
+        WAITING_GYRO_CONFIGURATION,
+        WAITING_ACCEL_CONFIGURATION,
+        WAITING_SWITCHING_ON,
+        WAITING_DATA
+    };
+
     enum class Register : uint8_t
     {
         // User Bank 0
@@ -81,22 +109,22 @@ private: // ICM-42688-P Register Map
 
     enum class AccelScale : uint8_t
     {
-        ACCEL_2G = 0x00, // ±2g
-        ACCEL_4G = 0x01, // ±4g
-        ACCEL_8G = 0x02, // ±8g
-        ACCEL_16G = 0x03 // ±16g
+        ACCEL_2G = 0x03 << 5, // ±2g
+        ACCEL_4G = 0x02 << 5, // ±4g
+        ACCEL_8G = 0x01 << 5, // ±8g
+        ACCEL_16G = 0x00 << 5 // ±16g
     };
 
     enum class GyroScale : uint8_t
     {
-        GYRO_2000DPS = 0x00,  // ±2000 dps
-        GYRO_1000DPS = 0x01,  // ±1000 dps
-        GYRO_500DPS = 0x02,   // ±500 dps
-        GYRO_250DPS = 0x03,   // ±250 dps
-        GYRO_125DPS = 0x04,   // ±125 dps
-        GYRO_62_5DPS = 0x05,  // ±62.5 dps
-        GYRO_31_25DPS = 0x06, // ±31.25 dps
-        GYRO_15_625DPS = 0x07 // ±15.625 dps
+        GYRO_2000DPS = 0x00 << 5,  // ±2000 dps
+        GYRO_1000DPS = 0x01 << 5,  // ±1000 dps
+        GYRO_500DPS = 0x02 << 5,   // ±500 dps
+        GYRO_250DPS = 0x03 << 5,   // ±250 dps
+        GYRO_125DPS = 0x04 << 5,   // ±125 dps
+        GYRO_62_5DPS = 0x05 << 5,  // ±62.5 dps
+        GYRO_31_25DPS = 0x06 << 5, // ±31.25 dps
+        GYRO_15_625DPS = 0x07 << 5 // ±15.625 dps
     };
 
     enum class ODR : uint8_t
@@ -130,14 +158,12 @@ public:
                        hydrv::GPIO::GPIOLow &mosi_pin,
                        hydrv::GPIO::GPIOLow &cs_pin,
                        int main_clock_frequency_khz, unsigned IRQ_priority,
+                       Logger &logger,
                        CallbackType transaction_complete_callback =
                            hydrolib::concepts::func::DummyFunc<void>);
 
     // Initialization and configuration
-    hydrolib::ReturnCode Init();
-
-    hydrolib::ReturnCode RequestData();
-    hydrolib::ReturnCode ProcessData();
+    hydrolib::ReturnCode Process();
 
     void IRQCallback();
 
@@ -146,11 +172,19 @@ public:
     int GetAccelerationY() const;
     int GetAccelerationZ() const;
 
+    // Gyroscope getters (in milli degrees per second)
+    int GetGyroscopeX() const;
+    int GetGyroscopeY() const;
+    int GetGyroscopeZ() const;
+
 private:
+    hydrolib::ReturnCode ProcessData_();
     static int ConcatinateBytes_(uint8_t high, uint8_t low);
 
 private:
-    SPI::SPI<0x00, CallbackType> spi_;
+    CallbackManager callback_manager_;
+
+    SPI::SPI<0x00, CallbackManager> spi_;
 
     uint8_t data_[kDataLength] = {};
 
@@ -161,92 +195,200 @@ private:
     int gyro_x_;
     int gyro_y_;
     int gyro_z_;
+
+    State state_;
+    bool got_data_;
+
+    Logger &logger_;
 };
 
-template <typename CallbackType>
+template <typename CallbackType, typename Logger>
 requires hydrolib::concepts::func::FuncConcept<CallbackType, void>
-consteval ICM42688<CallbackType>::ICM42688(hydrv::GPIO::GPIOLow &sck_pin,
-                                           hydrv::GPIO::GPIOLow &miso_pin,
-                                           hydrv::GPIO::GPIOLow &mosi_pin,
-                                           hydrv::GPIO::GPIOLow &cs_pin,
-                                           int main_clock_frequency_khz,
-                                           unsigned IRQ_priority,
-                                           CallbackType transaction_complete_callback)
-    : spi_(hydrv::SPI::SPILow::SPI1_LOW, sck_pin, miso_pin, mosi_pin,
+consteval ICM42688<CallbackType, Logger>::ICM42688(
+    hydrv::GPIO::GPIOLow &sck_pin, hydrv::GPIO::GPIOLow &miso_pin,
+    hydrv::GPIO::GPIOLow &mosi_pin, hydrv::GPIO::GPIOLow &cs_pin,
+    int main_clock_frequency_khz, unsigned IRQ_priority, Logger &logger,
+    CallbackType transaction_complete_callback)
+    : callback_manager_(*this, transaction_complete_callback),
+      spi_(hydrv::SPI::SPILow::SPI1_LOW, sck_pin, miso_pin, mosi_pin,
            IRQ_priority,
            hydrv::SPI::SPILow::BaudratePrescaler(main_clock_frequency_khz,
                                                  16000),
            hydrv::SPI::SPILow::ClockPolarity::HIGH,
            hydrv::SPI::SPILow::ClockPhase::SECOND_EDGE,
            hydrv::SPI::SPILow::DataSize::BITS_8,
-           hydrv::SPI::SPILow::BitOrder::MSB_FIRST, cs_pin,
-           transaction_complete_callback),
+           hydrv::SPI::SPILow::BitOrder::MSB_FIRST, cs_pin, callback_manager_),
       temp_(0),
       accel_x_(0),
       accel_y_(0),
       accel_z_(0),
       gyro_x_(0),
       gyro_y_(0),
-      gyro_z_(0)
+      gyro_z_(0),
+      state_(State::NOT_INITIALIZED),
+      got_data_(false),
+      logger_(logger)
 {
 }
 
-template <typename CallbackType>
+template <typename CallbackType, typename Logger>
 requires hydrolib::concepts::func::FuncConcept<CallbackType, void>
-inline hydrolib::ReturnCode ICM42688<CallbackType>::Init()
+consteval ICM42688<CallbackType, Logger>::CallbackManager::CallbackManager(
+    ICM42688<CallbackType, Logger> &icm42688, CallbackType callback)
+    : icm42688_(icm42688), callback_(callback)
 {
-    spi_.Init();
+}
+
+template <typename CallbackType, typename Logger>
+requires hydrolib::concepts::func::FuncConcept<CallbackType, void>
+inline void ICM42688<CallbackType, Logger>::CallbackManager::operator()()
+{
+    icm42688_.got_data_ = true;
+    callback_();
+}
+
+template <typename CallbackType, typename Logger>
+requires hydrolib::concepts::func::FuncConcept<CallbackType, void>
+inline hydrolib::ReturnCode ICM42688<CallbackType, Logger>::Process()
+{
+    if (!got_data_ && state_ != State::NOT_INITIALIZED)
+    {
+        return hydrolib::ReturnCode::NO_DATA;
+    }
+    got_data_ = false;
     constexpr uint8_t init_buffer[] = {
         static_cast<uint8_t>(Register::REG_BANK_SEL), 0x00,
         static_cast<uint8_t>(Register::WHO_AM_I) | kSPIReadFlag};
-    uint8_t who_am_i_value = 0;
-    spi_.MakeTransaction(init_buffer, sizeof(init_buffer), &who_am_i_value, 1);
-    for (int i = 0; i < 10000; i++)
-    {
-    }
-    if (who_am_i_value != kWhoAmIValue)
-    {
-        return hydrolib::ReturnCode::ERROR;
-    }
-    constexpr uint8_t device_config_buffer[] = {
-        static_cast<uint8_t>(Register::DEVICE_CONFIG), 0x01};
-    spi_.MakeTransaction(device_config_buffer, sizeof(device_config_buffer),
-                         nullptr, 0);
-    for (int i = 0; i < 10000; i++)
-    {
-    }
-    constexpr uint8_t config_buffer[] = {
-        static_cast<uint8_t>(Register::PWR_MGMT0),
-        0x00,
+    constexpr uint8_t switching_off_buffer[] = {
+        static_cast<uint8_t>(Register::PWR_MGMT0), 0x00};
+    constexpr uint8_t gyro_config_buffer[] = {
         static_cast<uint8_t>(Register::GYRO_CONFIG0),
         static_cast<uint8_t>(GyroScale::GYRO_125DPS) |
-            static_cast<uint8_t>(ODR::ODR_200HZ),
+            static_cast<uint8_t>(ODR::ODR_200HZ)};
+    constexpr uint8_t accel_config_buffer[] = {
         static_cast<uint8_t>(Register::ACCEL_CONFIG0),
         static_cast<uint8_t>(AccelScale::ACCEL_4G) |
-            static_cast<uint8_t>(ODR::ODR_200HZ),
-        static_cast<uint8_t>(Register::PWR_MGMT0),
-        0x0F};
-    spi_.MakeTransaction(config_buffer, sizeof(config_buffer), nullptr, 0);
-    for (int i = 0; i < 100000; i++)
-    {
-    }
-    return hydrolib::ReturnCode::OK;
-}
-
-template <typename CallbackType>
-requires hydrolib::concepts::func::FuncConcept<CallbackType, void>
-inline hydrolib::ReturnCode ICM42688<CallbackType>::RequestData()
-{
+            static_cast<uint8_t>(ODR::ODR_200HZ)};
+    constexpr uint8_t switching_on_buffer[] = {
+        static_cast<uint8_t>(Register::PWR_MGMT0), 0x0F};
     constexpr uint8_t data_request =
         kSPIReadFlag | static_cast<uint8_t>(Register::TEMP_DATA1);
-    spi_.MakeTransaction(&data_request, 1, data_, kDataLength);
-    return hydrolib::ReturnCode::OK;
+    switch (state_)
+    {
+    case State::NOT_INITIALIZED:
+        LOG(logger_, hydrolib::logger::LogLevel::INFO, "Initializing ICM42688");
+        spi_.Init();
+        spi_.MakeTransaction(init_buffer, sizeof(init_buffer), data_, 1);
+        state_ = State::WAITING_NAME;
+        return hydrolib::ReturnCode::OK;
+    case State::WAITING_NAME:
+        if (data_[0] != kWhoAmIValue)
+        {
+            LOG(logger_, hydrolib::logger::LogLevel::ERROR,
+                "Wrong WHO_AM_I value: {}, expected: {}", data_[0],
+                kWhoAmIValue);
+            state_ = State::NOT_INITIALIZED;
+            return hydrolib::ReturnCode::ERROR;
+        }
+        LOG(logger_, hydrolib::logger::LogLevel::DEBUG,
+            "WHO_AM_I verified successfully");
+        spi_.MakeTransaction(switching_off_buffer, sizeof(switching_off_buffer),
+                             nullptr, 0);
+        state_ = State::WAITING_SWITCHING_OFF;
+        return hydrolib::ReturnCode::OK;
+    case State::WAITING_SWITCHING_OFF:
+        LOG(logger_, hydrolib::logger::LogLevel::DEBUG,
+            "Configuring gyroscope");
+        spi_.MakeTransaction(gyro_config_buffer, sizeof(gyro_config_buffer),
+                             nullptr, 0);
+        state_ = State::WAITING_GYRO_CONFIGURATION;
+        return hydrolib::ReturnCode::OK;
+    case State::WAITING_GYRO_CONFIGURATION:
+        LOG(logger_, hydrolib::logger::LogLevel::DEBUG,
+            "Configuring accelerometer");
+        spi_.MakeTransaction(accel_config_buffer, sizeof(accel_config_buffer),
+                             nullptr, 0);
+        state_ = State::WAITING_ACCEL_CONFIGURATION;
+        return hydrolib::ReturnCode::OK;
+    case State::WAITING_ACCEL_CONFIGURATION:
+        LOG(logger_, hydrolib::logger::LogLevel::DEBUG, "Switching on IMU");
+        spi_.MakeTransaction(switching_on_buffer, sizeof(switching_on_buffer),
+                             nullptr, 0);
+        state_ = State::WAITING_SWITCHING_ON;
+        return hydrolib::ReturnCode::OK;
+    case State::WAITING_SWITCHING_ON:
+        LOG(logger_, hydrolib::logger::LogLevel::INFO,
+            "ICM42688 initialization complete, starting data acquisition");
+        spi_.MakeTransaction(&data_request, 1, data_, kDataLength);
+        state_ = State::WAITING_DATA;
+        return hydrolib::ReturnCode::OK;
+    case State::WAITING_DATA:
+        ProcessData_();
+        spi_.MakeTransaction(&data_request, 1, data_, kDataLength);
+        state_ = State::WAITING_DATA;
+        return hydrolib::ReturnCode::OK;
+    default:
+        LOG(logger_, hydrolib::logger::LogLevel::ERROR,
+            "Unknown state in Process method");
+        return hydrolib::ReturnCode::ERROR;
+    }
 }
 
-template <typename CallbackType>
+template <typename CallbackType, typename Logger>
 requires hydrolib::concepts::func::FuncConcept<CallbackType, void>
-inline hydrolib::ReturnCode ICM42688<CallbackType>::ProcessData()
+inline void ICM42688<CallbackType, Logger>::IRQCallback()
 {
+    spi_.IRQCallback();
+}
+
+template <typename CallbackType, typename Logger>
+requires hydrolib::concepts::func::FuncConcept<CallbackType, void>
+inline int ICM42688<CallbackType, Logger>::GetAccelerationX() const
+{
+    return accel_x_;
+}
+
+template <typename CallbackType, typename Logger>
+requires hydrolib::concepts::func::FuncConcept<CallbackType, void>
+inline int ICM42688<CallbackType, Logger>::GetAccelerationY() const
+{
+    return accel_y_;
+}
+
+template <typename CallbackType, typename Logger>
+requires hydrolib::concepts::func::FuncConcept<CallbackType, void>
+inline int ICM42688<CallbackType, Logger>::GetAccelerationZ() const
+{
+    return accel_z_;
+}
+
+template <typename CallbackType, typename Logger>
+requires hydrolib::concepts::func::FuncConcept<CallbackType, void>
+inline int ICM42688<CallbackType, Logger>::GetGyroscopeX() const
+{
+    return gyro_x_;
+}
+
+template <typename CallbackType, typename Logger>
+requires hydrolib::concepts::func::FuncConcept<CallbackType, void>
+inline int ICM42688<CallbackType, Logger>::GetGyroscopeY() const
+{
+    return gyro_y_;
+}
+
+template <typename CallbackType, typename Logger>
+requires hydrolib::concepts::func::FuncConcept<CallbackType, void>
+inline int ICM42688<CallbackType, Logger>::GetGyroscopeZ() const
+{
+    return gyro_z_;
+}
+
+template <typename CallbackType, typename Logger>
+requires hydrolib::concepts::func::FuncConcept<CallbackType, void>
+inline hydrolib::ReturnCode ICM42688<CallbackType, Logger>::ProcessData_()
+{
+    LOG(logger_, hydrolib::logger::LogLevel::DEBUG, "Processing sensor data");
+
     // Temperature data
     temp_ = ConcatinateBytes_(data_[0], data_[1]);
 
@@ -277,39 +419,31 @@ inline hydrolib::ReturnCode ICM42688<CallbackType>::ProcessData()
                                       static_cast<int>(Register::TEMP_DATA1)],
                                 data_[static_cast<int>(Register::GYRO_DATA_X0) -
                                       static_cast<int>(Register::TEMP_DATA1)]);
+    gyro_x_ = gyro_x_ * 1000 * 125 / 32768;
 
     gyro_y_ = ConcatinateBytes_(data_[static_cast<int>(Register::GYRO_DATA_Y1) -
                                       static_cast<int>(Register::TEMP_DATA1)],
                                 data_[static_cast<int>(Register::GYRO_DATA_Y0) -
                                       static_cast<int>(Register::TEMP_DATA1)]);
+    gyro_y_ = gyro_y_ * 1000 * 125 / 32768;
 
     gyro_z_ = ConcatinateBytes_(data_[static_cast<int>(Register::GYRO_DATA_Z1) -
                                       static_cast<int>(Register::TEMP_DATA1)],
                                 data_[static_cast<int>(Register::GYRO_DATA_Z0) -
                                       static_cast<int>(Register::TEMP_DATA1)]);
+    gyro_z_ = gyro_z_ * 1000 * 125 / 32768;
+
+    LOG(logger_, hydrolib::logger::LogLevel::DEBUG,
+        "Accel: X:{} Y:{} Z:{} mg/s², Gyro: X:{} Y:{} Z:{} md/s", accel_x_,
+        accel_y_, accel_z_, gyro_x_, gyro_y_, gyro_z_);
 
     return hydrolib::ReturnCode::OK;
 }
 
-template <typename CallbackType>
+template <typename CallbackType, typename Logger>
 requires hydrolib::concepts::func::FuncConcept<CallbackType, void>
-inline void ICM42688<CallbackType>::IRQCallback() { spi_.IRQCallback(); }
-
-template <typename CallbackType>
-requires hydrolib::concepts::func::FuncConcept<CallbackType, void>
-inline int ICM42688<CallbackType>::GetAccelerationX() const { return accel_x_; }
-
-template <typename CallbackType>
-requires hydrolib::concepts::func::FuncConcept<CallbackType, void>
-inline int ICM42688<CallbackType>::GetAccelerationY() const { return accel_y_; }
-
-template <typename CallbackType>
-requires hydrolib::concepts::func::FuncConcept<CallbackType, void>
-inline int ICM42688<CallbackType>::GetAccelerationZ() const { return accel_z_; }
-
-template <typename CallbackType>
-requires hydrolib::concepts::func::FuncConcept<CallbackType, void>
-inline int ICM42688<CallbackType>::ConcatinateBytes_(uint8_t high, uint8_t low)
+inline int ICM42688<CallbackType, Logger>::ConcatinateBytes_(uint8_t high,
+                                                             uint8_t low)
 {
     return static_cast<int>(static_cast<int16_t>(
         static_cast<uint16_t>(high) << 8 | static_cast<uint16_t>(low)));
