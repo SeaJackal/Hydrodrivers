@@ -4,13 +4,15 @@
 #include "hydrv_gpio_low.hpp"
 #include "hydrv_spi_low.hpp"
 #include <cstdint>
+#include <cstring>
 
 namespace hydrv::SPI
 {
 
 template <uint8_t IDLE_TX = 0x00,
           typename CallbackType =
-              decltype(&hydrolib::concepts::func::DummyFunc<void>)>
+              decltype(&hydrolib::concepts::func::DummyFunc<void>),
+          int MAX_TX_LENGTH = 255>
 requires hydrolib::concepts::func::FuncConcept<CallbackType, void>
 class SPI
 {
@@ -38,14 +40,14 @@ private:
     int transaction_counter_;
     int tx_length_;
     int transaction_length_;
-    const uint8_t *tx_buffer_;
+    uint8_t tx_buffer_[MAX_TX_LENGTH] = {};
     uint8_t *rx_buffer_;
     CallbackType transaction_complete_callback_;
 };
 
-template <uint8_t IDLE_TX, typename CallbackType>
+template <uint8_t IDLE_TX, typename CallbackType, int MAX_TX_LENGTH>
 requires hydrolib::concepts::func::FuncConcept<CallbackType, void>
-consteval SPI<IDLE_TX, CallbackType>::SPI(
+consteval SPI<IDLE_TX, CallbackType, MAX_TX_LENGTH>::SPI(
     const SPILow::SPIPreset &preset, hydrv::GPIO::GPIOLow &sck_pin,
     hydrv::GPIO::GPIOLow &miso_pin, hydrv::GPIO::GPIOLow &mosi_pin,
     unsigned IRQ_priority, SPILow::BaudratePrescaler baudrate_prescaler,
@@ -59,24 +61,23 @@ consteval SPI<IDLE_TX, CallbackType>::SPI(
       transaction_counter_(0),
       tx_length_(0),
       transaction_length_(0),
-      tx_buffer_(nullptr),
       rx_buffer_(nullptr),
       transaction_complete_callback_(transaction_complete_callback)
 {
 }
 
-template <uint8_t IDLE_TX, typename CallbackType>
+template <uint8_t IDLE_TX, typename CallbackType, int MAX_TX_LENGTH>
 requires hydrolib::concepts::func::FuncConcept<CallbackType, void>
-inline void SPI<IDLE_TX, CallbackType>::Init()
+inline void SPI<IDLE_TX, CallbackType, MAX_TX_LENGTH>::Init()
 {
     cs_pin_.Init();
     cs_pin_.Set();
     spi_low_.Init();
 }
 
-template <uint8_t IDLE_TX, typename CallbackType>
+template <uint8_t IDLE_TX, typename CallbackType, int MAX_TX_LENGTH>
 requires hydrolib::concepts::func::FuncConcept<CallbackType, void>
-inline void SPI<IDLE_TX, CallbackType>::MakeTransaction(const void *tx_buffer,
+inline void SPI<IDLE_TX, CallbackType, MAX_TX_LENGTH>::MakeTransaction(const void *tx_buffer,
                                                         int tx_length,
                                                         void *rx_buffer,
                                                         int rx_length)
@@ -86,7 +87,7 @@ inline void SPI<IDLE_TX, CallbackType>::MakeTransaction(const void *tx_buffer,
     transaction_length_ = tx_length + rx_length;
     if (tx_length)
     {
-        tx_buffer_ = static_cast<const uint8_t *>(tx_buffer);
+        memcpy(tx_buffer_, tx_buffer, tx_length);
         rx_buffer_ = static_cast<uint8_t *>(rx_buffer);
         spi_low_.SetTx(tx_buffer_[0]);
     }
@@ -98,9 +99,9 @@ inline void SPI<IDLE_TX, CallbackType>::MakeTransaction(const void *tx_buffer,
     spi_low_.EnableRxInterruption();
 }
 
-template <uint8_t IDLE_TX, typename CallbackType>
+template <uint8_t IDLE_TX, typename CallbackType, int MAX_TX_LENGTH>
 requires hydrolib::concepts::func::FuncConcept<CallbackType, void>
-inline void SPI<IDLE_TX, CallbackType>::IRQCallback()
+inline void SPI<IDLE_TX, CallbackType, MAX_TX_LENGTH>::IRQCallback()
 {
     if (spi_low_.IsRxDone())
     {
