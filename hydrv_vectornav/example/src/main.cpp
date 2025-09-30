@@ -2,9 +2,6 @@
 #include <sys/_intsup.h>
 #include <sys/_types.h>
 
-#include "stm32f407xx.h"
-#include "stm32f4xx.h"
-
 #include "hydrolib_log_distributor.hpp"
 #include "hydrolib_logger.hpp"
 #include "hydrv_clock.hpp"
@@ -99,7 +96,7 @@ void Error_Handler(void)
 
 extern "C"
 {
-    void UART3IRQHandler() { uart3.IRQcallback(); }
+    void UART3IRQHandler() { uart3.IRQCallback(); }
     void SysTick_Handler(void) { clock.SysTickHandler(); }
 }
 
