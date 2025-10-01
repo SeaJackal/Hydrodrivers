@@ -1,5 +1,6 @@
 #pragma once
 
+#include "hydrolib_fixed_point.hpp"
 #include "hydrolib_func_concepts.hpp"
 #include "hydrolib_logger.hpp"
 #include "hydrolib_return_codes.hpp"
@@ -168,14 +169,14 @@ public:
     void IRQCallback();
 
     // Acceleration getters (in m/s²)
-    int GetAccelerationX() const;
-    int GetAccelerationY() const;
-    int GetAccelerationZ() const;
+    hydrolib::math::FixedPoint10 GetAccelerationX() const;
+    hydrolib::math::FixedPoint10 GetAccelerationY() const;
+    hydrolib::math::FixedPoint10 GetAccelerationZ() const;
 
     // Gyroscope getters (in milli degrees per second)
-    int GetGyroscopeX() const;
-    int GetGyroscopeY() const;
-    int GetGyroscopeZ() const;
+    hydrolib::math::FixedPoint10 GetGyroscopeX() const;
+    hydrolib::math::FixedPoint10 GetGyroscopeY() const;
+    hydrolib::math::FixedPoint10 GetGyroscopeZ() const;
 
 private:
     hydrolib::ReturnCode ProcessData_();
@@ -188,13 +189,13 @@ private:
 
     uint8_t data_[kDataLength] = {};
 
-    int temp_;
-    int accel_x_;
-    int accel_y_;
-    int accel_z_;
-    int gyro_x_;
-    int gyro_y_;
-    int gyro_z_;
+    hydrolib::math::FixedPoint10 temp_;
+    hydrolib::math::FixedPoint10 accel_x_;
+    hydrolib::math::FixedPoint10 accel_y_;
+    hydrolib::math::FixedPoint10 accel_z_;
+    hydrolib::math::FixedPoint10 gyro_x_;
+    hydrolib::math::FixedPoint10 gyro_y_;
+    hydrolib::math::FixedPoint10 gyro_z_;
 
     State state_;
     bool got_data_;
@@ -218,13 +219,13 @@ consteval ICM42688<CallbackType, Logger>::ICM42688(
            hydrv::SPI::SPILow::ClockPhase::SECOND_EDGE,
            hydrv::SPI::SPILow::DataSize::BITS_8,
            hydrv::SPI::SPILow::BitOrder::MSB_FIRST, cs_pin, callback_manager_),
-      temp_(0),
-      accel_x_(0),
-      accel_y_(0),
-      accel_z_(0),
-      gyro_x_(0),
-      gyro_y_(0),
-      gyro_z_(0),
+      temp_(hydrolib::math::FixedPoint10(0)),
+      accel_x_(hydrolib::math::FixedPoint10(0)),
+      accel_y_(hydrolib::math::FixedPoint10(0)),
+      accel_z_(hydrolib::math::FixedPoint10(0)),
+      gyro_x_(hydrolib::math::FixedPoint10(0)),
+      gyro_y_(hydrolib::math::FixedPoint10(0)),
+      gyro_z_(hydrolib::math::FixedPoint10(0)),
       state_(State::NOT_INITIALIZED),
       got_data_(false),
       logger_(logger)
@@ -343,42 +344,48 @@ inline void ICM42688<CallbackType, Logger>::IRQCallback()
 
 template <typename CallbackType, typename Logger>
 requires hydrolib::concepts::func::FuncConcept<CallbackType, void>
-inline int ICM42688<CallbackType, Logger>::GetAccelerationX() const
+inline hydrolib::math::FixedPoint10
+ICM42688<CallbackType, Logger>::GetAccelerationX() const
 {
     return accel_x_;
 }
 
 template <typename CallbackType, typename Logger>
 requires hydrolib::concepts::func::FuncConcept<CallbackType, void>
-inline int ICM42688<CallbackType, Logger>::GetAccelerationY() const
+inline hydrolib::math::FixedPoint10
+ICM42688<CallbackType, Logger>::GetAccelerationY() const
 {
     return accel_y_;
 }
 
 template <typename CallbackType, typename Logger>
 requires hydrolib::concepts::func::FuncConcept<CallbackType, void>
-inline int ICM42688<CallbackType, Logger>::GetAccelerationZ() const
+inline hydrolib::math::FixedPoint10
+ICM42688<CallbackType, Logger>::GetAccelerationZ() const
 {
     return accel_z_;
 }
 
 template <typename CallbackType, typename Logger>
 requires hydrolib::concepts::func::FuncConcept<CallbackType, void>
-inline int ICM42688<CallbackType, Logger>::GetGyroscopeX() const
+inline hydrolib::math::FixedPoint10
+ICM42688<CallbackType, Logger>::GetGyroscopeX() const
 {
     return gyro_x_;
 }
 
 template <typename CallbackType, typename Logger>
 requires hydrolib::concepts::func::FuncConcept<CallbackType, void>
-inline int ICM42688<CallbackType, Logger>::GetGyroscopeY() const
+inline hydrolib::math::FixedPoint10
+ICM42688<CallbackType, Logger>::GetGyroscopeY() const
 {
     return gyro_y_;
 }
 
 template <typename CallbackType, typename Logger>
 requires hydrolib::concepts::func::FuncConcept<CallbackType, void>
-inline int ICM42688<CallbackType, Logger>::GetGyroscopeZ() const
+inline hydrolib::math::FixedPoint10
+ICM42688<CallbackType, Logger>::GetGyroscopeZ() const
 {
     return gyro_z_;
 }
@@ -390,51 +397,52 @@ inline hydrolib::ReturnCode ICM42688<CallbackType, Logger>::ProcessData_()
     LOG(logger_, hydrolib::logger::LogLevel::DEBUG, "Processing sensor data");
 
     // Temperature data
-    temp_ = ConcatinateBytes_(data_[0], data_[1]);
+    temp_ = hydrolib::math::FixedPoint10(ConcatinateBytes_(data_[0], data_[1]));
 
-    // Acceleration data (±4g range, convert to mm/s²)
     int raw_accel_x =
         ConcatinateBytes_(data_[static_cast<int>(Register::ACCEL_DATA_X1) -
                                 static_cast<int>(Register::TEMP_DATA1)],
                           data_[static_cast<int>(Register::ACCEL_DATA_X0) -
                                 static_cast<int>(Register::TEMP_DATA1)]);
-    accel_x_ = raw_accel_x * 1000 * 4 / 32768;
+    accel_x_ = hydrolib::math::FixedPoint10(raw_accel_x * 4, 32768);
 
     int raw_accel_y =
         ConcatinateBytes_(data_[static_cast<int>(Register::ACCEL_DATA_Y1) -
                                 static_cast<int>(Register::TEMP_DATA1)],
                           data_[static_cast<int>(Register::ACCEL_DATA_Y0) -
                                 static_cast<int>(Register::TEMP_DATA1)]);
-    accel_y_ = raw_accel_y * 1000 * 4 / 32768;
+    accel_y_ = hydrolib::math::FixedPoint10(raw_accel_y * 4, 32768);
 
     int raw_accel_z =
         ConcatinateBytes_(data_[static_cast<int>(Register::ACCEL_DATA_Z1) -
                                 static_cast<int>(Register::TEMP_DATA1)],
                           data_[static_cast<int>(Register::ACCEL_DATA_Z0) -
                                 static_cast<int>(Register::TEMP_DATA1)]);
-    accel_z_ = raw_accel_z * 1000 * 4 / 32768;
+    accel_z_ = hydrolib::math::FixedPoint10(raw_accel_z * 4, 32768);
 
-    // Gyroscope data (raw values)
-    gyro_x_ = ConcatinateBytes_(data_[static_cast<int>(Register::GYRO_DATA_X1) -
-                                      static_cast<int>(Register::TEMP_DATA1)],
-                                data_[static_cast<int>(Register::GYRO_DATA_X0) -
-                                      static_cast<int>(Register::TEMP_DATA1)]);
-    gyro_x_ = gyro_x_ * 1000 * 125 / 32768;
+    int raw_gyro_x =
+        ConcatinateBytes_(data_[static_cast<int>(Register::GYRO_DATA_X1) -
+                                static_cast<int>(Register::TEMP_DATA1)],
+                          data_[static_cast<int>(Register::GYRO_DATA_X0) -
+                                static_cast<int>(Register::TEMP_DATA1)]);
+    gyro_x_ = hydrolib::math::FixedPoint10(raw_gyro_x * 125, 32768);
 
-    gyro_y_ = ConcatinateBytes_(data_[static_cast<int>(Register::GYRO_DATA_Y1) -
-                                      static_cast<int>(Register::TEMP_DATA1)],
-                                data_[static_cast<int>(Register::GYRO_DATA_Y0) -
-                                      static_cast<int>(Register::TEMP_DATA1)]);
-    gyro_y_ = gyro_y_ * 1000 * 125 / 32768;
+    int raw_gyro_y =
+        ConcatinateBytes_(data_[static_cast<int>(Register::GYRO_DATA_Y1) -
+                                static_cast<int>(Register::TEMP_DATA1)],
+                          data_[static_cast<int>(Register::GYRO_DATA_Y0) -
+                                static_cast<int>(Register::TEMP_DATA1)]);
+    gyro_y_ = hydrolib::math::FixedPoint10(raw_gyro_y * 125, 32768);
 
-    gyro_z_ = ConcatinateBytes_(data_[static_cast<int>(Register::GYRO_DATA_Z1) -
-                                      static_cast<int>(Register::TEMP_DATA1)],
-                                data_[static_cast<int>(Register::GYRO_DATA_Z0) -
-                                      static_cast<int>(Register::TEMP_DATA1)]);
-    gyro_z_ = gyro_z_ * 1000 * 125 / 32768;
+    int raw_gyro_z =
+        ConcatinateBytes_(data_[static_cast<int>(Register::GYRO_DATA_Z1) -
+                                static_cast<int>(Register::TEMP_DATA1)],
+                          data_[static_cast<int>(Register::GYRO_DATA_Z0) -
+                                static_cast<int>(Register::TEMP_DATA1)]);
+    gyro_z_ = hydrolib::math::FixedPoint10(raw_gyro_z * 125, 32768);
 
     LOG(logger_, hydrolib::logger::LogLevel::DEBUG,
-        "Accel: X:{} Y:{} Z:{} mg/s², Gyro: X:{} Y:{} Z:{} md/s", accel_x_,
+        "Accel: X:{} Y:{} Z:{} mm/s², Gyro: X:{} Y:{} Z:{} mdps", accel_x_,
         accel_y_, accel_z_, gyro_x_, gyro_y_, gyro_z_);
 
     return hydrolib::ReturnCode::OK;
