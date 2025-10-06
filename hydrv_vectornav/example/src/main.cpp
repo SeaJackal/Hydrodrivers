@@ -26,12 +26,14 @@ constinit hydrolib::logger::LogDistributor distributor("[%s] [%l] %m\n\r",
 constinit hydrolib::logger::Logger logger1("VectorNAV", 0, distributor);
 constinit hydrolib::logger::Logger logger2("System", 1, distributor);
 
+constinit hydrv::vectornav::VectorNAV
+    vector_nav(hydrv::UART::UARTLow::USART1_115200_LOW, rx_pin1, tx_pin1,
+               logger1);
+
 int main(void)
 {
-    hydrv::vectornav::VectorNAV vector_nav(
-        hydrv::UART::UARTLow::USART1_115200_LOW, rx_pin1, tx_pin1, logger1);
 
-    clock.ConfigureHSI();
+    clock.Init();
     NVIC_SetPriorityGrouping(0);
 
     distributor.SetAllFilters(0, hydrolib::logger::LogLevel::ERROR);
@@ -76,7 +78,7 @@ int main(void)
                         (next_packages - packages),
                     (next_rubbish_bytes - rubbish_bytes) * 100 / 30 /
                         (next_packages - packages));
-                
+
                 wrong_crc = next_wrong_crc;
                 rubbish_bytes = next_rubbish_bytes;
                 packages = next_packages;

@@ -1,19 +1,24 @@
 #pragma once
 
-#include "hydrolib_vectronav.hpp"
+#include "hydrolib_logger.hpp"
+#include "hydrolib_vectornav.hpp"
 #include "hydrv_uart.hpp"
+#include <concepts>
 #include <sys/_intsup.h>
 #include <sys/_types.h>
 
 namespace hydrv::vectornav
 {
+template <hydrolib::logger::LogDistributorConcept Distributor>
 class VectorNAV
 {
 private:
-    hydrolib::logger::Logger &logger_;
-    constinit hydrv::UART::UART<255, 255> uart_;
+    hydrolib::logger::Logger<Distributor> &logger_;
+    hydrv::UART::UART<255, 255> uart_;
 
-    hydrolib::VectorNAVParser vector_nav_(uart_, logger_);
+    hydrolib::VectorNAVParser<hydrv::UART::UART<255, 255>,
+                              hydrolib::logger::Logger<Distributor>>
+        vector_nav_;
 
 public:
     void Init();
@@ -31,68 +36,81 @@ public:
     void IRQCallback();
 
 public:
-    constexpr VectorNAV::VectorNAV(hydrv::UART::UARTLow preset,
-                                   hydrv::GPIO::GPIOLow &rx_pin,
-                                   hydrv::GPIO::GPIOLow &tx_pin,
-                                   hydrolib::logger::Logger &logger);
+    consteval VectorNAV(hydrv::UART::UARTLow::UARTPreset preset,
+                        hydrv::GPIO::GPIOLow &rx_pin,
+                        hydrv::GPIO::GPIOLow &tx_pin,
+                        hydrolib::logger::Logger<Distributor> &logger);
 };
 
-constexpr VectorNAV::VectorNAV(hydrv::UART::UARTLow preset,
-                               hydrv::GPIO::GPIOLow &rx_pin,
-                               hydrv::GPIO::GPIOLow &tx_pin,
-                               hydrolib::logger::Logger &logger)
-    : uart_(preset, rx_pin, tx_pin, 7), logger_(logger)
+template <hydrolib::logger::LogDistributorConcept Distributor>
+consteval VectorNAV<Distributor>::VectorNAV(
+    hydrv::UART::UARTLow::UARTPreset preset, hydrv::GPIO::GPIOLow &rx_pin,
+    hydrv::GPIO::GPIOLow &tx_pin, hydrolib::logger::Logger<Distributor> &logger)
+    : logger_(logger),
+      uart_(preset, rx_pin, tx_pin, 7),
+      vector_nav_(uart_, logger_)
 {
 }
 
-void VectorNAV::Init()
+template <hydrolib::logger::LogDistributorConcept Distributor>
+void VectorNAV<Distributor>::Init()
 {
     uart_.Init();
     vector_nav_.Init();
 }
 
-void VectorNAV::Reset() { vector_nav_.Reset(); }
+template <hydrolib::logger::LogDistributorConcept Distributor>
+void VectorNAV<Distributor>::Reset()
+{
+    vector_nav_.Reset();
+}
 
-void VectorNAV::Process() { vector_nav_.Process(); }
+template <hydrolib::logger::LogDistributorConcept Distributor>
+void VectorNAV<Distributor>::Process()
+{
+    vector_nav_.Process();
+}
 
-unsigned VectorNAV::GetYaw()
+template <hydrolib::logger::LogDistributorConcept Distributor>
+unsigned VectorNAV<Distributor>::GetYaw()
 {
     return static_cast<int>(vector_nav_.GetYaw() * 100);
 }
 
-unsigned VectorNAV::GetPitch()
+template <hydrolib::logger::LogDistributorConcept Distributor>
+unsigned VectorNAV<Distributor>::GetPitch()
 {
     return static_cast<int>(vector_nav_.GetPitch() * 100);
 }
 
-unsigned VectorNAV::GetRoll()
+template <hydrolib::logger::LogDistributorConcept Distributor>
+unsigned VectorNAV<Distributor>::GetRoll()
 {
     return static_cast<int>(vector_nav_.GetRoll() * 100);
 }
 
-unsigned VectorNAV::GetWrongCRCCount()
+template <hydrolib::logger::LogDistributorConcept Distributor>
+unsigned VectorNAV<Distributor>::GetWrongCRCCount()
 {
     return vector_nav_.GetWrongCRCCount();
 }
 
-unsigned VectorNAV::GetRubbishBytesCount()
+template <hydrolib::logger::LogDistributorConcept Distributor>
+unsigned VectorNAV<Distributor>::GetRubbishBytesCount()
 {
     return vector_nav_.GetRubbishBytesCount();
 }
 
-unsigned VectorNAV::GetPackagesCount()
+template <hydrolib::logger::LogDistributorConcept Distributor>
+unsigned VectorNAV<Distributor>::GetPackagesCount()
 {
     return vector_nav_.GetPackagesCount();
 }
 
-void VectorNAV::IRQCallback() { uart_.IRQCallback(); }
-
-void Error_Handler(void)
+template <hydrolib::logger::LogDistributorConcept Distributor>
+void VectorNAV<Distributor>::IRQCallback()
 {
-    __disable_irq();
-    while (1)
-    {
-    }
+    uart_.IRQCallback();
 }
 
 } // namespace hydrv::vectornav

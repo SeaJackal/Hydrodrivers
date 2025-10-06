@@ -61,7 +61,6 @@ private:
 public:
   constexpr Clock(ClockPreset preset);
   void Init();
-  hydrolib_ReturnCode ConfigureHSI(void);
 
   void SysTickHandler(void);
   uint32_t GetSystemTime(void);
