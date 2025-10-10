@@ -2,8 +2,11 @@
 
 #include "hydrolib_fixed_point.hpp"
 #include "hydrolib_func_concepts.hpp"
+#include "hydrolib_iir.hpp"
+#include "hydrolib_imu_processor.hpp"
 #include "hydrolib_logger.hpp"
 #include "hydrolib_return_codes.hpp"
+#include "hydrolib_vector3d.hpp"
 #include "hydrv_gpio_low.hpp"
 #include "hydrv_spi.hpp"
 #include <cstdint>
@@ -17,6 +20,9 @@ template <typename CallbackType =
 requires hydrolib::concepts::func::FuncConcept<CallbackType, void>
 class ICM42688
 {
+private:
+    int kCalibrationCounter = 100;
+
 public:
     class CallbackManager
     {
@@ -40,7 +46,15 @@ private: // ICM-42688-P Register Map
         WAITING_SWITCHING_OFF,
         WAITING_GYRO_CONFIGURATION,
         WAITING_ACCEL_CONFIGURATION,
+        WAITING_FIFO_CONFIGURATION,
+        WAITING_FIFO_ENABLE,
+        WAITING_FILTER_BW_CONFIG,
+        WAITING_FILTER_ACCEL_CONFIG,
+        WAITING_FILTER_GYRO_CONFIG,
         WAITING_SWITCHING_ON,
+        CALIBRATING_Z,
+        CALIBRATING_Z_OPPOSITE,
+        CALIBRATING_X,
         WAITING_DATA
     };
 
@@ -147,11 +161,35 @@ private: // ICM-42688-P Register Map
         ODR_500HZ = 0x0F     // 500 Hz
     };
 
+    struct FIFOMessage_
+    {
+        uint8_t header;
+        uint8_t accel_x_high;
+        uint8_t accel_x_low;
+        uint8_t accel_y_high;
+        uint8_t accel_y_low;
+        uint8_t accel_z_high;
+        uint8_t accel_z_low;
+        uint8_t gyro_x_high;
+        uint8_t gyro_x_low;
+        uint8_t gyro_y_high;
+        uint8_t gyro_y_low;
+        uint8_t gyro_z_high;
+        uint8_t gyro_z_low;
+        uint8_t temp;
+        uint8_t time_stamp_high;
+        uint8_t time_stamp_low;
+    };
+
 private:
     static constexpr uint8_t kWhoAmIValue = 0x47;
     static constexpr uint8_t kSPIReadFlag = 0x80;
 
     static constexpr int kDataLength = 14;
+
+    static constexpr int kGX = 0;
+    static constexpr int kGY = 0;
+    static constexpr int kGZ = -32768 / 4;
 
 public:
     consteval ICM42688(hydrv::GPIO::GPIOLow &sck_pin,
@@ -169,17 +207,21 @@ public:
     void IRQCallback();
 
     // Acceleration getters (in m/s²)
-    hydrolib::math::FixedPoint10 GetAccelerationX() const;
-    hydrolib::math::FixedPoint10 GetAccelerationY() const;
-    hydrolib::math::FixedPoint10 GetAccelerationZ() const;
+    hydrolib::math::FixedPointBase GetAccelerationX() const;
+    hydrolib::math::FixedPointBase GetAccelerationY() const;
+    hydrolib::math::FixedPointBase GetAccelerationZ() const;
 
     // Gyroscope getters (in milli degrees per second)
-    hydrolib::math::FixedPoint10 GetGyroscopeX() const;
-    hydrolib::math::FixedPoint10 GetGyroscopeY() const;
-    hydrolib::math::FixedPoint10 GetGyroscopeZ() const;
+    hydrolib::math::FixedPointBase GetGyroscopeX() const;
+    hydrolib::math::FixedPointBase GetGyroscopeY() const;
+    hydrolib::math::FixedPointBase GetGyroscopeZ() const;
+
+    hydrolib::math::Quaternion<hydrolib::math::FixedPointBase>
+    GetOrientation() const;
 
 private:
-    hydrolib::ReturnCode ProcessData_();
+    void ProcessData_();
+    void ProcessFIFOData_();
     static int ConcatinateBytes_(uint8_t high, uint8_t low);
 
 private:
@@ -187,18 +229,40 @@ private:
 
     SPI::SPI<0x00, CallbackManager> spi_;
 
-    uint8_t data_[kDataLength] = {};
+    hydrolib::sensors::IMUProcessor<hydrolib::math::FixedPointBase, 0.1>
+        imu_processor_;
 
-    hydrolib::math::FixedPoint10 temp_;
-    hydrolib::math::FixedPoint10 accel_x_;
-    hydrolib::math::FixedPoint10 accel_y_;
-    hydrolib::math::FixedPoint10 accel_z_;
-    hydrolib::math::FixedPoint10 gyro_x_;
-    hydrolib::math::FixedPoint10 gyro_y_;
-    hydrolib::math::FixedPoint10 gyro_z_;
+    hydrolib::filter::IIR<hydrolib::math::FixedPointBase, 10.0, 100.0>
+        accel_x_filter_;
+    hydrolib::filter::IIR<hydrolib::math::FixedPointBase, 10.0, 100.0>
+        accel_y_filter_;
+    hydrolib::filter::IIR<hydrolib::math::FixedPointBase, 10.0, 100.0>
+        accel_z_filter_;
+
+    uint8_t data_[kDataLength] = {};
+    FIFOMessage_ fifo_data_ = {};
+
+    hydrolib::math::FixedPointBase temp_;
+    hydrolib::math::FixedPointBase accel_x_;
+    hydrolib::math::FixedPointBase accel_y_;
+    hydrolib::math::FixedPointBase accel_z_;
+    hydrolib::math::FixedPointBase gyro_x_;
+    hydrolib::math::FixedPointBase gyro_y_;
+    hydrolib::math::FixedPointBase gyro_z_;
+
+    hydrolib::math::Quaternion<hydrolib::math::FixedPointBase> orientation_;
 
     State state_;
     bool got_data_;
+
+    hydrolib::math::Vector3D<hydrolib::math::FixedPointBase>
+        calibration_z_accel_;
+    hydrolib::math::Vector3D<hydrolib::math::FixedPointBase>
+        calibration_z_opposite_accel_;
+    hydrolib::math::Vector3D<hydrolib::math::FixedPointBase>
+        calibration_x_accel_;
+
+    int calibration_counter_;
 
     Logger &logger_;
 };
@@ -219,15 +283,25 @@ consteval ICM42688<CallbackType, Logger>::ICM42688(
            hydrv::SPI::SPILow::ClockPhase::SECOND_EDGE,
            hydrv::SPI::SPILow::DataSize::BITS_8,
            hydrv::SPI::SPILow::BitOrder::MSB_FIRST, cs_pin, callback_manager_),
-      temp_(hydrolib::math::FixedPoint10(0)),
-      accel_x_(hydrolib::math::FixedPoint10(0)),
-      accel_y_(hydrolib::math::FixedPoint10(0)),
-      accel_z_(hydrolib::math::FixedPoint10(0)),
-      gyro_x_(hydrolib::math::FixedPoint10(0)),
-      gyro_y_(hydrolib::math::FixedPoint10(0)),
-      gyro_z_(hydrolib::math::FixedPoint10(0)),
+      imu_processor_(),
+      accel_x_filter_(),
+      accel_y_filter_(),
+      accel_z_filter_(),
+      temp_(hydrolib::math::FixedPointBase(0)),
+      accel_x_(hydrolib::math::FixedPointBase(0)),
+      accel_y_(hydrolib::math::FixedPointBase(0)),
+      accel_z_(hydrolib::math::FixedPointBase(0)),
+      gyro_x_(hydrolib::math::FixedPointBase(0)),
+      gyro_y_(hydrolib::math::FixedPointBase(0)),
+      gyro_z_(hydrolib::math::FixedPointBase(0)),
+      orientation_(hydrolib::math::Quaternion<hydrolib::math::FixedPointBase>(
+          0, 0, 0, 1)),
       state_(State::NOT_INITIALIZED),
       got_data_(false),
+      calibration_z_accel_(0, 0, 0),
+      calibration_z_opposite_accel_(0, 0, 0),
+      calibration_x_accel_(0, 0, 0),
+      calibration_counter_(kCalibrationCounter),
       logger_(logger)
 {
 }
@@ -270,10 +344,22 @@ inline hydrolib::ReturnCode ICM42688<CallbackType, Logger>::Process()
         static_cast<uint8_t>(Register::ACCEL_CONFIG0),
         static_cast<uint8_t>(AccelScale::ACCEL_4G) |
             static_cast<uint8_t>(ODR::ODR_200HZ)};
+    constexpr uint8_t fifo_config_buffer[] = {
+        static_cast<uint8_t>(Register::FIFO_CONFIG1), 0x03};
+    constexpr uint8_t enable_fifo_buffer[] = {
+        static_cast<uint8_t>(Register::FIFO_CONFIG), 1 << 6};
+    constexpr uint8_t filter_bw_config_buffer[] = {
+        static_cast<uint8_t>(Register::GYRO_ACCEL_CONFIG0), 7 << 4 | 7};
+    constexpr uint8_t accel_filter_config_buffer[] = {
+        static_cast<uint8_t>(Register::ACCEL_CONFIG1), 1 << 3};
+    constexpr uint8_t gyro_filter_config_buffer[] = {
+        static_cast<uint8_t>(Register::GYRO_CONFIG1), 1 << 2};
     constexpr uint8_t switching_on_buffer[] = {
         static_cast<uint8_t>(Register::PWR_MGMT0), 0x0F};
     constexpr uint8_t data_request =
         kSPIReadFlag | static_cast<uint8_t>(Register::TEMP_DATA1);
+    constexpr uint8_t fifo_request =
+        kSPIReadFlag | static_cast<uint8_t>(Register::FIFO_DATA);
     switch (state_)
     {
     case State::NOT_INITIALIZED:
@@ -312,19 +398,104 @@ inline hydrolib::ReturnCode ICM42688<CallbackType, Logger>::Process()
         state_ = State::WAITING_ACCEL_CONFIGURATION;
         return hydrolib::ReturnCode::OK;
     case State::WAITING_ACCEL_CONFIGURATION:
-        LOG(logger_, hydrolib::logger::LogLevel::DEBUG, "Switching on IMU");
+        LOG(logger_, hydrolib::logger::LogLevel::DEBUG,
+            "Configuring filter bandwidth");
+        spi_.MakeTransaction(filter_bw_config_buffer,
+                             sizeof(filter_bw_config_buffer), nullptr, 0);
+        state_ = State::WAITING_FILTER_BW_CONFIG;
+        return hydrolib::ReturnCode::OK;
+    case State::WAITING_FILTER_BW_CONFIG:
+        LOG(logger_, hydrolib::logger::LogLevel::DEBUG,
+            "Configuring accel filter");
+        spi_.MakeTransaction(accel_filter_config_buffer,
+                             sizeof(accel_filter_config_buffer), nullptr, 0);
+        state_ = State::WAITING_FILTER_ACCEL_CONFIG;
+        return hydrolib::ReturnCode::OK;
+    case State::WAITING_FILTER_ACCEL_CONFIG:
+        LOG(logger_, hydrolib::logger::LogLevel::DEBUG,
+            "Configuring gyro filter");
+        spi_.MakeTransaction(gyro_filter_config_buffer,
+                             sizeof(gyro_filter_config_buffer), nullptr, 0);
+        state_ = State::WAITING_FILTER_GYRO_CONFIG;
+        return hydrolib::ReturnCode::OK;
+    case State::WAITING_FILTER_GYRO_CONFIG:
+        LOG(logger_, hydrolib::logger::LogLevel::DEBUG,
+            "Configuring gyro filter");
         spi_.MakeTransaction(switching_on_buffer, sizeof(switching_on_buffer),
                              nullptr, 0);
         state_ = State::WAITING_SWITCHING_ON;
         return hydrolib::ReturnCode::OK;
+    // case State::WAITING_FIFO_CONFIGURATION:
+    //     LOG(logger_, hydrolib::logger::LogLevel::DEBUG, "Enabling FIFO");
+    //     spi_.MakeTransaction(enable_fifo_buffer, sizeof(enable_fifo_buffer),
+    //                          nullptr, 0);
+    //     state_ = State::WAITING_FIFO_ENABLE;
+    //     return hydrolib::ReturnCode::OK;
+    // case State::WAITING_FIFO_ENABLE:
+    //     LOG(logger_, hydrolib::logger::LogLevel::DEBUG, "Switching on IMU");
+    //     spi_.MakeTransaction(switching_on_buffer,
+    //     sizeof(switching_on_buffer),
+    //                          nullptr, 0);
+    //     state_ = State::WAITING_SWITCHING_ON;
+    //     return hydrolib::ReturnCode::OK;
     case State::WAITING_SWITCHING_ON:
         LOG(logger_, hydrolib::logger::LogLevel::INFO,
             "ICM42688 initialization complete, starting data acquisition");
         spi_.MakeTransaction(&data_request, 1, data_, kDataLength);
-        state_ = State::WAITING_DATA;
+        // spi_.MakeTransaction(&fifo_request, 1, &fifo_data_,
+        //                      sizeof(FIFOMessage_));
+        state_ = State::CALIBRATING_Z;
+        return hydrolib::ReturnCode::OK;
+    case State::CALIBRATING_Z:
+        LOG(logger_, hydrolib::logger::LogLevel::DEBUG, "Calibrating ICM42688");
+        ProcessData_();
+        calibration_counter_--;
+        if (calibration_counter_ == 0)
+        {
+            calibration_z_accel_ = {accel_x_, accel_y_, accel_z_};
+            state_ = State::CALIBRATING_Z_OPPOSITE;
+            calibration_counter_ = kCalibrationCounter;
+        }
+        spi_.MakeTransaction(&data_request, 1, data_, kDataLength);
+        // spi_.MakeTransaction(&fifo_request, 1, &fifo_data_,
+        //                      sizeof(FIFOMessage_));
+        return hydrolib::ReturnCode::OK;
+    case State::CALIBRATING_Z_OPPOSITE:
+        LOG(logger_, hydrolib::logger::LogLevel::DEBUG, "Calibrating ICM42688");
+        ProcessData_();
+        calibration_counter_--;
+        if (calibration_counter_ == 0)
+        {
+            calibration_z_opposite_accel_ = {accel_x_, accel_y_, accel_z_};
+            state_ = State::CALIBRATING_X;
+            calibration_counter_ = kCalibrationCounter;
+        }
+        spi_.MakeTransaction(&data_request, 1, data_, kDataLength);
+        // spi_.MakeTransaction(&fifo_request, 1, &fifo_data_,
+        //                      sizeof(FIFOMessage_));
+        return hydrolib::ReturnCode::OK;
+    case State::CALIBRATING_X:
+        LOG(logger_, hydrolib::logger::LogLevel::DEBUG, "Calibrating ICM42688");
+        ProcessData_();
+        calibration_counter_--;
+        if (calibration_counter_ == 0)
+        {
+            calibration_x_accel_ = {accel_x_, accel_y_, accel_z_};
+            imu_processor_.Calibrate(calibration_z_accel_,
+                                     calibration_z_opposite_accel_,
+                                     calibration_x_accel_);
+            state_ = State::WAITING_DATA;
+            calibration_counter_ = kCalibrationCounter;
+        }
+        spi_.MakeTransaction(&data_request, 1, data_, kDataLength);
+        // spi_.MakeTransaction(&fifo_request, 1, &fifo_data_,
+        //                      sizeof(FIFOMessage_));
         return hydrolib::ReturnCode::OK;
     case State::WAITING_DATA:
         ProcessData_();
+        // ProcessFIFOData_();
+        // spi_.MakeTransaction(&fifo_request, 1, &fifo_data_,
+        //                      sizeof(FIFOMessage_));
         spi_.MakeTransaction(&data_request, 1, data_, kDataLength);
         state_ = State::WAITING_DATA;
         return hydrolib::ReturnCode::OK;
@@ -344,7 +515,7 @@ inline void ICM42688<CallbackType, Logger>::IRQCallback()
 
 template <typename CallbackType, typename Logger>
 requires hydrolib::concepts::func::FuncConcept<CallbackType, void>
-inline hydrolib::math::FixedPoint10
+inline hydrolib::math::FixedPointBase
 ICM42688<CallbackType, Logger>::GetAccelerationX() const
 {
     return accel_x_;
@@ -352,7 +523,7 @@ ICM42688<CallbackType, Logger>::GetAccelerationX() const
 
 template <typename CallbackType, typename Logger>
 requires hydrolib::concepts::func::FuncConcept<CallbackType, void>
-inline hydrolib::math::FixedPoint10
+inline hydrolib::math::FixedPointBase
 ICM42688<CallbackType, Logger>::GetAccelerationY() const
 {
     return accel_y_;
@@ -360,7 +531,7 @@ ICM42688<CallbackType, Logger>::GetAccelerationY() const
 
 template <typename CallbackType, typename Logger>
 requires hydrolib::concepts::func::FuncConcept<CallbackType, void>
-inline hydrolib::math::FixedPoint10
+inline hydrolib::math::FixedPointBase
 ICM42688<CallbackType, Logger>::GetAccelerationZ() const
 {
     return accel_z_;
@@ -368,7 +539,7 @@ ICM42688<CallbackType, Logger>::GetAccelerationZ() const
 
 template <typename CallbackType, typename Logger>
 requires hydrolib::concepts::func::FuncConcept<CallbackType, void>
-inline hydrolib::math::FixedPoint10
+inline hydrolib::math::FixedPointBase
 ICM42688<CallbackType, Logger>::GetGyroscopeX() const
 {
     return gyro_x_;
@@ -376,7 +547,7 @@ ICM42688<CallbackType, Logger>::GetGyroscopeX() const
 
 template <typename CallbackType, typename Logger>
 requires hydrolib::concepts::func::FuncConcept<CallbackType, void>
-inline hydrolib::math::FixedPoint10
+inline hydrolib::math::FixedPointBase
 ICM42688<CallbackType, Logger>::GetGyroscopeY() const
 {
     return gyro_y_;
@@ -384,7 +555,7 @@ ICM42688<CallbackType, Logger>::GetGyroscopeY() const
 
 template <typename CallbackType, typename Logger>
 requires hydrolib::concepts::func::FuncConcept<CallbackType, void>
-inline hydrolib::math::FixedPoint10
+inline hydrolib::math::FixedPointBase
 ICM42688<CallbackType, Logger>::GetGyroscopeZ() const
 {
     return gyro_z_;
@@ -392,60 +563,115 @@ ICM42688<CallbackType, Logger>::GetGyroscopeZ() const
 
 template <typename CallbackType, typename Logger>
 requires hydrolib::concepts::func::FuncConcept<CallbackType, void>
-inline hydrolib::ReturnCode ICM42688<CallbackType, Logger>::ProcessData_()
+inline hydrolib::math::Quaternion<hydrolib::math::FixedPointBase>
+ICM42688<CallbackType, Logger>::GetOrientation() const
 {
-    LOG(logger_, hydrolib::logger::LogLevel::DEBUG, "Processing sensor data");
+    return orientation_;
+}
 
-    // Temperature data
-    temp_ = hydrolib::math::FixedPoint10(ConcatinateBytes_(data_[0], data_[1]));
+template <typename CallbackType, typename Logger>
+requires hydrolib::concepts::func::FuncConcept<CallbackType, void>
+inline void ICM42688<CallbackType, Logger>::ProcessData_()
+{
+    temp_ =
+        hydrolib::math::FixedPointBase(ConcatinateBytes_(data_[0], data_[1]));
 
     int raw_accel_x =
         ConcatinateBytes_(data_[static_cast<int>(Register::ACCEL_DATA_X1) -
                                 static_cast<int>(Register::TEMP_DATA1)],
                           data_[static_cast<int>(Register::ACCEL_DATA_X0) -
                                 static_cast<int>(Register::TEMP_DATA1)]);
-    accel_x_ = hydrolib::math::FixedPoint10(raw_accel_x * 4, 32768);
+    auto not_filtred_accel_x_ =
+        hydrolib::math::FixedPointBase((raw_accel_x) * 4, 32768);
+    accel_x_ = accel_x_filter_.Process(not_filtred_accel_x_);
+    // accel_x_ = not_filtred_accel_x_;
 
     int raw_accel_y =
         ConcatinateBytes_(data_[static_cast<int>(Register::ACCEL_DATA_Y1) -
                                 static_cast<int>(Register::TEMP_DATA1)],
                           data_[static_cast<int>(Register::ACCEL_DATA_Y0) -
                                 static_cast<int>(Register::TEMP_DATA1)]);
-    accel_y_ = hydrolib::math::FixedPoint10(raw_accel_y * 4, 32768);
+    auto not_filtred_accel_y_ =
+        hydrolib::math::FixedPointBase((raw_accel_y) * 4, 32768);
+    accel_y_ = accel_y_filter_.Process(not_filtred_accel_y_);
+    // accel_y_ = not_filtred_accel_y_;
 
     int raw_accel_z =
         ConcatinateBytes_(data_[static_cast<int>(Register::ACCEL_DATA_Z1) -
                                 static_cast<int>(Register::TEMP_DATA1)],
                           data_[static_cast<int>(Register::ACCEL_DATA_Z0) -
                                 static_cast<int>(Register::TEMP_DATA1)]);
-    accel_z_ = hydrolib::math::FixedPoint10(raw_accel_z * 4, 32768);
+    auto not_filtred_accel_z_ =
+        hydrolib::math::FixedPointBase((raw_accel_z) * 4, 32768);
+    accel_z_ = accel_z_filter_.Process(not_filtred_accel_z_);
+    // accel_z_ = not_filtred_accel_z_;
 
     int raw_gyro_x =
         ConcatinateBytes_(data_[static_cast<int>(Register::GYRO_DATA_X1) -
                                 static_cast<int>(Register::TEMP_DATA1)],
                           data_[static_cast<int>(Register::GYRO_DATA_X0) -
                                 static_cast<int>(Register::TEMP_DATA1)]);
-    gyro_x_ = hydrolib::math::FixedPoint10(raw_gyro_x * 125, 32768);
+    gyro_x_ = hydrolib::math::FixedPointBase((raw_gyro_x) * 125, 32768);
 
     int raw_gyro_y =
         ConcatinateBytes_(data_[static_cast<int>(Register::GYRO_DATA_Y1) -
                                 static_cast<int>(Register::TEMP_DATA1)],
                           data_[static_cast<int>(Register::GYRO_DATA_Y0) -
                                 static_cast<int>(Register::TEMP_DATA1)]);
-    gyro_y_ = hydrolib::math::FixedPoint10(raw_gyro_y * 125, 32768);
+    gyro_y_ = hydrolib::math::FixedPointBase((raw_gyro_y) * 125, 32768);
 
     int raw_gyro_z =
         ConcatinateBytes_(data_[static_cast<int>(Register::GYRO_DATA_Z1) -
                                 static_cast<int>(Register::TEMP_DATA1)],
                           data_[static_cast<int>(Register::GYRO_DATA_Z0) -
                                 static_cast<int>(Register::TEMP_DATA1)]);
-    gyro_z_ = hydrolib::math::FixedPoint10(raw_gyro_z * 125, 32768);
+    gyro_z_ = hydrolib::math::FixedPointBase((raw_gyro_z) * 125, 32768);
+
+    orientation_ = imu_processor_.Process({accel_x_, accel_y_, accel_z_},
+                                          {gyro_x_, gyro_y_, gyro_z_});
 
     LOG(logger_, hydrolib::logger::LogLevel::DEBUG,
         "Accel: X:{} Y:{} Z:{} mm/s², Gyro: X:{} Y:{} Z:{} mdps", accel_x_,
         accel_y_, accel_z_, gyro_x_, gyro_y_, gyro_z_);
+}
 
-    return hydrolib::ReturnCode::OK;
+template <typename CallbackType, typename Logger>
+requires hydrolib::concepts::func::FuncConcept<CallbackType, void>
+inline void ICM42688<CallbackType, Logger>::ProcessFIFOData_()
+{
+    int raw_accel_x =
+        ConcatinateBytes_(fifo_data_.accel_x_high, fifo_data_.accel_x_low);
+    accel_x_ = hydrolib::math::FixedPointBase((raw_accel_x) * 4, 32768);
+
+    int raw_accel_y =
+        ConcatinateBytes_(fifo_data_.accel_y_high, fifo_data_.accel_y_low);
+    accel_y_ = hydrolib::math::FixedPointBase((raw_accel_y) * 4, 32768);
+
+    int raw_accel_z =
+        ConcatinateBytes_(fifo_data_.accel_z_high, fifo_data_.accel_z_low);
+    accel_z_ = hydrolib::math::FixedPointBase((raw_accel_z) * 4, 32768);
+
+    int raw_gyro_x =
+        ConcatinateBytes_(fifo_data_.gyro_x_high, fifo_data_.gyro_x_low);
+    gyro_x_ = hydrolib::math::FixedPointBase((raw_gyro_x) * 125, 32768);
+
+    int raw_gyro_y =
+        ConcatinateBytes_(fifo_data_.gyro_y_high, fifo_data_.gyro_y_low);
+    gyro_y_ = hydrolib::math::FixedPointBase((raw_gyro_y) * 125, 32768);
+
+    int raw_gyro_z =
+        ConcatinateBytes_(data_[static_cast<int>(Register::GYRO_DATA_Z1) -
+                                static_cast<int>(Register::TEMP_DATA1)],
+                          data_[static_cast<int>(Register::GYRO_DATA_Z0) -
+                                static_cast<int>(Register::TEMP_DATA1)]);
+    gyro_z_ = hydrolib::math::FixedPointBase((raw_gyro_z) * 125, 32768);
+
+    orientation_ = imu_processor_.Process({accel_x_, accel_y_, accel_z_},
+                                          {gyro_x_, gyro_y_, gyro_z_});
+
+    LOG(logger_, hydrolib::logger::LogLevel::DEBUG,
+        "Accel: X:{} Y:{} Z:{} mm/s², Gyro: X:{} Y:{} Z:{} mdps", accel_x_,
+        accel_y_, accel_z_, gyro_x_, gyro_y_, gyro_z_);
 }
 
 template <typename CallbackType, typename Logger>

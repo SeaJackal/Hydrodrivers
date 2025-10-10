@@ -52,25 +52,42 @@ int main(void)
     clock.Init();
     uart3.Init();
 
+    int count = 0;
+
     while (1)
     {
         auto result = icm42688.Process();
         if (result == hydrolib::ReturnCode::OK)
         {
-            LOG(logger1, hydrolib::logger::LogLevel::INFO, "Accel X: {}",
-                icm42688.GetAccelerationX());
-            LOG(logger1, hydrolib::logger::LogLevel::INFO, "Accel Y: {}",
-                icm42688.GetAccelerationY());
-            LOG(logger1, hydrolib::logger::LogLevel::INFO, "Accel Z: {}",
-                icm42688.GetAccelerationZ());
-            LOG(logger1, hydrolib::logger::LogLevel::INFO, "Gyro X: {}",
-                icm42688.GetGyroscopeX());
-            LOG(logger1, hydrolib::logger::LogLevel::INFO, "Gyro Y: {}",
-                icm42688.GetGyroscopeY());
-            LOG(logger1, hydrolib::logger::LogLevel::INFO, "Gyro Z: {}",
-                icm42688.GetGyroscopeZ());
+            // LOG(logger1, hydrolib::logger::LogLevel::INFO, "Accel X: {}",
+            //     icm42688.GetAccelerationX());
+            // LOG(logger1, hydrolib::logger::LogLevel::INFO, "Accel Y: {}",
+            //     icm42688.GetAccelerationY());
+            // LOG(logger1, hydrolib::logger::LogLevel::INFO, "Accel Z: {}",
+            //     icm42688.GetAccelerationZ());
+            // LOG(logger1, hydrolib::logger::LogLevel::INFO, "Gyro X: {}",
+            //     icm42688.GetGyroscopeX());
+            // LOG(logger1, hydrolib::logger::LogLevel::INFO, "Gyro Y: {}",
+            //     icm42688.GetGyroscopeY());
+            // LOG(logger1, hydrolib::logger::LogLevel::INFO, "Gyro Z: {}",
+            //     icm42688.GetGyroscopeZ());
+            count++;
+            if (count == 10)
+            {
+                // LOG(logger1, hydrolib::logger::LogLevel::INFO,
+                //     "Acceleration: x:{} y:{} z:{}",
+                //     icm42688.GetAccelerationX(), icm42688.GetAccelerationY(),
+                //     icm42688.GetAccelerationZ());
+                auto orientation = icm42688.GetOrientation();
+                LOG(logger1, hydrolib::logger::LogLevel::INFO,
+                    "Orientation: x:{} y:{} z:{} w:{}", orientation.x,
+                    orientation.y, orientation.z, orientation.w);
+                count = 0;
+            }
+            // LOG(logger1, hydrolib::logger::LogLevel::INFO, "Length: {}",
+            //     orientation.GetNorm());
         }
-        clock.Delay(100);
+        clock.Delay(10);
     }
 }
 
