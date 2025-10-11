@@ -23,9 +23,9 @@ public:
     void Reset();
     void Process();
 
-    unsigned GetYaw();
-    unsigned GetPitch();
-    unsigned GetRoll();
+    int GetYaw();
+    int GetPitch();
+    int GetRoll();
 
     unsigned GetWrongCRCCount();
     unsigned GetRubbishBytesCount();
@@ -70,19 +70,19 @@ void VectorNAV<Distributor>::Process()
 }
 
 template <hydrolib::logger::LogDistributorConcept Distributor>
-unsigned VectorNAV<Distributor>::GetYaw()
+int VectorNAV<Distributor>::GetYaw()
 {
     return static_cast<int>(vector_nav_.GetYaw() * 100);
 }
 
 template <hydrolib::logger::LogDistributorConcept Distributor>
-unsigned VectorNAV<Distributor>::GetPitch()
+int VectorNAV<Distributor>::GetPitch()
 {
     return static_cast<int>(vector_nav_.GetPitch() * 100);
 }
 
 template <hydrolib::logger::LogDistributorConcept Distributor>
-unsigned VectorNAV<Distributor>::GetRoll()
+int VectorNAV<Distributor>::GetRoll()
 {
     return static_cast<int>(vector_nav_.GetRoll() * 100);
 }

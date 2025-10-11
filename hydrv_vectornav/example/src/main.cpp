@@ -1,8 +1,3 @@
-#include <stm32f407xx.h>
-#include <string.h>
-#include <sys/_intsup.h>
-#include <sys/_types.h>
-
 #include "hydrolib_log_distributor.hpp"
 #include "hydrolib_logger.hpp"
 #include "hydrv_clock.hpp"
