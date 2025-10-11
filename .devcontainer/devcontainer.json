@@ -12,8 +12,6 @@
             "UID": "${localEnv:UID}"
         }
     },
-    "workspaceFolder": "${localWorkspaceFolder}",
-    "workspaceMount": "source=${localEnv:HOME},target=${localEnv:HOME},type=bind",
     "runArgs": [
         "--privileged",
         "--security-opt",
