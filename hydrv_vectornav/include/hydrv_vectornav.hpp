@@ -21,7 +21,8 @@ private:
         vector_nav_;
 
 public:
-    void Init();
+    void InitUart();
+    void InitVectorNAV();
     void Reset();
     void Process();
 
@@ -53,9 +54,14 @@ consteval VectorNAV<Distributor>::VectorNAV(
 }
 
 template <hydrolib::logger::LogDistributorConcept Distributor>
-void VectorNAV<Distributor>::Init()
+void VectorNAV<Distributor>::InitUart()
 {
     uart_.Init();
+}
+
+template <hydrolib::logger::LogDistributorConcept Distributor>
+void VectorNAV<Distributor>::InitVectorNAV()
+{
     vector_nav_.Init();
 }
 

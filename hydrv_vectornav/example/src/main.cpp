@@ -1,3 +1,4 @@
+#include <stm32f407xx.h>
 #include <string.h>
 #include <sys/_intsup.h>
 #include <sys/_types.h>
@@ -32,17 +33,18 @@ constinit hydrv::vectornav::VectorNAV
 
 int main(void)
 {
-
     clock.Init();
+    uart3.Init();
+    vector_nav.InitUart();
+
     NVIC_SetPriorityGrouping(0);
 
     distributor.SetAllFilters(0, hydrolib::logger::LogLevel::ERROR);
     distributor.SetAllFilters(1, hydrolib::logger::LogLevel::INFO);
 
-    uart3.Init();
     vector_nav.Reset();
     clock.Delay(500);
-    vector_nav.Init();
+    vector_nav.InitVectorNAV();
 
     unsigned last_log = 0;
     unsigned counter = 0;
@@ -98,7 +100,8 @@ void Error_Handler(void)
 
 extern "C"
 {
-    void UART3IRQHandler() { uart3.IRQCallback(); }
+    void USART3_IRQHandler() { uart3.IRQCallback(); }
+    void USART1_IRQHandler() { vector_nav.IRQCallback(); }
     void SysTick_Handler(void) { clock.SysTickHandler(); }
 }
 
