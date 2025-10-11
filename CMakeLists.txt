@@ -17,6 +17,7 @@ message(STATUS "Building for MCU family: ${MCU_FAMILY}")
 if(NOT BUILD_TESTS)
     add_subdirectory(third_party)
     add_subdirectory(hydrv_clock)
+
     # add_subdirectory(hydrv_clock_deprecated)
     add_subdirectory(hydrv_gpio)
     add_subdirectory(hydrv_dma)
