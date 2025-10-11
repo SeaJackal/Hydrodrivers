@@ -4,8 +4,6 @@
 #include "hydrolib_vectornav.hpp"
 #include "hydrv_uart.hpp"
 #include <concepts>
-#include <sys/_intsup.h>
-#include <sys/_types.h>
 
 namespace hydrv::vectornav
 {
@@ -21,8 +19,7 @@ private:
         vector_nav_;
 
 public:
-    void InitUart();
-    void InitVectorNAV();
+    void Init();
     void Reset();
     void Process();
 
@@ -54,14 +51,9 @@ consteval VectorNAV<Distributor>::VectorNAV(
 }
 
 template <hydrolib::logger::LogDistributorConcept Distributor>
-void VectorNAV<Distributor>::InitUart()
+void VectorNAV<Distributor>::Init()
 {
     uart_.Init();
-}
-
-template <hydrolib::logger::LogDistributorConcept Distributor>
-void VectorNAV<Distributor>::InitVectorNAV()
-{
     vector_nav_.Init();
 }
 

@@ -35,7 +35,6 @@ int main(void)
 {
     clock.Init();
     uart3.Init();
-    vector_nav.InitUart();
 
     NVIC_SetPriorityGrouping(0);
 
@@ -44,7 +43,7 @@ int main(void)
 
     vector_nav.Reset();
     clock.Delay(500);
-    vector_nav.InitVectorNAV();
+    vector_nav.Init();
 
     unsigned last_log = 0;
     unsigned counter = 0;
