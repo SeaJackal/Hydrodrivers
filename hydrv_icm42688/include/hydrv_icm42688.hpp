@@ -229,7 +229,7 @@ private:
 
     SPI::SPI<0x00, CallbackManager> spi_;
 
-    hydrolib::sensors::IMUProcessor<hydrolib::math::FixedPointBase, 0.1>
+    hydrolib::sensors::IMUProcessor<hydrolib::math::FixedPointBase, 0.01>
         imu_processor_;
 
     hydrolib::filter::IIR<hydrolib::math::FixedPointBase, 10.0, 100.0>
@@ -481,9 +481,9 @@ inline hydrolib::ReturnCode ICM42688<CallbackType, Logger>::Process()
         if (calibration_counter_ == 0)
         {
             calibration_x_accel_ = {accel_x_, accel_y_, accel_z_};
-            imu_processor_.Calibrate(calibration_z_accel_,
-                                     calibration_z_opposite_accel_,
-                                     calibration_x_accel_);
+            // imu_processor_.Calibrate(calibration_z_accel_,
+            //                          calibration_z_opposite_accel_,
+            //                          calibration_x_accel_);
             state_ = State::WAITING_DATA;
             calibration_counter_ = kCalibrationCounter;
         }
@@ -611,21 +611,24 @@ inline void ICM42688<CallbackType, Logger>::ProcessData_()
                                 static_cast<int>(Register::TEMP_DATA1)],
                           data_[static_cast<int>(Register::GYRO_DATA_X0) -
                                 static_cast<int>(Register::TEMP_DATA1)]);
-    gyro_x_ = hydrolib::math::FixedPointBase((raw_gyro_x) * 125, 32768);
+    gyro_x_ = hydrolib::math::DegToRad(
+        hydrolib::math::FixedPointBase((raw_gyro_x) * 125, 32768));
 
     int raw_gyro_y =
         ConcatinateBytes_(data_[static_cast<int>(Register::GYRO_DATA_Y1) -
                                 static_cast<int>(Register::TEMP_DATA1)],
                           data_[static_cast<int>(Register::GYRO_DATA_Y0) -
                                 static_cast<int>(Register::TEMP_DATA1)]);
-    gyro_y_ = hydrolib::math::FixedPointBase((raw_gyro_y) * 125, 32768);
+    gyro_y_ = hydrolib::math::DegToRad(
+        hydrolib::math::FixedPointBase((raw_gyro_y) * 125, 32768));
 
     int raw_gyro_z =
         ConcatinateBytes_(data_[static_cast<int>(Register::GYRO_DATA_Z1) -
                                 static_cast<int>(Register::TEMP_DATA1)],
                           data_[static_cast<int>(Register::GYRO_DATA_Z0) -
                                 static_cast<int>(Register::TEMP_DATA1)]);
-    gyro_z_ = hydrolib::math::FixedPointBase((raw_gyro_z) * 125, 32768);
+    gyro_z_ = hydrolib::math::DegToRad(
+        hydrolib::math::FixedPointBase((raw_gyro_z) * 125, 32768));
 
     orientation_ = imu_processor_.Process({accel_x_, accel_y_, accel_z_},
                                           {gyro_x_, gyro_y_, gyro_z_});
