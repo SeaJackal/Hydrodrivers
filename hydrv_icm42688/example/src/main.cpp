@@ -78,6 +78,9 @@ int main(void)
                 //     "Acceleration: x:{} y:{} z:{}",
                 //     icm42688.GetAccelerationX(), icm42688.GetAccelerationY(),
                 //     icm42688.GetAccelerationZ());
+                // LOG(logger1, hydrolib::logger::LogLevel::INFO,
+                //     "Acceleration: x:{} y:{} z:{}", icm42688.GetGyroscopeX(),
+                //     icm42688.GetGyroscopeY(), icm42688.GetGyroscopeZ());
                 auto orientation = icm42688.GetOrientation();
                 LOG(logger1, hydrolib::logger::LogLevel::INFO,
                     "Orientation: x:{} y:{} z:{} w:{}", orientation.x,
