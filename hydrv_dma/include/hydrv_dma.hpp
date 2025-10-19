@@ -1,21 +1,19 @@
-#ifndef HYDRV_DMA_H_
-#define HYDRV_DMA_H_
-
+#pragma
 #include <cstdint>
 
-extern "C"
+extern "C" //чтобы компилятор не менял имена, которые используются в .с файлах
 {
 #include "stm32f4xx.h"
 
-#include "hydrolib_common.h"
+#include "hydrolib_common.h" //коды ошибок, заменить
 }
 
-namespace hydrv::DMA
+namespace hydrv::DMA //чтобы доабвлять в начале переменных DMA
 {
-  class DMAStream
+  class DMAStream //класс
   {
   public:
-    struct DMAStreamPreset
+    struct DMAStreamPreset //структура пресета
     {
       DMA_TypeDef *const DMAx;
       DMA_Stream_TypeDef *const DMAx_StreamX;
@@ -32,7 +30,7 @@ namespace hydrv::DMA
     };
 
   public:
-    static constexpr DMAStreamPreset USART3_TX_DMA{
+    static constexpr DMAStreamPreset USART3_TX_DMA{ //заполнение персета значениями, котрые нужны нам
         .DMAx = DMA1,
         .DMAx_StreamX = DMA1_Stream4,
         .stream_number = 4,
@@ -43,14 +41,27 @@ namespace hydrv::DMA
         .periphery_address = &(USART3->DR)};
 
   public:
-    DMAStream(const DMAStreamPreset &preset, uint32_t IRQ_priority)
-        : DMAx_(preset.DMAx),
+    DMAStream(const DMAStreamPreset &preset, uint32_t IRQ_priority);
+    void Disable();
+    hydrolib_ReturnCode Enable();
+    void ClearCompliteFlag();
+    void ClearHalfCompliteFlag();
+    hydrolib_ReturnCode TransferMemory(void *memory, uint32_t size);
+
+  private:
+    DMA_TypeDef *const DMAx_;
+    DMA_Stream_TypeDef *const DMAx_StreamX_;
+    const unsigned stream_number_;
+  };
+
+  DMAStream::DMAStream(const DMAStreamPreset &preset, uint32_t IRQ_priority) //конструктор класса
+        : DMAx_(preset.DMAx), //список инициализаиции, тут заполняются значения перменных, это вниз надо
           DMAx_StreamX_(preset.DMAx_StreamX),
           stream_number_(preset.stream_number)
     {
-      SET_BIT(RCC->AHB1ENR, preset.RCC_AHB1ENR_DMAxEN);
+      SET_BIT(RCC->AHB1ENR, preset.RCC_AHB1ENR_DMAxEN); //включение тактирования
 
-      Disable();
+      Disable(); //функция 
 
       if (preset.periphery_address)
       {
@@ -86,8 +97,7 @@ namespace hydrv::DMA
       NVIC_EnableIRQ(preset.DMAx_Streamx_IRQn);
     }
 
-  public:
-    void Disable()
+    void DMAStream::Disable()
     {
       while (READ_BIT(DMAx_StreamX_->CR, DMA_SxCR_EN))
       {
@@ -95,7 +105,7 @@ namespace hydrv::DMA
       }
     }
 
-    hydrolib_ReturnCode Enable()
+    hydrolib_ReturnCode DMAStream::Enable()
     {
       SET_BIT(DMAx_StreamX_->CR, DMA_SxCR_EN);
       if (!READ_BIT(DMAx_StreamX_->CR, DMA_SxCR_EN))
@@ -105,7 +115,7 @@ namespace hydrv::DMA
       return HYDROLIB_RETURN_OK;
     }
 
-    void ClearCompliteFlag()
+    void DMAStream::ClearCompliteFlag()
     {
       if (stream_number_ > 3)
       {
@@ -117,7 +127,7 @@ namespace hydrv::DMA
       }
     }
 
-    void ClearHalfCompliteFlag()
+    void DMAStream::ClearHalfCompliteFlag()
     {
       if (stream_number_ > 3)
       {
@@ -129,18 +139,11 @@ namespace hydrv::DMA
       }
     }
 
-    hydrolib_ReturnCode TransferMemory(void *memory, uint32_t size)
+    hydrolib_ReturnCode DMAStream::TransferMemory(void *memory, uint32_t size)
     {
       DMAx_StreamX_->NDTR = size;
       DMAx_StreamX_->M0AR = reinterpret_cast<uint32_t>(memory);
       return Enable();
     }
-
-  private:
-    DMA_TypeDef *const DMAx_;
-    DMA_Stream_TypeDef *const DMAx_StreamX_;
-    const unsigned stream_number_;
-  };
+    
 } // namespace hydrv::DMA
-
-#endif
