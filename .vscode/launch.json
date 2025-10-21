@@ -99,6 +99,22 @@
                 "interface/stlink.cfg",
                 "target/stm32f4x.cfg"
             ]
+        },
+        {
+            "name": "Cortex Debug Bus",
+            "cwd": "${workspaceFolder}",
+            "executable": "${workspaceFolder}/build/hydrv_bus/example/HydrvBusExample.elf",
+            "request": "launch",
+            "type": "cortex-debug",
+            "runToEntryPoint": "main",
+            "servertype": "openocd",
+            "device": "stm32f4x",
+            "svdFile": "resources/STM32F407.svd",
+            "showDevDebugOutput": "raw",
+            "configFiles": [
+                "interface/stlink.cfg",
+                "target/stm32f4x.cfg"
+            ]
         }
     ]
 }
