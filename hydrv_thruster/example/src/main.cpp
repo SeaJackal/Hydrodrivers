@@ -3,6 +3,7 @@
 #include "hydrv_tim_low.hpp"
 
 #include "hydrv_thruster.hpp"
+#include "hydrv_thrusters_control.hpp"
 
 extern "C"
 {
@@ -15,7 +16,7 @@ hydrv::timer::TimerLow tim(hydrv::timer::TimerLow::TIM5_low,
                            hydrv::thruster::Thruster::tim_prescaler,
                            hydrv::thruster::Thruster::tim_counter_period);
 
-hydrv::thruster::Thruster thruster(0, tim, tim_pin);
+hydrv::thruster::Thruster thruster(0, &tim, &tim_pin);
 
 int main(void)
 {
