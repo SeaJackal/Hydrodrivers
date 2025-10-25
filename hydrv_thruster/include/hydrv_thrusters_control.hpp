@@ -10,16 +10,6 @@ namespace hydrv::thruster
 template <unsigned THRUSTERS_COUNT>
 class ThrusterControl
 {
-private:
-    int x_rotation_gain_[THRUSTERS_COUNT];
-    int y_rotation_gain_[THRUSTERS_COUNT];
-    int z_rotation_gain_[THRUSTERS_COUNT];
-
-    int x_linear_gain_[THRUSTERS_COUNT];
-    int y_linear_gain_[THRUSTERS_COUNT];
-    int z_linear_gain_[THRUSTERS_COUNT];
-
-    int dest_[THRUSTERS_COUNT];
 
 public:
     constexpr ThrusterControl(
@@ -38,10 +28,6 @@ private:
     hydrv::thruster::Thruster thrusters_[THRUSTERS_COUNT];
 
     hydrolib::controlling::ThrustGenerator<THRUSTERS_COUNT> thrust_generator_;
-
-private:
-    static_assert(hydrolib::controlling::ThrusterConcept<ThrusterControl>,
-                  "ThrusterControl must have SetControl()");
 };
 
 template <unsigned THRUSTERS_COUNT>
@@ -59,6 +45,7 @@ inline constexpr ThrusterControl<THRUSTERS_COUNT>::ThrusterControl(
     {
         for (int i = 0; i < THRUSTERS_COUNT; i++)
         {
+            //TODO: Check if we can do so
             thrusters_[i](thruster_tim_channel[i], *thruster_tim[i],
                           *thruster_tim_pin[i]);
         }
@@ -78,11 +65,12 @@ template <unsigned THRUSTERS_COUNT>
 void ThrusterControl<THRUSTERS_COUNT>::SetControl(
     hydrolib::controlling::ThrustersControlData thruster_control_data)
 {
-    thrust_generator_.ProcessWithFeedback(thruster_control_data, *dest_);
+    int dest[THRUSTERS_COUNT];
+    thrust_generator_.ProcessWithFeedback(thruster_control_data, *dest);
 
     for (int i = 0; i < THRUSTERS_COUNT; i++)
     {
-        thrusters_[i].SetSpeed(dest_[i]);
+        thrusters_[i].SetSpeed(dest[i]);
     }
 }
 
