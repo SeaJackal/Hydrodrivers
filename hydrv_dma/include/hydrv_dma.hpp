@@ -1,19 +1,19 @@
-#pragma
+#pragma once
 #include <cstdint>
 
-extern "C" //чтобы компилятор не менял имена, которые используются в .с файлах
+extern "C"
 {
 #include "stm32f4xx.h"
 
-#include "hydrolib_common.h" //коды ошибок, заменить
+#include "hydrolib_common.h"
 }
 
-namespace hydrv::DMA //чтобы доабвлять в начале переменных DMA
+namespace hydrv::DMA
 {
-  class DMAStream //класс
+  class DMAStream 
   {
   public:
-    struct DMAStreamPreset //структура пресета
+    struct DMAStreamPreset
     {
       DMA_TypeDef *const DMAx;
       DMA_Stream_TypeDef *const DMAx_StreamX;
@@ -30,7 +30,7 @@ namespace hydrv::DMA //чтобы доабвлять в начале перем�
     };
 
   public:
-    static constexpr DMAStreamPreset USART3_TX_DMA{ //заполнение персета значениями, котрые нужны нам
+    static constexpr DMAStreamPreset USART3_TX_DMA{
         .DMAx = DMA1,
         .DMAx_StreamX = DMA1_Stream4,
         .stream_number = 4,
@@ -54,14 +54,14 @@ namespace hydrv::DMA //чтобы доабвлять в начале перем�
     const unsigned stream_number_;
   };
 
-  DMAStream::DMAStream(const DMAStreamPreset &preset, uint32_t IRQ_priority) //конструктор класса
-        : DMAx_(preset.DMAx), //список инициализаиции, тут заполняются значения перменных, это вниз надо
+  DMAStream::DMAStream(const DMAStreamPreset &preset, uint32_t IRQ_priority)
+        : DMAx_(preset.DMAx),
           DMAx_StreamX_(preset.DMAx_StreamX),
           stream_number_(preset.stream_number)
     {
-      SET_BIT(RCC->AHB1ENR, preset.RCC_AHB1ENR_DMAxEN); //включение тактирования
+      SET_BIT(RCC->AHB1ENR, preset.RCC_AHB1ENR_DMAxEN);
 
-      Disable(); //функция 
+      Disable(); 
 
       if (preset.periphery_address)
       {
