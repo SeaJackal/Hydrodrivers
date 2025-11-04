@@ -4,6 +4,11 @@
 
 #include "hydrolib_shell.hpp"
 
+#include "hydrolib_streambuf.hpp"
+
+#include <iostream>
+#include <ostream>
+
 #define BUFFER_LENGTH 5
 
 constinit hydrv::clock::Clock clock(hydrv::clock::Clock::HSI_DEFAULT);
@@ -17,6 +22,9 @@ constinit hydrv::UART::UART<255, 255>
     uart(hydrv::UART::UARTLow::USART3_115200_LOW, rx_pin, tx_pin, 7);
 
 int Handler(int argc, char *argv[]);
+
+hydrolib::Streambuf uart_streambuf(uart);
+std::ostream cout(&uart_streambuf);
 
 class CommandMap
 {
@@ -37,7 +45,7 @@ int Handler(int argc, char *argv[])
     {
         return -1;
     }
-    write(uart, argv[1], strlen(argv[1]));
+    cout << argv[1];
     return 0;
 }
 
