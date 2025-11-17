@@ -3,6 +3,7 @@
 #include "hydrv_tim_low.hpp"
 
 #include "hydrv_thruster.hpp"
+#include "hydrv_thrusters_control.hpp"
 
 extern "C"
 {

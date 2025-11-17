@@ -35,36 +35,36 @@ private:
     static constexpr unsigned SpeedToPWM_(int speed);
 
 private:
-    int speed;
+    unsigned tim_channel_;
+    timer::TimerLow &tim_;
+    GPIO::GPIOLow &tim_pin_;
 
-    timer::TimerLow &tim;
-    unsigned tim_channel;
-    GPIO::GPIOLow &tim_pin;
+    int speed_;
 };
 
 inline constexpr Thruster::Thruster(unsigned thruster_tim_channel,
                           hydrv::timer::TimerLow &thruster_tim,
                           hydrv::GPIO::GPIOLow &thruster_tim_pin)
-    : tim_channel(thruster_tim_channel), tim(thruster_tim),
-      tim_pin(thruster_tim_pin),
-      speed(speed_null)
+    : tim_channel_(thruster_tim_channel), tim_(thruster_tim),
+      tim_pin_(thruster_tim_pin),
+      speed_(speed_null)
 {
 }
 
 inline void Thruster::Init()
 {
-    tim.Init();
-    tim.ConfigurePWM(tim_channel, tim_pin);
-    tim.SetCaptureCompare(tim_channel, SpeedToPWM_(speed_null));
-    tim.StartTimer();
+    tim_.Init();
+    tim_.ConfigurePWM(tim_channel_, tim_pin_);
+    tim_.SetCaptureCompare(tim_channel_, SpeedToPWM_(speed_null));
+    tim_.StartTimer();
 }
 
 inline hydrolib_ReturnCode Thruster::SetSpeed(int thruster_speed)
 {
     if (thruster_speed <= max_speed && thruster_speed >= -max_speed)
     {
-        speed = thruster_speed;
-        tim.SetCaptureCompare(tim_channel, SpeedToPWM_(speed));
+        speed_ = thruster_speed;
+        tim_.SetCaptureCompare(tim_channel_, SpeedToPWM_(speed_));
         return HYDROLIB_RETURN_OK;
     }
     else
@@ -73,7 +73,7 @@ inline hydrolib_ReturnCode Thruster::SetSpeed(int thruster_speed)
     }
 }
 
-inline int Thruster::GetSpeed() { return speed; }
+inline int Thruster::GetSpeed() { return speed_; }
 
 inline constexpr unsigned Thruster::SpeedToPWM_(int speed)
 {
