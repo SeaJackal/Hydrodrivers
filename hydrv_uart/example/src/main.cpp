@@ -2,7 +2,7 @@
 #include "hydrv_gpio_low.hpp"
 #include "hydrv_uart.hpp"
 
-#define BUFFER_LENGTH 5
+#define BUFFER_LENGTH 5 //TODO:make variable
 
 constinit hydrv::clock::Clock clock(hydrv::clock::Clock::HSI_DEFAULT);
 constinit hydrv::GPIO::GPIOLow led_pin(hydrv::GPIO::GPIOLow::GPIOD_port, 15,
