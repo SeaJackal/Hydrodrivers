@@ -3,11 +3,11 @@
 #include <cstddef>
 #include <cstdint>
 
+#include "hydrolib_return_codes.hpp"
+
 extern "C"
 {
 #include "stm32f4xx.h"
-
-#include "hydrolib_common.h"
 }
 
 namespace hydrv::GPIO
@@ -63,7 +63,7 @@ public:
                       GPIOPreset preset);
 
 public:
-    hydrolib_ReturnCode Init(uint32_t altfunc);
+    hydrolib::ReturnCode Init(uint32_t altfunc);
 
     bool IsInited();
 
@@ -139,11 +139,11 @@ consteval inline GPIOLow::GPIOLow(const GPIOPort &GPIO_group, unsigned pin,
 {
 }
 
-inline hydrolib_ReturnCode GPIOLow::Init(uint32_t altfunc = 0)
+inline hydrolib::ReturnCode GPIOLow::Init(uint32_t altfunc = 0)
 {
     if (is_inited_)
     {
-        return HYDROLIB_RETURN_FAIL;
+        return hydrolib::ReturnCode::FAIL;
     }
 
     EnableGPIOxClock_(RCC_AHB1ENR_GPIOxEN_);
@@ -166,13 +166,13 @@ inline hydrolib_ReturnCode GPIOLow::Init(uint32_t altfunc = 0)
         SetModeOutput_();
         break;
     default:
-        return HYDROLIB_RETURN_FAIL;
+        return hydrolib::ReturnCode::FAIL;
     }
     // TODO move to constructor output_speed_reg_value_low_, false,
     // push_pull_reg_value_no_
     is_inited_ = true;
 
-    return HYDROLIB_RETURN_OK;
+    return hydrolib::ReturnCode::OK;
 }
 
 inline bool GPIOLow::IsInited() { return is_inited_; }
