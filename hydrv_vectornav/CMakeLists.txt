@@ -1,15 +1,16 @@
-cmake_minimum_required(VERSION 3.10)
+if(MCU_FAMILY STREQUAL "F4")
+    set(LIBRARY_NAME HydrodriversVectorNAV)
 
-set(LIBRARY_NAME HydrodriversVectorNAV)
+    add_library(${LIBRARY_NAME} INTERFACE)
+    add_subdirectory(example)
 
-set(CMAKE_CXX_STANDARD 20)
-set(CMAKE_CXX_STANDARD_REQUIRED True)
+    target_link_libraries(${LIBRARY_NAME} INTERFACE HydrolibVectorNAV)
+    target_link_libraries(${LIBRARY_NAME} INTERFACE HydrodriversUART)
+    target_link_libraries(${LIBRARY_NAME} INTERFACE HydrolibLogger)
 
-add_library(${LIBRARY_NAME} INTERFACE)
-add_subdirectory(example)
+    target_include_directories(${LIBRARY_NAME} INTERFACE include)
 
-target_link_libraries(${LIBRARY_NAME} INTERFACE HydrolibVectorNAV)
-target_link_libraries(${LIBRARY_NAME} INTERFACE HydrodriversUART)
-target_link_libraries(${LIBRARY_NAME} INTERFACE HydrolibLogger)
-
-target_include_directories(${LIBRARY_NAME} INTERFACE include)
+    message(STATUS "hydrv_vectornav subdirectories added for MCU_FAMILY: ${MCU_FAMILY}")
+else()
+    message(WARNING "hydrv_vectornav subdirectories are not supported for MCU_FAMILY: ${MCU_FAMILY}")
+endif()
