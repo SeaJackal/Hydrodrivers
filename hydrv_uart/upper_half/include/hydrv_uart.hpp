@@ -85,11 +85,7 @@ consteval UART<RX_BUFFER_CAPACITY, TX_BUFFER_CAPACITY, CallbackType>::UART(
       tx_head_(0),
       tx_tail_(0),
       tx_finish_flag(false),
-<<<<<<< HEAD
       status_(hydrolib::ReturnCode::OK),
-=======
-      status_(HYDROLIB_RETURN_OK),
->>>>>>> 9636dc2 (fixed tx_finish_flag and added read(), write())
       rx_callback_(rx_callback)
 {
 }
