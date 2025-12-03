@@ -3,7 +3,7 @@
 #include <cstdint>
 #include <cstring>
 
-#include "hydrolib_common.h"
+#include "hydrolib_return_codes.hpp"
 #include "hydrolib_func_concepts.hpp"
 
 #include "hydrv_uart_low.hpp"
@@ -58,7 +58,7 @@ private:
 
     bool tx_finish_flag;
 
-    hydrolib_ReturnCode status_;
+    hydrolib::ReturnCode status_;
 
     CallbackType rx_callback_;
 };
@@ -85,7 +85,7 @@ consteval UART<RX_BUFFER_CAPACITY, TX_BUFFER_CAPACITY, CallbackType>::UART(
       tx_head_(0),
       tx_tail_(0),
       tx_finish_flag(false),
-      status_(HYDROLIB_RETURN_OK),
+      status_(hydrolib::ReturnCode::OK),
       rx_callback_(rx_callback)
 {
 }
@@ -231,7 +231,7 @@ void UART<RX_BUFFER_CAPACITY, TX_BUFFER_CAPACITY, CallbackType>::ProcessRx_()
     if (next_tail == rx_head_)
     {
         UART_handler_.GetRx();
-        status_ = HYDROLIB_RETURN_FAIL;
+        status_ = hydrolib::ReturnCode::FAIL;
         rx_callback_();
         return;
     }

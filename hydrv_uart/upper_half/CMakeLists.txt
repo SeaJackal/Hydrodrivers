@@ -4,7 +4,7 @@ add_library(${LIBRARY_NAME} INTERFACE)
 
 target_include_directories(${LIBRARY_NAME} INTERFACE include)
 
-target_link_libraries(${LIBRARY_NAME} INTERFACE HydrolibCommon HydrolibConcepts)
+target_link_libraries(${LIBRARY_NAME} INTERFACE HydrolibReturnCodes HydrolibConcepts)
 
 if(BUILD_TESTS)
     target_link_libraries(${LIBRARY_NAME} INTERFACE HydrodriversUARTLowMock)

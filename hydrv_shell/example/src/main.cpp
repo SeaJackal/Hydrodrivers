@@ -6,14 +6,11 @@
 
 #include "hydrolib_streambuf.hpp"
 
-#include <iostream>
 #include <ostream>
 
 #define BUFFER_LENGTH 5
 
 constinit hydrv::clock::Clock clock(hydrv::clock::Clock::HSI_DEFAULT);
-constinit hydrv::GPIO::GPIOLow led_pin(hydrv::GPIO::GPIOLow::GPIOD_port, 15,
-                                       hydrv::GPIO::GPIOLow::GPIO_Output);
 constinit hydrv::GPIO::GPIOLow rx_pin(hydrv::GPIO::GPIOLow::GPIOB_port, 11,
                                       hydrv::GPIO::GPIOLow::GPIO_UART_RX);
 constinit hydrv::GPIO::GPIOLow tx_pin(hydrv::GPIO::GPIOLow::GPIOB_port, 10,
@@ -59,7 +56,6 @@ int main(void)
 {
     clock.Init();
     NVIC_SetPriorityGrouping(0);
-    led_pin.Init();
     uart.Init();
 
     while (1)
