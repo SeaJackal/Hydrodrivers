@@ -41,8 +41,6 @@ public:
 
 protected:
     bool IsTransmiting() const;
-protected:
-    bool IsTransmissionComplete();
 
 private:
     void ProcessRx_();
@@ -61,9 +59,7 @@ private:
 
     bool tx_finish_flag;
 
-    uint8_t tx_finish_flag;
-
-    hydrolib_ReturnCode status_;
+    hydrolib::ReturnCode status_;
 
     CallbackType rx_callback_;
 };
@@ -91,8 +87,6 @@ consteval UART<RX_BUFFER_CAPACITY, TX_BUFFER_CAPACITY, CallbackType>::UART(
       tx_tail_(0),
       tx_finish_flag(false),
       status_(hydrolib::ReturnCode::OK),
-      tx_finish_flag(0),
-      status_(HYDROLIB_RETURN_OK),
       rx_callback_(rx_callback)
 {
 }
@@ -111,22 +105,6 @@ bool UART<RX_BUFFER_CAPACITY, TX_BUFFER_CAPACITY, CallbackType>::IsTransmiting()
 {
     if (tx_finish_flag)
     {
-        return true;
-    }
-    else
-    {
-        return false;
-    }
-}
-
-template <int RX_BUFFER_CAPACITY, int TX_BUFFER_CAPACITY, typename CallbackType>
-requires hydrolib::concepts::func::FuncConcept<CallbackType, void>
-bool UART<RX_BUFFER_CAPACITY, TX_BUFFER_CAPACITY,
-          CallbackType>::IsTransmissionComplete()
-{
-    if (tx_finish_flag)
-    {
-        tx_finish_flag = 0;
         return true;
     }
     else
@@ -277,7 +255,6 @@ void UART<RX_BUFFER_CAPACITY, TX_BUFFER_CAPACITY, CallbackType>::ProcessTx_()
     if (tx_head_ == tx_tail_)
     {
         tx_finish_flag = true;
-        tx_finish_flag ++;
         UART_handler_.DisableTxInterruption();
         return;
     }
