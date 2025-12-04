@@ -4,9 +4,9 @@
 
 #include "hydrolib_shell.hpp"
 
-#include "hydrolib_streambuf.hpp"
+// #include "hydrolib_streambuf.hpp"
 
-#include <ostream>
+// #include <ostream>
 
 #define BUFFER_LENGTH 5
 
@@ -20,8 +20,8 @@ constinit hydrv::UART::UART<255, 255>
 
 int Handler(int argc, char *argv[]);
 
-hydrolib::Streambuf uart_streambuf(uart);
-std::ostream cout(&uart_streambuf);
+// hydrolib::Streambuf uart_streambuf(uart);
+// std::ostream cout(&uart_streambuf);
 
 class CommandMap
 {
@@ -42,7 +42,7 @@ int Handler(int argc, char *argv[])
     {
         return -1;
     }
-    cout << argv[1];
+    uart.Transmit(argv[1], strlen(argv[1]));
     return 0;
 }
 

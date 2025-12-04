@@ -7,7 +7,6 @@ set(CMAKE_CXX_STANDARD_REQUIRED True)
 
 if(MCU_FAMILY STREQUAL "F1")
     add_library(${LIBRARY_NAME} INTERFACE)
-    target_link_libraries(${LIBRARY_NAME} INTERFACE HydrolibCommon)
     target_link_libraries(${LIBRARY_NAME} INTERFACE CMSIS)
     target_link_libraries(${LIBRARY_NAME} INTERFACE HydrodriversGPIO)
     
