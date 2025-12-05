@@ -4,6 +4,8 @@ project(Hydrodrivers VERSION 1.0)
 
 enable_language(C CXX ASM)
 
+set(FETCHCONTENT_BASE_DIR "${CMAKE_SOURCE_DIR}/.deps" CACHE PATH "Base directory for CMake FetchContent downloads")
+
 if(NOT DEFINED MCU_FAMILY)
     message(FATAL_ERROR "MCU_FAMILY variable is not defined. Please set it to F1 or F4.")
 endif()
