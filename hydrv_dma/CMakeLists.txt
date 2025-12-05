@@ -7,7 +7,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED True)
 
 if(MCU_FAMILY STREQUAL "F4")
     add_library(${LIBRARY_NAME} INTERFACE)
-    target_link_libraries(${LIBRARY_NAME} INTERFACE HydrolibCommon)
+    target_link_libraries(${LIBRARY_NAME} INTERFACE HydrolibReturnCodes)
     target_link_libraries(${LIBRARY_NAME} INTERFACE CMSIS)
     target_include_directories(${LIBRARY_NAME} INTERFACE include)
     
