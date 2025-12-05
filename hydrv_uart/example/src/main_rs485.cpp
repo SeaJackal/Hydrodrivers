@@ -14,7 +14,7 @@ constinit hydrv::GPIO::GPIOLow tx_pin(hydrv::GPIO::GPIOLow::GPIOB_port, 10,
 constinit hydrv::GPIO::GPIOLow direction_pin(hydrv::GPIO::GPIOLow::GPIOC_port, 14,
                                        hydrv::GPIO::GPIOLow::GPIO_Output);
 constinit hydrv::RS485::RS485<255, 255> RS(hydrv::UART::UARTLow::USART3_115200_LOW,
-                                 rx_pin, tx_pin, direction_pin, false, 7);
+                                 rx_pin, tx_pin, direction_pin, true, 7);
 
 uint8_t buffer[BUFFER_LENGTH];
 
@@ -24,6 +24,7 @@ int main(void)
     NVIC_SetPriorityGrouping(0);
     led_pin.Init();
     RS.Init();
+    RS.SetReceiveMode();
 
     while (1)
     {
