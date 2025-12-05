@@ -4,6 +4,7 @@
 
 #include "hydrolib_cat.hpp"
 #include "hydrolib_device_manager.hpp"
+#include "hydrolib_echo.hpp"
 #include "hydrolib_shell.hpp"
 #include "hydrolib_stream_device.hpp"
 
@@ -36,7 +37,7 @@ public:
     {
         if (command == "echo")
         {
-            return Handler;
+            return hydrolib::shell::Echo;
         }
         else if (command == "cat")
         {
