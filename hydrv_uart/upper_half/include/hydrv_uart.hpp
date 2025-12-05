@@ -255,6 +255,7 @@ int write(UART<RX_BUFFER_CAPACITY, TX_BUFFER_CAPACITY, CallbackType> &stream,
 
 namespace hydrv::RS485
 {
+
 template <int RX_BUFFER_CAPACITY, int TX_BUFFER_CAPACITY,
           typename CallbackType =
               decltype(&hydrolib::concepts::func::DummyFunc<void>)>
@@ -264,17 +265,18 @@ class RS485 : public UART::UART<RX_BUFFER_CAPACITY, TX_BUFFER_CAPACITY>
 private:
     using Parent = hydrv::UART::UART<RX_BUFFER_CAPACITY, TX_BUFFER_CAPACITY, CallbackType>;
     hydrv::GPIO::GPIOLow& direction_pin_;
+    void SetTransmitMode();
+    bool transmit_mode_;
     
 public:
     consteval RS485(
         const UART::UARTLow::UARTPreset& preset,
-        hydrv::GPIO::GPIOLow &rx_pin, hydrv::GPIO::GPIOLow &tx_pin, hydrv::GPIO::GPIOLow &direction_pin,
+        hydrv::GPIO::GPIOLow &rx_pin, hydrv::GPIO::GPIOLow &tx_pin, hydrv::GPIO::GPIOLow &direction_pin, bool transmit_mode,
         unsigned irq_priority,
         CallbackType rx_callback = hydrolib::concepts::func::DummyFunc<void>);
     
-    void setTransmitMode();
     
-    void setReceiveMode();
+    void SetReceiveMode();
     
     int Transmit(const void *data, unsigned data_length);
 
@@ -285,10 +287,10 @@ template <int RX_BUFFER_CAPACITY, int TX_BUFFER_CAPACITY, typename CallbackType>
 requires hydrolib::concepts::func::FuncConcept<CallbackType, void>
 consteval RS485<RX_BUFFER_CAPACITY, TX_BUFFER_CAPACITY, CallbackType>::RS485(
     const UART::UARTLow::UARTPreset &UART_preset,
-    hydrv::GPIO::GPIOLow &rx_pin, hydrv::GPIO::GPIOLow &tx_pin, hydrv::GPIO::GPIOLow &direction_pin,
+    hydrv::GPIO::GPIOLow &rx_pin, hydrv::GPIO::GPIOLow &tx_pin, hydrv::GPIO::GPIOLow &direction_pin, bool transmit_mode,
     unsigned IRQ_priority,
     CallbackType rx_callback)
-    : Parent(UART_preset, rx_pin, tx_pin, IRQ_priority, rx_callback), direction_pin_(direction_pin){}
+    : Parent(UART_preset, rx_pin, tx_pin, IRQ_priority, rx_callback), direction_pin_(direction_pin), transmit_mode_(transmit_mode){}
 
 
 template <int RX_BUFFER_CAPACITY, int TX_BUFFER_CAPACITY, typename CallbackType>
@@ -296,8 +298,9 @@ requires hydrolib::concepts::func::FuncConcept<CallbackType, void>
 int RS485<RX_BUFFER_CAPACITY, TX_BUFFER_CAPACITY, CallbackType>::Transmit(
     const void *data, unsigned data_length)
 {
-    setTransmitMode();
+    SetTransmitMode();
     int result = Parent::Transmit(data, data_length);
+    SetReceiveMode();
     return result;
 }
 
@@ -306,23 +309,28 @@ requires hydrolib::concepts::func::FuncConcept<CallbackType, void>
 int RS485<RX_BUFFER_CAPACITY, TX_BUFFER_CAPACITY, CallbackType>::Read(
     void *data, unsigned data_length)
 {
-    setReceiveMode();
     int result = Parent::Read(data, data_length);
     return result;
 }
 
 template <int RX_BUFFER_CAPACITY, int TX_BUFFER_CAPACITY, typename CallbackType>
 requires hydrolib::concepts::func::FuncConcept<CallbackType, void>
-void RS485<RX_BUFFER_CAPACITY, TX_BUFFER_CAPACITY, CallbackType>::setTransmitMode()
+void RS485<RX_BUFFER_CAPACITY, TX_BUFFER_CAPACITY, CallbackType>::SetTransmitMode()
 {
-    direction_pin_.Set();
+    if (transmit_mode_){
+        direction_pin_.Set();
+    }
+    else direction_pin_.Reset();
 }
 
 template <int RX_BUFFER_CAPACITY, int TX_BUFFER_CAPACITY, typename CallbackType>
 requires hydrolib::concepts::func::FuncConcept<CallbackType, void>
-void RS485<RX_BUFFER_CAPACITY, TX_BUFFER_CAPACITY, CallbackType>::setReceiveMode()
+void RS485<RX_BUFFER_CAPACITY, TX_BUFFER_CAPACITY, CallbackType>::SetReceiveMode()
 {
-    direction_pin_.Reset();
+    if (transmit_mode_){
+        direction_pin_.Reset();
+    }
+    else direction_pin_.Set();
 }
 
 } // namespace hydrv::RS485
