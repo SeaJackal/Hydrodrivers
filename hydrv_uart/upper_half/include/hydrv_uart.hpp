@@ -20,10 +20,10 @@ private:
     static constexpr unsigned REAL_TX_BUFFER_CAPACITY_ = TX_BUFFER_CAPACITY + 1;
 
 public:
-    consteval UART(const UARTLow::UARTPreset &UART_preset,
-                   hydrv::GPIO::GPIOLow &rx_pin, hydrv::GPIO::GPIOLow &tx_pin,
-                   unsigned IRQ_priority,
-                   CallbackType rx_callback = hydrolib::concepts::func::DummyFunc<void>);
+    consteval UART(
+        const UARTLow::UARTPreset &UART_preset, hydrv::GPIO::GPIOLow &rx_pin,
+        hydrv::GPIO::GPIOLow &tx_pin, unsigned IRQ_priority,
+        CallbackType rx_callback = hydrolib::concepts::func::DummyFunc<void>);
 
     void Init();
 
@@ -36,6 +36,8 @@ public:
 
     unsigned GetRxLength() const;
     unsigned GetTxLength() const;
+
+    bool IsTransmissionComplete() { return UART_handler_.IsTxDone(); }
 
 private:
     void ProcessRx_();
@@ -252,85 +254,3 @@ int write(UART<RX_BUFFER_CAPACITY, TX_BUFFER_CAPACITY, CallbackType> &stream,
 }
 
 } // namespace hydrv::UART
-
-namespace hydrv::RS485
-{
-
-template <int RX_BUFFER_CAPACITY, int TX_BUFFER_CAPACITY,
-          typename CallbackType =
-              decltype(&hydrolib::concepts::func::DummyFunc<void>)>
-requires hydrolib::concepts::func::FuncConcept<CallbackType, void>
-class RS485 : public UART::UART<RX_BUFFER_CAPACITY, TX_BUFFER_CAPACITY>
-{
-private:
-    using Parent = hydrv::UART::UART<RX_BUFFER_CAPACITY, TX_BUFFER_CAPACITY, CallbackType>;
-    hydrv::GPIO::GPIOLow& direction_pin_;
-    void SetTransmitMode();
-    bool transmit_on_hight_; // true = передача на HIGH, false = передача на LOW
-    
-public:
-    consteval RS485(
-        const UART::UARTLow::UARTPreset& preset,
-        hydrv::GPIO::GPIOLow &rx_pin, hydrv::GPIO::GPIOLow &tx_pin, hydrv::GPIO::GPIOLow &direction_pin, bool transmit_on_hight,
-        unsigned irq_priority,
-        CallbackType rx_callback = hydrolib::concepts::func::DummyFunc<void>);
-    
-    
-    void SetReceiveMode();
-    
-    int Transmit(const void *data, unsigned data_length);
-
-    int Read(void *data, unsigned data_length);
-};
-
-template <int RX_BUFFER_CAPACITY, int TX_BUFFER_CAPACITY, typename CallbackType>
-requires hydrolib::concepts::func::FuncConcept<CallbackType, void>
-consteval RS485<RX_BUFFER_CAPACITY, TX_BUFFER_CAPACITY, CallbackType>::RS485(
-    const UART::UARTLow::UARTPreset &UART_preset,
-    hydrv::GPIO::GPIOLow &rx_pin, hydrv::GPIO::GPIOLow &tx_pin, hydrv::GPIO::GPIOLow &direction_pin, bool transmit_on_hight,
-    unsigned IRQ_priority,
-    CallbackType rx_callback)
-    : Parent(UART_preset, rx_pin, tx_pin, IRQ_priority, rx_callback), direction_pin_(direction_pin), transmit_on_hight_(transmit_on_hight){}
-
-
-template <int RX_BUFFER_CAPACITY, int TX_BUFFER_CAPACITY, typename CallbackType>
-requires hydrolib::concepts::func::FuncConcept<CallbackType, void>
-int RS485<RX_BUFFER_CAPACITY, TX_BUFFER_CAPACITY, CallbackType>::Transmit(
-    const void *data, unsigned data_length)
-{
-    SetTransmitMode();
-    int result = Parent::Transmit(data, data_length);
-    SetReceiveMode();
-    return result;
-}
-
-template <int RX_BUFFER_CAPACITY, int TX_BUFFER_CAPACITY, typename CallbackType>
-requires hydrolib::concepts::func::FuncConcept<CallbackType, void>
-int RS485<RX_BUFFER_CAPACITY, TX_BUFFER_CAPACITY, CallbackType>::Read(
-    void *data, unsigned data_length)
-{
-    int result = Parent::Read(data, data_length);
-    return result;
-}
-
-template <int RX_BUFFER_CAPACITY, int TX_BUFFER_CAPACITY, typename CallbackType>
-requires hydrolib::concepts::func::FuncConcept<CallbackType, void>
-void RS485<RX_BUFFER_CAPACITY, TX_BUFFER_CAPACITY, CallbackType>::SetTransmitMode()
-{
-    if (transmit_on_hight_){
-        direction_pin_.Set();
-    }
-    else direction_pin_.Reset();
-}
-
-template <int RX_BUFFER_CAPACITY, int TX_BUFFER_CAPACITY, typename CallbackType>
-requires hydrolib::concepts::func::FuncConcept<CallbackType, void>
-void RS485<RX_BUFFER_CAPACITY, TX_BUFFER_CAPACITY, CallbackType>::SetReceiveMode()
-{
-    if (transmit_on_hight_){
-        direction_pin_.Reset();
-    }
-    else direction_pin_.Set();
-}
-
-} // namespace hydrv::RS485
