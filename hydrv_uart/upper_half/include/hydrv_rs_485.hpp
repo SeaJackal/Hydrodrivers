@@ -2,7 +2,6 @@
 
 #include <cstring>
 
-#include "hydrolib_common.h"
 #include "hydrolib_func_concepts.hpp"
 
 #include "hydrv_uart.hpp"
@@ -11,7 +10,8 @@
 namespace hydrv::RS485
 {
 
-template <int RX_BUFFER_CAPACITY, int TX_BUFFER_CAPACITY, bool RS_config = true,
+template <int RX_BUFFER_CAPACITY, int TX_BUFFER_CAPACITY,
+          bool TRANSMIT_ON_HIGHT = true,
           typename CallbackType =
               decltype(&hydrolib::concepts::func::DummyFunc<void>)>
 requires hydrolib::concepts::func::FuncConcept<CallbackType, void>
@@ -41,10 +41,10 @@ public:
     void IRQCallback();
 };
 
-template <int RX_BUFFER_CAPACITY, int TX_BUFFER_CAPACITY, bool RS_config,
-          typename CallbackType>
+template <int RX_BUFFER_CAPACITY, int TX_BUFFER_CAPACITY,
+          bool TRANSMIT_ON_HIGHT, typename CallbackType>
 requires hydrolib::concepts::func::FuncConcept<CallbackType, void>
-consteval RS485<RX_BUFFER_CAPACITY, TX_BUFFER_CAPACITY, RS_config,
+consteval RS485<RX_BUFFER_CAPACITY, TX_BUFFER_CAPACITY, TRANSMIT_ON_HIGHT,
                 CallbackType>::RS485(const UART::UARTLow::UARTPreset
                                          &UART_preset,
                                      hydrv::GPIO::GPIOLow &rx_pin,
@@ -57,11 +57,10 @@ consteval RS485<RX_BUFFER_CAPACITY, TX_BUFFER_CAPACITY, RS_config,
 {
 }
 
-
-template <int RX_BUFFER_CAPACITY, int TX_BUFFER_CAPACITY, bool RS_config,
-          typename CallbackType>
+template <int RX_BUFFER_CAPACITY, int TX_BUFFER_CAPACITY,
+          bool TRANSMIT_ON_HIGHT, typename CallbackType>
 requires hydrolib::concepts::func::FuncConcept<CallbackType, void>
-void RS485<RX_BUFFER_CAPACITY, TX_BUFFER_CAPACITY, RS_config,
+void RS485<RX_BUFFER_CAPACITY, TX_BUFFER_CAPACITY, TRANSMIT_ON_HIGHT,
            CallbackType>::IRQCallback()
 {
     Parent::IRQCallback();
@@ -71,11 +70,10 @@ void RS485<RX_BUFFER_CAPACITY, TX_BUFFER_CAPACITY, RS_config,
     }
 }
 
-
-template <int RX_BUFFER_CAPACITY, int TX_BUFFER_CAPACITY, bool RS_config,
-          typename CallbackType>
+template <int RX_BUFFER_CAPACITY, int TX_BUFFER_CAPACITY,
+          bool TRANSMIT_ON_HIGHT, typename CallbackType>
 requires hydrolib::concepts::func::FuncConcept<CallbackType, void>
-void RS485<RX_BUFFER_CAPACITY, TX_BUFFER_CAPACITY, RS_config,
+void RS485<RX_BUFFER_CAPACITY, TX_BUFFER_CAPACITY, TRANSMIT_ON_HIGHT,
            CallbackType>::Init()
 {
     Parent::Init();
@@ -83,10 +81,10 @@ void RS485<RX_BUFFER_CAPACITY, TX_BUFFER_CAPACITY, RS_config,
     SetReceiveMode();
 }
 
-template <int RX_BUFFER_CAPACITY, int TX_BUFFER_CAPACITY, bool RS_config,
-          typename CallbackType>
+template <int RX_BUFFER_CAPACITY, int TX_BUFFER_CAPACITY,
+          bool TRANSMIT_ON_HIGHT, typename CallbackType>
 requires hydrolib::concepts::func::FuncConcept<CallbackType, void>
-int RS485<RX_BUFFER_CAPACITY, TX_BUFFER_CAPACITY, RS_config,
+int RS485<RX_BUFFER_CAPACITY, TX_BUFFER_CAPACITY, TRANSMIT_ON_HIGHT,
           CallbackType>::Transmit(const void *data, unsigned data_length)
 {
     SetTransmitMode();
@@ -94,23 +92,23 @@ int RS485<RX_BUFFER_CAPACITY, TX_BUFFER_CAPACITY, RS_config,
     return result;
 }
 
-template <int RX_BUFFER_CAPACITY, int TX_BUFFER_CAPACITY, bool RS_config,
-          typename CallbackType>
+template <int RX_BUFFER_CAPACITY, int TX_BUFFER_CAPACITY,
+          bool TRANSMIT_ON_HIGHT, typename CallbackType>
 requires hydrolib::concepts::func::FuncConcept<CallbackType, void>
-int RS485<RX_BUFFER_CAPACITY, TX_BUFFER_CAPACITY, RS_config,
+int RS485<RX_BUFFER_CAPACITY, TX_BUFFER_CAPACITY, TRANSMIT_ON_HIGHT,
           CallbackType>::Read(void *data, unsigned data_length)
 {
     int result = Parent::Read(data, data_length);
     return result;
 }
 
-template <int RX_BUFFER_CAPACITY, int TX_BUFFER_CAPACITY, bool RS_config,
-          typename CallbackType>
+template <int RX_BUFFER_CAPACITY, int TX_BUFFER_CAPACITY,
+          bool TRANSMIT_ON_HIGHT, typename CallbackType>
 requires hydrolib::concepts::func::FuncConcept<CallbackType, void>
-void RS485<RX_BUFFER_CAPACITY, TX_BUFFER_CAPACITY, RS_config,
+void RS485<RX_BUFFER_CAPACITY, TX_BUFFER_CAPACITY, TRANSMIT_ON_HIGHT,
            CallbackType>::SetTransmitMode()
 {
-    if constexpr (RS_config)
+    if constexpr (TRANSMIT_ON_HIGHT)
     {
         direction_pin_.Set();
     }
@@ -120,13 +118,13 @@ void RS485<RX_BUFFER_CAPACITY, TX_BUFFER_CAPACITY, RS_config,
     }
 }
 
-template <int RX_BUFFER_CAPACITY, int TX_BUFFER_CAPACITY, bool RS_config,
-          typename CallbackType>
+template <int RX_BUFFER_CAPACITY, int TX_BUFFER_CAPACITY,
+          bool TRANSMIT_ON_HIGHT, typename CallbackType>
 requires hydrolib::concepts::func::FuncConcept<CallbackType, void>
-void RS485<RX_BUFFER_CAPACITY, TX_BUFFER_CAPACITY, RS_config,
+void RS485<RX_BUFFER_CAPACITY, TX_BUFFER_CAPACITY, TRANSMIT_ON_HIGHT,
            CallbackType>::SetReceiveMode()
 {
-    if constexpr (RS_config)
+    if constexpr (TRANSMIT_ON_HIGHT)
     {
         direction_pin_.Reset();
     }
