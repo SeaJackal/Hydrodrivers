@@ -16,6 +16,10 @@ endif()
 
 message(STATUS "Building for MCU family: ${MCU_FAMILY}")
 
+set(LOGGER_TYPE "hydrolib")
+
+add_subdirectory(libs/Hydrolib-soft Hydrolib-soft)
+
 if(NOT BUILD_TESTS)
     add_subdirectory(third_party)
     add_subdirectory(hydrv_clock)
@@ -34,4 +38,3 @@ else()
 endif()
 
 add_subdirectory(hydrv_uart)
-add_subdirectory(libs/Hydrolib-soft Hydrolib-soft)
