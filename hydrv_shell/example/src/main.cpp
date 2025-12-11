@@ -6,29 +6,15 @@
 #include "hydrolib_device_manager.hpp"
 #include "hydrolib_echo.hpp"
 #include "hydrolib_shell.hpp"
-<<<<<<< HEAD
 #include "hydrolib_stream_device.hpp"
-=======
-
-#include "hydrolib_streambuf.hpp"
-
-#include <ostream>
->>>>>>> 7593473 (Migrated to new hydrolib)
 
 #define BUFFER_LENGTH 5
 
 constinit hydrv::clock::Clock clock(hydrv::clock::Clock::HSI_DEFAULT);
-<<<<<<< HEAD
 constinit hydrv::GPIO::GPIOLow rx_pin3(hydrv::GPIO::GPIOLow::GPIOB_port, 11,
                                        hydrv::GPIO::GPIOLow::GPIO_UART_RX);
 constinit hydrv::GPIO::GPIOLow tx_pin3(hydrv::GPIO::GPIOLow::GPIOB_port, 10,
                                        hydrv::GPIO::GPIOLow::GPIO_UART_TX);
-=======
-constinit hydrv::GPIO::GPIOLow rx_pin(hydrv::GPIO::GPIOLow::GPIOB_port, 11,
-                                      hydrv::GPIO::GPIOLow::GPIO_UART_RX);
-constinit hydrv::GPIO::GPIOLow tx_pin(hydrv::GPIO::GPIOLow::GPIOB_port, 10,
-                                      hydrv::GPIO::GPIOLow::GPIO_UART_TX);
->>>>>>> 7593473 (Migrated to new hydrolib)
 constinit hydrv::UART::UART<255, 255>
     uart3(hydrv::UART::UARTLow::USART3_115200_LOW, rx_pin3, tx_pin3, 7);
 
@@ -81,12 +67,8 @@ int main(void)
 {
     clock.Init();
     NVIC_SetPriorityGrouping(0);
-<<<<<<< HEAD
     uart1.Init();
     uart3.Init();
-=======
-    uart.Init();
->>>>>>> 7593473 (Migrated to new hydrolib)
 
     while (1)
     {
