@@ -1,5 +1,6 @@
 #include "hydrolib_log_distributor.hpp"
 #include "hydrolib_logger.hpp"
+#include "hydrolib_log_macro.hpp"
 #include "hydrv_clock.hpp"
 #include "hydrv_gpio_low.hpp"
 #include "hydrv_icm42688.hpp"
