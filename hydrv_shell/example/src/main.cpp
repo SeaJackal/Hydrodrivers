@@ -6,7 +6,16 @@
 #include "hydrolib_device_manager.hpp"
 #include "hydrolib_echo.hpp"
 #include "hydrolib_shell.hpp"
+<<<<<<< HEAD
 #include "hydrolib_stream_device.hpp"
+=======
+
+#include "hydrolib_streambuf.hpp"
+
+#include <ostream>
+
+#include <ostream>
+>>>>>>> 6b4beee (rebase)
 
 #define BUFFER_LENGTH 5
 
