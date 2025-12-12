@@ -1,6 +1,6 @@
 #include "hydrv_clock.hpp"
 #include "hydrv_gpio_low.hpp"
-#include "hydrv_uart.hpp"
+#include "hydrv_shell_uart.hpp"
 
 #include "hydrolib_cat.hpp"
 #include "hydrolib_device_manager.hpp"
@@ -15,7 +15,7 @@ constinit hydrv::GPIO::GPIOLow rx_pin3(hydrv::GPIO::GPIOLow::GPIOB_port, 11,
                                        hydrv::GPIO::GPIOLow::GPIO_UART_RX);
 constinit hydrv::GPIO::GPIOLow tx_pin3(hydrv::GPIO::GPIOLow::GPIOB_port, 10,
                                        hydrv::GPIO::GPIOLow::GPIO_UART_TX);
-constinit hydrv::UART::UART<255, 255>
+constinit hydrv::UART::ShellUART<255, 255>
     uart3(hydrv::UART::UARTLow::USART3_115200_LOW, rx_pin3, tx_pin3, 7);
 
 constinit hydrv::GPIO::GPIOLow rx_pin1(hydrv::GPIO::GPIOLow::GPIOB_port, 7,
@@ -27,7 +27,7 @@ constinit hydrv::UART::UART<255, 255>
 
 int Handler(int argc, char *argv[]);
 
-hydrolib::device::StreamDevice<decltype(uart3)> uart_device("uart", uart1);
+hydrolib::device::StreamDevice<decltype(uart1)> uart_device("uart", uart1);
 hydrolib::device::DeviceManager device_manager({&uart_device});
 
 class CommandMap

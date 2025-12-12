@@ -2,9 +2,10 @@
 
 #include <cstdint>
 #include <cstring>
+#include <optional>
 
-#include "hydrolib_return_codes.hpp"
 #include "hydrolib_func_concepts.hpp"
+#include "hydrolib_return_codes.hpp"
 
 #include "hydrv_uart_low.hpp"
 
@@ -39,11 +40,10 @@ public:
     unsigned GetTxLength() const;
 
 protected:
-    bool IsTransmiting() const;
+    bool IsTransmiting_() const;
 
-private:
-    void ProcessRx_();
-    void ProcessTx_();
+    std::optional<uint8_t> ProcessRx_();
+    std::optional<uint8_t> ProcessTx_();
 
 private:
     UARTLow UART_handler_;
@@ -99,8 +99,8 @@ void UART<RX_BUFFER_CAPACITY, TX_BUFFER_CAPACITY, CallbackType>::Init()
 
 template <int RX_BUFFER_CAPACITY, int TX_BUFFER_CAPACITY, typename CallbackType>
 requires hydrolib::concepts::func::FuncConcept<CallbackType, void>
-bool UART<RX_BUFFER_CAPACITY, TX_BUFFER_CAPACITY, CallbackType>::IsTransmiting()
-    const
+bool UART<RX_BUFFER_CAPACITY, TX_BUFFER_CAPACITY,
+          CallbackType>::IsTransmiting_() const
 {
     return tx_in_progress_flag_;
 }
@@ -212,11 +212,12 @@ UART<RX_BUFFER_CAPACITY, TX_BUFFER_CAPACITY, CallbackType>::GetTxLength() const
 
 template <int RX_BUFFER_CAPACITY, int TX_BUFFER_CAPACITY, typename CallbackType>
 requires hydrolib::concepts::func::FuncConcept<CallbackType, void>
-void UART<RX_BUFFER_CAPACITY, TX_BUFFER_CAPACITY, CallbackType>::ProcessRx_()
+std::optional<uint8_t>
+UART<RX_BUFFER_CAPACITY, TX_BUFFER_CAPACITY, CallbackType>::ProcessRx_()
 {
     if (!UART_handler_.IsRxDone())
     {
-        return;
+        return std::nullopt;
     }
 
     unsigned next_tail = (rx_tail_ + 1) % REAL_RX_BUFFER_CAPACITY_;
@@ -226,33 +227,38 @@ void UART<RX_BUFFER_CAPACITY, TX_BUFFER_CAPACITY, CallbackType>::ProcessRx_()
         UART_handler_.GetRx();
         status_ = hydrolib::ReturnCode::FAIL;
         rx_callback_();
-        return;
+        return std::nullopt;
     }
 
-    rx_buffer_[rx_tail_] = UART_handler_.GetRx();
+    uint8_t rx = UART_handler_.GetRx();
+    rx_buffer_[rx_tail_] = rx;
     rx_tail_ = next_tail;
 
     rx_callback_();
+    return rx;
 }
 
 template <int RX_BUFFER_CAPACITY, int TX_BUFFER_CAPACITY, typename CallbackType>
 requires hydrolib::concepts::func::FuncConcept<CallbackType, void>
-void UART<RX_BUFFER_CAPACITY, TX_BUFFER_CAPACITY, CallbackType>::ProcessTx_()
+std::optional<uint8_t>
+UART<RX_BUFFER_CAPACITY, TX_BUFFER_CAPACITY, CallbackType>::ProcessTx_()
 {
     if (!UART_handler_.IsTxDone())
     {
-        return;
+        return std::nullopt;
     }
 
     if (tx_head_ == tx_tail_)
     {
         tx_in_progress_flag_ = false;
         UART_handler_.DisableTxInterruption();
-        return;
+        return std::nullopt;
     }
 
-    UART_handler_.SetTx(tx_buffer_[tx_head_]);
+    uint8_t tx = tx_buffer_[tx_head_];
+    UART_handler_.SetTx(tx);
     tx_head_ = (tx_head_ + 1) % REAL_TX_BUFFER_CAPACITY_;
+    return tx;
 }
 
 template <int RX_BUFFER_CAPACITY, int TX_BUFFER_CAPACITY, typename CallbackType>

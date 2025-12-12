@@ -8,3 +8,5 @@ target_link_libraries(${LIBRARY_NAME} INTERFACE HydrolibShell)
 target_link_libraries(${LIBRARY_NAME} INTERFACE HydrodriversGPIO HydrodriversUART)
 
 target_include_directories(${LIBRARY_NAME} INTERFACE include)
+
+add_subdirectory(example)
