@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cstdint>
 #include <cstring>
 
 #include "hydrolib_return_codes.hpp"
@@ -20,10 +21,10 @@ private:
     static constexpr unsigned REAL_TX_BUFFER_CAPACITY_ = TX_BUFFER_CAPACITY + 1;
 
 public:
-    consteval UART(const UARTLow::UARTPreset &UART_preset,
-                   hydrv::GPIO::GPIOLow &rx_pin, hydrv::GPIO::GPIOLow &tx_pin,
-                   unsigned IRQ_priority,
-                   CallbackType rx_callback = hydrolib::concepts::func::DummyFunc<void>);
+    consteval UART(
+        const UARTLow::UARTPreset &UART_preset, hydrv::GPIO::GPIOLow &rx_pin,
+        hydrv::GPIO::GPIOLow &tx_pin, unsigned IRQ_priority,
+        CallbackType rx_callback = hydrolib::concepts::func::DummyFunc<void>);
 
     void Init();
 
@@ -36,6 +37,9 @@ public:
 
     unsigned GetRxLength() const;
     unsigned GetTxLength() const;
+
+protected:
+    bool IsTransmiting() const;
 
 private:
     void ProcessRx_();
@@ -51,6 +55,8 @@ private:
     uint8_t tx_buffer_[REAL_TX_BUFFER_CAPACITY_];
     volatile unsigned tx_head_;
     unsigned tx_tail_;
+
+    bool tx_in_progress_flag_;
 
     hydrolib::ReturnCode status_;
 
@@ -78,6 +84,7 @@ consteval UART<RX_BUFFER_CAPACITY, TX_BUFFER_CAPACITY, CallbackType>::UART(
       tx_buffer_{},
       tx_head_(0),
       tx_tail_(0),
+      tx_in_progress_flag_(false),
       status_(hydrolib::ReturnCode::OK),
       rx_callback_(rx_callback)
 {
@@ -88,6 +95,14 @@ requires hydrolib::concepts::func::FuncConcept<CallbackType, void>
 void UART<RX_BUFFER_CAPACITY, TX_BUFFER_CAPACITY, CallbackType>::Init()
 {
     UART_handler_.Init();
+}
+
+template <int RX_BUFFER_CAPACITY, int TX_BUFFER_CAPACITY, typename CallbackType>
+requires hydrolib::concepts::func::FuncConcept<CallbackType, void>
+bool UART<RX_BUFFER_CAPACITY, TX_BUFFER_CAPACITY, CallbackType>::IsTransmiting()
+    const
+{
+    return tx_in_progress_flag_;
 }
 
 template <int RX_BUFFER_CAPACITY, int TX_BUFFER_CAPACITY, typename CallbackType>
@@ -104,6 +119,8 @@ int UART<RX_BUFFER_CAPACITY, TX_BUFFER_CAPACITY, CallbackType>::Transmit(
     const void *data, unsigned data_length)
 {
     unsigned length = GetTxLength();
+
+    tx_in_progress_flag_ = true;
 
     if (length + data_length > TX_BUFFER_CAPACITY)
     {
@@ -229,6 +246,7 @@ void UART<RX_BUFFER_CAPACITY, TX_BUFFER_CAPACITY, CallbackType>::ProcessTx_()
 
     if (tx_head_ == tx_tail_)
     {
+        tx_in_progress_flag_ = false;
         UART_handler_.DisableTxInterruption();
         return;
     }
