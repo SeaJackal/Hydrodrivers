@@ -76,7 +76,7 @@ void RS485<RX_BUFFER_CAPACITY, TX_BUFFER_CAPACITY, TRANSMIT_ON_HIGHT,
            CallbackType>::IRQCallback()
 {
     Parent::IRQCallback();
-    if (Parent::IsTransmiting())
+    if (!Parent::IsTransmiting())
     {
         SetReceiveMode();
     }
