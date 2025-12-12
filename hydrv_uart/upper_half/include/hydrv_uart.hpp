@@ -156,7 +156,7 @@ int UART<RX_BUFFER_CAPACITY, TX_BUFFER_CAPACITY, CallbackType>::Read(
     {
         data_length = length;
     }
-    unsigned forward_length = RX_BUFFER_CAPACITY - rx_head_;
+    unsigned forward_length = REAL_RX_BUFFER_CAPACITY_ - rx_head_;
     if (data_length > forward_length)
     {
         memcpy(data, rx_buffer_ + rx_head_, forward_length);
