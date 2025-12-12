@@ -56,7 +56,7 @@ private:
     volatile unsigned tx_head_;
     unsigned tx_tail_;
 
-    bool tx_in_progress_flag;
+    bool tx_in_progress_flag_;
 
     hydrolib::ReturnCode status_;
 
@@ -84,7 +84,7 @@ consteval UART<RX_BUFFER_CAPACITY, TX_BUFFER_CAPACITY, CallbackType>::UART(
       tx_buffer_{},
       tx_head_(0),
       tx_tail_(0),
-      tx_in_progress_flag(false),
+      tx_in_progress_flag_(false),
       status_(hydrolib::ReturnCode::OK),
       rx_callback_(rx_callback)
 {
@@ -102,7 +102,7 @@ requires hydrolib::concepts::func::FuncConcept<CallbackType, void>
 bool UART<RX_BUFFER_CAPACITY, TX_BUFFER_CAPACITY, CallbackType>::IsTransmiting()
     const
 {
-    return tx_in_progress_flag;
+    return tx_in_progress_flag_;
 }
 
 template <int RX_BUFFER_CAPACITY, int TX_BUFFER_CAPACITY, typename CallbackType>
@@ -120,7 +120,7 @@ int UART<RX_BUFFER_CAPACITY, TX_BUFFER_CAPACITY, CallbackType>::Transmit(
 {
     unsigned length = GetTxLength();
 
-    tx_in_progress_flag = true;
+    tx_in_progress_flag_ = true;
 
     if (length + data_length > TX_BUFFER_CAPACITY)
     {
@@ -246,7 +246,7 @@ void UART<RX_BUFFER_CAPACITY, TX_BUFFER_CAPACITY, CallbackType>::ProcessTx_()
 
     if (tx_head_ == tx_tail_)
     {
-        tx_in_progress_flag = false;
+        tx_in_progress_flag_ = false;
         UART_handler_.DisableTxInterruption();
         return;
     }
