@@ -7,6 +7,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED True)
 
 if(MCU_FAMILY STREQUAL "F4")
     add_library(${LIBRARY_NAME} INTERFACE)
+    add_subdirectory(example)
     target_link_libraries(${LIBRARY_NAME} INTERFACE HydrolibReturnCodes)
     target_link_libraries(${LIBRARY_NAME} INTERFACE HydrodriversGPIO)
     target_link_libraries(${LIBRARY_NAME} INTERFACE HydrodriversTimerLow)
