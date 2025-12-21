@@ -2,19 +2,19 @@ name: Building and testing library
 run-name: Building and testing library
 on: [push]
 jobs:
-  Explore-GitHub-Actions:
+  Build-F1:
     runs-on: ubuntu-latest
     container:
       image: seajackal/hydrodrivers:latest
     steps:
       - uses: actions/checkout@v4
-        with:
-          submodules: true
-      - name: Configure and build for F4
-        run: |
-          cmake --preset DebugF4
-          cmake --build ./build
-      - name: Configure and build for F1
-        run: |
-          cmake --preset DebugF1
-          cmake --build ./build
+      - run: cmake --preset DebugF1
+      - run: cmake --build ./build
+  Build-F4:
+    runs-on: ubuntu-latest
+    container:
+      image: seajackal/hydrodrivers:latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: cmake --preset DebugF4
+      - run: cmake --build ./build
