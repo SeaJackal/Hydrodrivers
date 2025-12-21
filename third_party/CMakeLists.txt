@@ -7,6 +7,7 @@ else()
 endif()
 
 add_subdirectory(CMSIS_5)
+add_subdirectory(Hydrolib)
 
 add_library(CMSIS INTERFACE)
 
