@@ -111,7 +111,7 @@ constexpr Clock::Clock(ClockPreset preset)
   ClearStatus_();
 }
 
-void Clock::Init() {
+inline void Clock::Init() {
   default_tick_failed_ = SysTick_Config(MhzToKhz_(FREQUENCY_HSI_MHZ));
   if (default_tick_failed_) {
     return;
@@ -150,11 +150,11 @@ void Clock::Init() {
   clock_config_success_ = true;
 }
 
-void Clock::SysTickHandler() { systick_counter_++; }
+inline void Clock::SysTickHandler() { systick_counter_++; }
 
-uint32_t Clock::GetSystemTime(void) { return GetSystickCounter_(); }
+inline uint32_t Clock::GetSystemTime(void) { return GetSystickCounter_(); }
 
-void Clock::Delay(uint32_t time_ms) {
+inline void Clock::Delay(uint32_t time_ms) {
   uint32_t start_counter = GetSystickCounter_();
   volatile uint32_t current_counter = GetSystickCounter_();
   while (current_counter - start_counter < time_ms) {
@@ -162,35 +162,35 @@ void Clock::Delay(uint32_t time_ms) {
   }
 }
 
-bool Clock::IsClockConfigured() const { return clock_config_success_; }
+inline bool Clock::IsClockConfigured() const { return clock_config_success_; }
 
-bool Clock::IsDefaultTickFailed() const { return default_tick_failed_; }
+inline bool Clock::IsDefaultTickFailed() const { return default_tick_failed_; }
 
-bool Clock::IsHSIFailed() const { return hsi_failed_; }
+inline bool Clock::IsHSIFailed() const { return hsi_failed_; }
 
-bool Clock::IsHSEFailed() const { return hse_failed_; }
+inline bool Clock::IsHSEFailed() const { return hse_failed_; }
 
-bool Clock::IsPLLFailed() const { return pll_failed_; }
+inline bool Clock::IsPLLFailed() const { return pll_failed_; }
 
-bool Clock::IsSysTickFailed() const { return sys_tick_failed_; }
+inline bool Clock::IsSysTickFailed() const { return sys_tick_failed_; }
 
-unsigned Clock::GetSystemClockMHz() const { return system_clock_mhz_; }
+inline unsigned Clock::GetSystemClockMHz() const { return system_clock_mhz_; }
 
-void Clock::EnablePowerClock_(void) {
+inline void Clock::EnablePowerClock_(void) {
   volatile uint32_t tmpreg = 0x00U;
   SET_BIT(RCC->APB1ENR, RCC_APB1ENR_PWREN);
   tmpreg = READ_BIT(RCC->APB1ENR, RCC_APB1ENR_PWREN);
   (void)tmpreg;
 }
 
-void Clock::SetPowerVoltageScale_(void) {
+inline void Clock::SetPowerVoltageScale_(void) {
   volatile uint32_t tmpreg = 0x00U;
   MODIFY_REG(PWR->CR, PWR_CR_VOS, PWR_REGULATOR_VOLTAGE_SCALE1);
   tmpreg = READ_BIT(PWR->CR, PWR_CR_VOS);
   (void)tmpreg;
 }
 
-hydrolib::ReturnCode Clock::EnableHSI_(void) {
+inline hydrolib::ReturnCode Clock::EnableHSI_(void) {
   SET_BIT(RCC->CR, RCC_CR_HSION);
 
   uint32_t start = GetSystickCounter_();
@@ -202,7 +202,7 @@ hydrolib::ReturnCode Clock::EnableHSI_(void) {
   return hydrolib::ReturnCode::OK;
 }
 
-hydrolib::ReturnCode Clock::EnableHSE_(void) {
+inline hydrolib::ReturnCode Clock::EnableHSE_(void) {
   SET_BIT(RCC->CR, RCC_CR_HSEON);
 
   uint32_t start = GetSystickCounter_();
@@ -214,7 +214,7 @@ hydrolib::ReturnCode Clock::EnableHSE_(void) {
   return hydrolib::ReturnCode::OK;
 }
 
-void Clock::ConfigureSystemClock_(void) {
+inline void Clock::ConfigureSystemClock_(void) {
   MODIFY_REG(FLASH->ACR, FLASH_ACR_LATENCY, FLASH_ACR_LATENCY_5WS);
 
   MODIFY_REG(RCC->CFGR, RCC_CFGR_PPRE1, RCC_CFGR_PPRE1_DIV16); // TODO: Precalculate CFGR
@@ -227,7 +227,7 @@ void Clock::ConfigureSystemClock_(void) {
   MODIFY_REG(RCC->CFGR, RCC_CFGR_PPRE2, RCC_CFGR_PPRE2_DIV2);
 }
 
-hydrolib::ReturnCode Clock::ConfigurePLL_(void) {
+inline hydrolib::ReturnCode Clock::ConfigurePLL_(void) {
   CLEAR_BIT(RCC->CR, RCC_CR_PLLON);
   RCC->PLLCFGR = pllcfgr_value_;
   SET_BIT(RCC->CR, RCC_CR_PLLON);
@@ -242,13 +242,13 @@ hydrolib::ReturnCode Clock::ConfigurePLL_(void) {
   return hydrolib::ReturnCode::OK;
 }
 
-uint32_t Clock::GetSystickCounter_(void) { return Clock::systick_counter_; }
+inline uint32_t Clock::GetSystickCounter_(void) { return Clock::systick_counter_; }
 
-bool Clock::IsHSIready_() { return READ_BIT(RCC->CR, RCC_CR_HSIRDY); }
+inline bool Clock::IsHSIready_() { return READ_BIT(RCC->CR, RCC_CR_HSIRDY); }
 
-bool Clock::IsHSEready_() { return READ_BIT(RCC->CR, RCC_CR_HSERDY); }
+inline bool Clock::IsHSEready_() { return READ_BIT(RCC->CR, RCC_CR_HSERDY); }
 
-bool Clock::IsPLLready_() { return READ_BIT(RCC->CR, RCC_CR_PLLRDY); }
+inline bool Clock::IsPLLready_() { return READ_BIT(RCC->CR, RCC_CR_PLLRDY); }
 
 constexpr void Clock::ClearStatus_() {
   default_tick_failed_ = false;
