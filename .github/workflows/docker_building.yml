@@ -3,7 +3,7 @@ run-name: Building devcontainer image
 on:
   push:
     branches:
-      - master
+      - main
     paths:
       - '.devcontainer/Dockerfile'
   # pull_request:
