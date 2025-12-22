@@ -1,7 +1,7 @@
 FROM seajackal/hydrolib:latest
 
 ARG USERNAME=hydrolib
-ARG UID=1001
+ARG UID=1000
 ARG GID=$UID
 
 RUN wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key | sudo apt-key add - \
