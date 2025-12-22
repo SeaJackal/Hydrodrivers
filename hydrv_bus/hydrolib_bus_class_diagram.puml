@@ -1,0 +1,119 @@
+@startuml hydrolib_bus_class_diagram
+
+title Hydrolib Bus - Class Diagram
+
+package "hydrolib::concepts::stream" {
+    note as N1
+        Концепт определяют требования к свободным функциям:
+        + write(stream, source, length) -> int
+        + read(stream, dest, length) -> int
+    end note
+    
+    interface ByteFullStreamConcept {
+    }
+    
+    
+    N1 .. ByteFullStreamConcept
+}
+
+package "hydrolib::bus::datalink" {
+    class "StreamManager<RxTxStream, Logger, MATES_COUNT>" as StreamManager {
+        -stream_: RxTxStream&
+        -logger_: Logger&
+        -self_address_: AddressType
+        +Process(): void
+        +GetLostBytes(): int
+    }
+
+    note as N2
+        Объект, управляющий приёмом и передачей в конкретное последовательное устройство
+    end note
+
+    N2 .. StreamManager
+    
+    class "Stream<RxTxStream, Logger, MATES_COUNT>" as Stream {
+        -stream_manager_: StreamManager&
+        -mate_address_: AddressType
+        +Read(dest: void*, length: unsigned): int
+        +Write(dest: const void*, length: unsigned): int
+    }
+
+    note as N3
+        Объект, изолируйющий из обмена конкретного адресата
+    end note
+
+    N3 .. Stream
+    
+    class Serializer {
+    }
+    
+    class Deserializer {
+    }
+
+    note as N4
+        Вспомогательные объекты, которые можно использовать для своей реализации
+        транспортного уровня без StreamManager и Stream
+    end note
+
+    N4 .. Serializer
+    N4 .. Deserializer
+    
+    StreamManager <..> "0..MATES_COUNT" Stream
+    StreamManager o-- Deserializer
+    Stream <-- Serializer
+    Stream <-- Deserializer
+}
+
+package "hydrolib::bus::application" {
+    class "Slave<Memory, Logger, TxRxStream>" as Slave {
+        -stream_: TxRxStream&
+        -memory_: Memory&
+        -logger_: Logger&
+        +Process(): void
+    }
+
+    note as N5
+        Сервер, ждёт команд от клиента и пишет или читает память
+        с помощью объекта Memory
+    end note
+
+    N5 .. Slave
+
+    class "Master<TxRxStream, Logger>" as Master {
+        -stream_: TxRxStream&
+        -logger_: Logger&
+        +Process(): void
+        +Read(address: uint16_t, data: void*, length: unsigned): int
+        +Write(address: uint16_t, data: const void*, length: unsigned): int
+    }
+
+    note as N6
+        Клиент, отправляет команды серверу и получает запрошенные данные
+    end note
+
+    N6 .. Master
+}
+
+Stream ..|> ByteFullStreamConcept
+
+object "RxTxStream" as RxTxStream {
+}
+
+RxTxStream ..|> ByteFullStreamConcept
+StreamManager ..> RxTxStream
+
+object "DatalinkStream" as DatalinkStream {
+}
+
+DatalinkStream ..|> ByteFullStreamConcept
+DatalinkStream <.. Slave
+DatalinkStream <.. Master
+DatalinkStream <-- Stream
+
+object "Memory" as Memory {
+    +Read(address: uint16_t, data: void*, length: unsigned): int
+    +Write(address: uint16_t, data: const void*, length: unsigned): int
+}
+
+Slave ..> Memory
+@enduml
