@@ -1,12 +1,17 @@
 #include "hydrv_clock.hpp"
 #include "hydrv_gpio_low.hpp"
 #include "hydrv_shell_uart.hpp"
+#include "hydrv_thruster.hpp"
+#include "hydrv_tim_low.hpp"
+#include "hydrv_uart.hpp"
 
 #include "hydrolib_cat.hpp"
 #include "hydrolib_device_manager.hpp"
 #include "hydrolib_echo.hpp"
 #include "hydrolib_shell.hpp"
 #include "hydrolib_stream_device.hpp"
+#include "hydrolib_thruster_commands.hpp"
+#include "hydrolib_thruster_device.hpp"
 
 #define BUFFER_LENGTH 5
 
@@ -24,10 +29,21 @@ constinit hydrv::GPIO::GPIOLow tx_pin1(hydrv::GPIO::GPIOLow::GPIOB_port, 6,
 constinit hydrv::UART::UART<255, 255>
     uart1(hydrv::UART::UARTLow::USART1_115200_LOW, rx_pin1, tx_pin1, 7);
 
+constinit hydrv::GPIO::GPIOLow tim_pin(hydrv::GPIO::GPIOLow::GPIOA_port, 0,
+                                       hydrv::GPIO::GPIOLow::GPIO_Timer);
+hydrv::timer::TimerLow tim(hydrv::timer::TimerLow::TIM5_low,
+                           hydrv::thruster::Thruster::tim_prescaler,
+                           hydrv::thruster::Thruster::tim_counter_period);
+
+hydrv::thruster::Thruster thruster(0, tim, tim_pin);
+
 int Handler(int argc, char *argv[]);
 
 hydrolib::device::StreamDevice<decltype(uart1)> uart_device("uart", uart1);
-hydrolib::device::DeviceManager device_manager({&uart_device});
+
+hydrolib::device::ThrusterDevice<decltype(thruster)> thruster_device("thruster",
+                                                                     thruster);
+hydrolib::device::DeviceManager device_manager({&uart_device, &thruster_device});
 
 class CommandMap
 {
@@ -41,6 +57,10 @@ public:
         else if (command == "cat")
         {
             return hydrolib::shell::Cat;
+        }
+        else if (command == "thr")
+        {
+            return hydrolib::shell::ThrusterCommands;
         }
         return std::nullopt;
     }
@@ -68,6 +88,8 @@ int main(void)
     NVIC_SetPriorityGrouping(0);
     uart1.Init();
     uart3.Init();
+
+    thruster.Init();
 
     while (1)
     {
