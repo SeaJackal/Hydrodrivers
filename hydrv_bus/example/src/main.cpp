@@ -9,6 +9,9 @@
 
 #include <cstring>
 
+#include <chrono>
+#include <ctime>
+
 #define BUFFER_LENGTH 5
 
 class Memory
@@ -39,7 +42,7 @@ private:
     uint8_t buffer_[BUFFER_LENGTH];
 };
 
-constinit hydrv::clock::Clock clock(hydrv::clock::Clock::HSI_DEFAULT);
+// constinit hydrv::clock::Clock clock(hydrv::clock::Clock::HSI_DEFAULT);
 constinit hydrv::GPIO::GPIOLow led_pin(hydrv::GPIO::GPIOLow::GPIOD_port, 15,
                                        hydrv::GPIO::GPIOLow::GPIO_Output);
 constinit hydrv::GPIO::GPIOLow rx_pin1(hydrv::GPIO::GPIOLow::GPIOA_port, 10,
@@ -71,7 +74,9 @@ hydrolib::bus::application::Slave slave(stream, memory, logger);
 
 int main(void)
 {
-    clock.Init();
+    auto start = std::chrono::steady_clock::now();
+
+    // clock.Init();
     NVIC_SetPriorityGrouping(0);
     led_pin.Init();
     uart1.Init();
@@ -98,7 +103,7 @@ int main(void)
 
 extern "C"
 {
-    void SysTick_Handler(void) { clock.SysTickHandler(); }
+    // void SysTick_Handler(void) { clock.SysTickHandler(); }
     void USART3_IRQHandler(void) { uart3.IRQCallback(); }
     void USART1_IRQHandler(void) { uart1.IRQCallback(); }
 }
