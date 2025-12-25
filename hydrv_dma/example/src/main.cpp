@@ -4,11 +4,10 @@ extern "C"
 {
 
 #include "stm32f4xx.h"
-
-#include "hydrv_clock.h"
 #include "hydrv_common.h"
 }
 
+#include "hydrv_clock.hpp"
 #include "hydrv_gpio_low.hpp"
 #include "hydrv_uart_low.hpp"
 #include "hydrv_dma.hpp"
@@ -23,7 +22,7 @@ uint8_t buffer[] = "Disco-disco, party-party\n\r";
 
 int main(void)
 {
-    hydrv_Clock_ConfigureHSI();
+    hydrv::clock::Clock::Init(hydrv::clock::Clock::HSI_DEFAULT);
     NVIC_SetPriorityGrouping(0);
 
     uart.EnableDMATransmit();
@@ -32,7 +31,7 @@ int main(void)
     {
         dma_stream.ClearCompliteFlag();
         dma_stream.TransferMemory(buffer, sizeof(buffer));
-        hydrv_Clock_Delay(1000);
+        hydrv::clock::Clock::Delay(1000);
     }
 }
 
@@ -41,6 +40,8 @@ extern "C"
     void UART3IRQHandler(void)
     {
     }
+
+    void SysTick_Handler(void) { hydrv::clock::Clock::SysTickHandler(); }
 }
 
 void Error_Handler(void)

@@ -7,7 +7,6 @@ extern "C"
 {
     void SysTick_Handler();
 }
-constinit hydrv::clock::Clock clock(hydrv::clock::Clock::HSI_DEFAULT);
 constinit hydrv::GPIO::GPIOLow tim_pin(hydrv::GPIO::GPIOLow::GPIOA_port, 0,
                              hydrv::GPIO::GPIOLow::GPIO_Timer);
 constinit hydrv::timer::TimerLow tim(hydrv::timer::TimerLow::TIM5_low, 168, 10000);
@@ -15,7 +14,7 @@ constinit hydrv::timer::TimerLow tim(hydrv::timer::TimerLow::TIM5_low, 168, 1000
 int main(void)
 {
      NVIC_SetPriorityGrouping(0);
-    clock.Init();
+    hydrv::clock::Clock::Init(hydrv::clock::Clock::HSI_DEFAULT);
 
     tim.Init();
     tim.ConfigurePWM(0, tim_pin);
@@ -25,9 +24,9 @@ int main(void)
 
     while (1)
     {
-        clock.Delay(500);
+        hydrv::clock::Clock::Delay(500);
         tim.SetCaptureCompare(0, 7500);
-        clock.Delay(500);
+        hydrv::clock::Clock::Delay(500);
         tim.SetCaptureCompare(0, 2500);
     }
 }
@@ -42,7 +41,7 @@ void Error_Handler(void)
 
 extern "C"
 {
-    void SysTick_Handler() { clock.SysTickHandler(); }
+    void SysTick_Handler() { hydrv::clock::Clock::SysTickHandler(); }
 }
 
 #ifdef USE_FULL_ASSERT

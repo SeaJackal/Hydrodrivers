@@ -4,7 +4,6 @@
 #include "hydrv_uart.hpp"
 #include "hydrv_vectornav.hpp"
 
-constinit hydrv::clock::Clock clock(hydrv::clock::Clock::HSI_DEFAULT);
 constinit hydrv::GPIO::GPIOLow rx_pin3(hydrv::GPIO::GPIOLow::GPIOC_port, 11,
                                        hydrv::GPIO::GPIOLow::GPIO_UART_RX);
 constinit hydrv::GPIO::GPIOLow tx_pin3(hydrv::GPIO::GPIOLow::GPIOC_port, 10,
@@ -28,7 +27,7 @@ constinit hydrv::vectornav::VectorNAV
 
 int main(void)
 {
-    clock.Init();
+    hydrv::clock::Clock::Init(hydrv::clock::Clock::HSI_DEFAULT);
     uart3.Init();
 
     NVIC_SetPriorityGrouping(0);
@@ -37,7 +36,7 @@ int main(void)
     distributor.SetAllFilters(1, hydrolib::logger::LogLevel::INFO);
 
     vector_nav.Reset();
-    clock.Delay(500);
+    hydrv::clock::Clock::Delay(500);
     vector_nav.Init();
 
     unsigned last_log = 0;
@@ -48,7 +47,7 @@ int main(void)
     while (1)
     {
         vector_nav.Process();
-        if (clock.GetSystemTime() - last_log > 100)
+        if (hydrv::clock::Clock::GetSystemTime() - last_log > 100)
         {
             int yaw = static_cast<int>(vector_nav.GetYaw() * 100);
             int pitch = static_cast<int>(vector_nav.GetPitch() * 100);
@@ -60,7 +59,7 @@ int main(void)
                 (pitch >= 0) ? (pitch % 100) : (-pitch % 100), roll / 100,
                 (roll >= 0) ? (roll % 100) : (-roll % 100));
 
-            last_log = clock.GetSystemTime();
+            last_log = hydrv::clock::Clock::GetSystemTime();
             counter++;
             if (counter == 50)
             {
@@ -96,7 +95,7 @@ extern "C"
 {
     void USART3_IRQHandler() { uart3.IRQCallback(); }
     void USART1_IRQHandler() { vector_nav.IRQCallback(); }
-    void SysTick_Handler(void) { clock.SysTickHandler(); }
+    void SysTick_Handler(void) { hydrv::clock::Clock::SysTickHandler(); }
 }
 
 #ifdef USE_FULL_ASSERT

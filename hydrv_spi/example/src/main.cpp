@@ -4,8 +4,6 @@
 
 #define BUFFER_LENGTH 4
 
-constinit hydrv::clock::Clock clock(hydrv::clock::Clock::HSI_DEFAULT);
-
 constinit hydrv::GPIO::GPIOLow cs_pin(hydrv::GPIO::GPIOLow::GPIOA_port, 4,
                                       hydrv::GPIO::GPIOLow::GPIO_Fast_Output);
 
@@ -31,20 +29,20 @@ int count = 0;
 
 int main(void)
 {
-    clock.Init();
+    hydrv::clock::Clock::Init(hydrv::clock::Clock::HSI_DEFAULT);
     NVIC_SetPriorityGrouping(0);
     spi.Init();
 
     while (1)
     {
         spi.MakeTransaction(tx_buffer, 3, rx_buffer, 1);
-        clock.Delay(500);
+        hydrv::clock::Clock::Delay(500);
     }
 }
 
 extern "C"
 {
-    void SysTick_Handler(void) { clock.SysTickHandler(); }
+    void SysTick_Handler(void) { hydrv::clock::Clock::SysTickHandler(); }
 
     void SPI1_IRQHandler(void) { spi.IRQCallback(); }
 }

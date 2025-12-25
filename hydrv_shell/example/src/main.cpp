@@ -10,7 +10,6 @@
 
 #define BUFFER_LENGTH 5
 
-constinit hydrv::clock::Clock clock(hydrv::clock::Clock::HSI_DEFAULT);
 constinit hydrv::GPIO::GPIOLow rx_pin3(hydrv::GPIO::GPIOLow::GPIOB_port, 11,
                                        hydrv::GPIO::GPIOLow::GPIO_UART_RX);
 constinit hydrv::GPIO::GPIOLow tx_pin3(hydrv::GPIO::GPIOLow::GPIOB_port, 10,
@@ -65,7 +64,7 @@ hydrolib::shell::Shell<decltype(uart3), decltype(&Handler),
 
 int main(void)
 {
-    clock.Init();
+    hydrv::clock::Clock::Init(hydrv::clock::Clock::HSI_DEFAULT);
     NVIC_SetPriorityGrouping(0);
     uart1.Init();
     uart3.Init();
@@ -78,7 +77,7 @@ int main(void)
 
 extern "C"
 {
-    void SysTick_Handler(void) { clock.SysTickHandler(); }
+    void SysTick_Handler(void) { hydrv::clock::Clock::SysTickHandler(); }
     void USART3_IRQHandler(void) { uart3.IRQCallback(); }
     void USART1_IRQHandler(void) { uart1.IRQCallback(); }
 }

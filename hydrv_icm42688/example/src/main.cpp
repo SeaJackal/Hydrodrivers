@@ -11,8 +11,6 @@ extern "C"
     void SysTick_Handler();
 }
 
-constinit hydrv::clock::Clock clock(hydrv::clock::Clock::HSI_DEFAULT);
-
 constinit hydrv::GPIO::GPIOLow
     spi_sclk_pin(hydrv::GPIO::GPIOLow::GPIOA_port, 5,
                  hydrv::GPIO::GPIOLow::GPIO_SPI_OUTPUT);
@@ -50,7 +48,7 @@ int main(void)
     distributor.SetAllFilters(0, hydrolib::logger::LogLevel::ERROR);
     distributor.SetAllFilters(0, hydrolib::logger::LogLevel::DEBUG);
 
-    clock.Init();
+    hydrv::clock::Clock::Init(hydrv::clock::Clock::HSI_DEFAULT);
     uart3.Init();
 
     int count = 0;
@@ -91,7 +89,7 @@ int main(void)
             // LOG(logger1, hydrolib::logger::LogLevel::INFO, "Length: {}",
             //     orientation.GetNorm());
         }
-        clock.Delay(10);
+        hydrv::clock::Clock::Delay(10);
     }
 }
 
@@ -105,7 +103,7 @@ void Error_Handler(void)
 
 extern "C"
 {
-    void SysTick_Handler() { clock.SysTickHandler(); }
+    void SysTick_Handler() { hydrv::clock::Clock::SysTickHandler(); }
 
     void SPI1_IRQHandler() { icm42688.IRQCallback(); }
 

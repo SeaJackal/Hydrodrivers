@@ -32,98 +32,80 @@ public:
         unsigned frequency_hse_mhz;
     };
 
-public:
     static constexpr ClockPreset HSI_DEFAULT{
         .source = HSI,
         .multiply_factor = 16,
         .hse_divide_factor = 1,
         .frequency_hse_mhz = 0,
     };
-
     static constexpr unsigned TIMEOUT_MS = 1000;
 
-private:
-    bool default_tick_failed_;
-    bool hsi_failed_;
-    bool hse_failed_;
-    bool pll_failed_;
-    bool sys_tick_failed_;
+    static hydrolib::ReturnCode Init(ClockPreset preset);
+    static void SysTickHandler(void);
+    static uint32_t GetSystemTime(void);
+    static void Delay(uint32_t time_ms);
 
-    bool clock_config_success_;
+    static bool IsDefaultTickFailed();
+    static bool IsHSIFailed();
+    static bool IsHSEFailed();
+    static bool IsPLLFailed();
+    static bool IsSysTickFailed();
+
+    static int GetSystemClockMHz();
+
+private:
+    static void EnablePowerClock_(void);
+
+    static hydrolib::ReturnCode EnableHSI_(void);
+    static hydrolib::ReturnCode EnableHSE_(void);
+    static void ConfigureSystemClock_(void);
+    static hydrolib::ReturnCode ConfigurePLL_(const ClockPreset &preset);
+
+    static uint32_t GetSystickCounter_(void);
+    static bool IsHSIReady_();
+    static bool IsHSEReady_();
+    static bool IsPLLReady_();
+
+    static constexpr unsigned
+    CalculateSystemClockMHz_(const ClockPreset &preset);
 
     static constexpr unsigned FREQUENCY_HSI_MHZ = 8;
     static constexpr unsigned FREQUENCY_HSE_DEFAULT_MHZ = 8;
     static constexpr uint32_t FLASH_ACR_LATENCY_2WS = 0x02;
     static constexpr unsigned MhzToKhz_(unsigned freq);
 
-public:
-    constexpr Clock(ClockPreset preset);
-    void Init();
-    hydrolib::ReturnCode ConfigureHSI(void);
+    static inline bool default_tick_failed_ = false;
+    static inline bool hsi_failed_ = false;
+    static inline bool hse_failed_ = false;
+    static inline bool pll_failed_ = false;
+    static inline bool sys_tick_failed_ = false;
 
-    void SysTickHandler(void);
-    uint32_t GetSystemTime(void);
-    void Delay(uint32_t time_ms);
-
-    bool IsClockConfigured() const;
-    bool IsDefaultTickFailed() const;
-    bool IsHSIFailed() const;
-    bool IsHSEFailed() const;
-    bool IsPLLFailed() const;
-    bool IsSysTickFailed() const;
-
-    unsigned GetSystemClockMHz() const;
-
-private:
-    void EnablePowerClock_(void);
-
-    hydrolib::ReturnCode EnableHSI_(void);
-    hydrolib::ReturnCode EnableHSE_(void);
-    void ConfigureSystemClock_(void);
-    hydrolib::ReturnCode ConfigurePLL_(void);
-
-    uint32_t GetSystickCounter_(void);
-    bool IsHSIready_();
-    bool IsHSEready_();
-    bool IsPLLready_();
-
-    constexpr void ClearStatus_();
-    constexpr unsigned CalculateSystemClockMHz_(const ClockPreset &preset);
-
-private:
-    ClockPreset preset_;
-    unsigned systick_counter_ = 0;
-    unsigned system_clock_mhz_;
-    const uint32_t systick_reload_value_;
+    static inline int systick_counter_ = 0;
+    static inline int system_clock_mhz_ = 0;
 };
 
 constexpr unsigned Clock::MhzToKhz_(unsigned freq) { return freq * 1000; }
 
-constexpr Clock::Clock(ClockPreset preset)
-    : preset_(preset),
-      system_clock_mhz_(CalculateSystemClockMHz_(preset)),
-      systick_reload_value_(MhzToKhz_(system_clock_mhz_))
+inline hydrolib::ReturnCode Clock::Init(ClockPreset preset)
 {
-    ClearStatus_();
-}
+    system_clock_mhz_ = CalculateSystemClockMHz_(preset);
+    const uint32_t systick_reload_value = MhzToKhz_(system_clock_mhz_);
 
-void Clock::Init()
-{
     default_tick_failed_ = SysTick_Config(MhzToKhz_(FREQUENCY_HSI_MHZ));
     if (default_tick_failed_)
     {
-        return;
+        return hydrolib::ReturnCode::ERROR;
     }
 
     EnablePowerClock_();
 
-    if (preset_.source == HSI)
+    if (preset.source == HSI)
     {
         hydrolib::ReturnCode hsi_rc = EnableHSI_();
         hsi_failed_ = hsi_rc != hydrolib::ReturnCode::OK;
         if (hsi_failed_)
         {
-            return;
+            return hydrolib::ReturnCode::ERROR;
         }
     }
     else
@@ -132,33 +114,33 @@ void Clock::Init()
         hse_failed_ = hse_rc != hydrolib::ReturnCode::OK;
         if (hse_failed_)
         {
-            return;
+            return hydrolib::ReturnCode::ERROR;
         }
     }
 
-    hydrolib::ReturnCode pll_rc = ConfigurePLL_();
+    hydrolib::ReturnCode pll_rc = ConfigurePLL_(preset);
     pll_failed_ = pll_rc != hydrolib::ReturnCode::OK;
     if (pll_failed_)
     {
-        return;
+        return hydrolib::ReturnCode::ERROR;
     }
 
     ConfigureSystemClock_();
 
-    sys_tick_failed_ = SysTick_Config(systick_reload_value_);
+    sys_tick_failed_ = SysTick_Config(systick_reload_value);
     if (sys_tick_failed_)
     {
-        return;
+        return hydrolib::ReturnCode::ERROR;
     }
 
-    clock_config_success_ = true;
+    return hydrolib::ReturnCode::OK;
 }
 
-void Clock::SysTickHandler() { systick_counter_++; }
+inline void Clock::SysTickHandler() { systick_counter_++; }
 
-uint32_t Clock::GetSystemTime(void) { return GetSystickCounter_(); }
+inline uint32_t Clock::GetSystemTime(void) { return GetSystickCounter_(); }
 
-void Clock::Delay(uint32_t time_ms)
+inline void Clock::Delay(uint32_t time_ms)
 {
     uint32_t start_counter = GetSystickCounter_();
     volatile uint32_t current_counter = GetSystickCounter_();
@@ -168,21 +150,19 @@ void Clock::Delay(uint32_t time_ms)
     }
 }
 
-bool Clock::IsClockConfigured() const { return clock_config_success_; }
+inline bool Clock::IsDefaultTickFailed() { return default_tick_failed_; }
 
-bool Clock::IsDefaultTickFailed() const { return default_tick_failed_; }
+inline bool Clock::IsHSIFailed() { return hsi_failed_; }
 
-bool Clock::IsHSIFailed() const { return hsi_failed_; }
+inline bool Clock::IsHSEFailed() { return hse_failed_; }
 
-bool Clock::IsHSEFailed() const { return hse_failed_; }
+inline bool Clock::IsPLLFailed() { return pll_failed_; }
 
-bool Clock::IsPLLFailed() const { return pll_failed_; }
+inline bool Clock::IsSysTickFailed() { return sys_tick_failed_; }
 
-bool Clock::IsSysTickFailed() const { return sys_tick_failed_; }
+inline int Clock::GetSystemClockMHz() { return system_clock_mhz_; }
 
-unsigned Clock::GetSystemClockMHz() const { return system_clock_mhz_; }
-
-void Clock::EnablePowerClock_(void)
+inline void Clock::EnablePowerClock_(void)
 {
     volatile uint32_t tmpreg = 0x00U;
     SET_BIT(RCC->APB1ENR, RCC_APB1ENR_PWREN);
@@ -190,12 +170,12 @@ void Clock::EnablePowerClock_(void)
     (void)tmpreg;
 }
 
-hydrolib::ReturnCode Clock::EnableHSI_(void)
+inline hydrolib::ReturnCode Clock::EnableHSI_(void)
 {
     SET_BIT(RCC->CR, RCC_CR_HSION);
 
     uint32_t start = GetSystickCounter_();
-    while (!IsHSIready_())
+    while (!IsHSIReady_())
     {
         if (GetSystickCounter_() - start > TIMEOUT_MS)
         {
@@ -205,12 +185,12 @@ hydrolib::ReturnCode Clock::EnableHSI_(void)
     return hydrolib::ReturnCode::OK;
 }
 
-hydrolib::ReturnCode Clock::EnableHSE_(void)
+inline hydrolib::ReturnCode Clock::EnableHSE_(void)
 {
     SET_BIT(RCC->CR, RCC_CR_HSEON);
 
     uint32_t start = GetSystickCounter_();
-    while (!IsHSEready_())
+    while (!IsHSEReady_())
     {
         if (GetSystickCounter_() - start > TIMEOUT_MS)
         {
@@ -220,7 +200,7 @@ hydrolib::ReturnCode Clock::EnableHSE_(void)
     return hydrolib::ReturnCode::OK;
 }
 
-void Clock::ConfigureSystemClock_(void)
+inline void Clock::ConfigureSystemClock_(void)
 {
     MODIFY_REG(FLASH->ACR, FLASH_ACR_LATENCY, FLASH_ACR_LATENCY_2WS);
 
@@ -235,18 +215,18 @@ void Clock::ConfigureSystemClock_(void)
     MODIFY_REG(RCC->CFGR, RCC_CFGR_PPRE2, RCC_CFGR_PPRE2_DIV1);
 }
 
-hydrolib::ReturnCode Clock::ConfigurePLL_(void)
+inline hydrolib::ReturnCode Clock::ConfigurePLL_(const ClockPreset &preset)
 {
     CLEAR_BIT(RCC->CR, RCC_CR_PLLON);
-    MODIFY_REG(RCC->CFGR, RCC_CFGR_PLLSRC, preset_.source);
+    MODIFY_REG(RCC->CFGR, RCC_CFGR_PLLSRC, preset.source);
     MODIFY_REG(RCC->CFGR, RCC_CFGR_PLLMULL_Msk,
-               (preset_.multiply_factor - 2) << RCC_CFGR_PLLMULL_Pos);
+               (preset.multiply_factor - 2) << RCC_CFGR_PLLMULL_Pos);
     MODIFY_REG(RCC->CFGR, RCC_CFGR_PLLXTPRE,
-               (preset_.hse_divide_factor - 1) << RCC_CFGR_PLLXTPRE_Pos);
+               (preset.hse_divide_factor - 1) << RCC_CFGR_PLLXTPRE_Pos);
     SET_BIT(RCC->CR, RCC_CR_PLLON);
 
     uint32_t start = GetSystickCounter_();
-    while (!IsPLLready_())
+    while (!IsPLLReady_())
     {
         if (GetSystickCounter_() - start > TIMEOUT_MS)
         {
@@ -257,23 +237,16 @@ hydrolib::ReturnCode Clock::ConfigurePLL_(void)
     return hydrolib::ReturnCode::OK;
 }
 
-uint32_t Clock::GetSystickCounter_(void) { return Clock::systick_counter_; }
-
-bool Clock::IsHSIready_() { return READ_BIT(RCC->CR, RCC_CR_HSIRDY); }
-
-bool Clock::IsHSEready_() { return READ_BIT(RCC->CR, RCC_CR_HSERDY); }
-
-bool Clock::IsPLLready_() { return READ_BIT(RCC->CR, RCC_CR_PLLRDY); }
-
-constexpr void Clock::ClearStatus_()
+inline uint32_t Clock::GetSystickCounter_(void)
 {
-    default_tick_failed_ = false;
-    hsi_failed_ = false;
-    hse_failed_ = false;
-    pll_failed_ = false;
-    sys_tick_failed_ = false;
-    clock_config_success_ = false;
+    return Clock::systick_counter_;
 }
+
+inline bool Clock::IsHSIReady_() { return READ_BIT(RCC->CR, RCC_CR_HSIRDY); }
+
+inline bool Clock::IsHSEReady_() { return READ_BIT(RCC->CR, RCC_CR_HSERDY); }
+
+inline bool Clock::IsPLLReady_() { return READ_BIT(RCC->CR, RCC_CR_PLLRDY); }
 
 constexpr unsigned Clock::CalculateSystemClockMHz_(const ClockPreset &preset)
 {

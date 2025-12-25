@@ -1,7 +1,7 @@
 #include "hydrv_clock.hpp"
 #include "hydrv_gpio_low.hpp"
 
-hydrv::clock::Clock clock(hydrv::clock::Clock::HSI_DEFAULT);
+#include <chrono>
 
 #if defined(STM32F407xx)
 constinit hydrv::GPIO::GPIOLow led_pin(hydrv::GPIO::GPIOLow::GPIOD_port, 12,
@@ -15,16 +15,24 @@ int main(void)
 {
     NVIC_SetPriorityGrouping(0);
 
-    clock.Init();
+    hydrv::clock::Clock::Init(hydrv::clock::Clock::HSI_DEFAULT);
 
     led_pin.Init();
 
     while (1)
     {
         led_pin.Set();
-        clock.Delay(500);
+        auto start_time = std::chrono::steady_clock::now();
+        while (std::chrono::steady_clock::now() - start_time <
+               std::chrono::seconds(1))
+        {
+        }
         led_pin.Reset();
-        clock.Delay(500);
+        start_time = std::chrono::steady_clock::now();
+        while (std::chrono::steady_clock::now() - start_time <
+               std::chrono::seconds(1))
+        {
+        }
     }
 }
 
@@ -37,7 +45,7 @@ void Error_Handler(void)
 }
 extern "C"
 {
-    void SysTick_Handler(void) { clock.SysTickHandler(); }
+    void SysTick_Handler(void) { hydrv::clock::Clock::SysTickHandler(); }
 }
 
 #ifdef USE_FULL_ASSERT

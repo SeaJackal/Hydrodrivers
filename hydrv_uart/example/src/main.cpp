@@ -4,7 +4,6 @@
 
 #define BUFFER_LENGTH 5 //TODO:make variable
 
-constinit hydrv::clock::Clock clock(hydrv::clock::Clock::HSI_DEFAULT);
 constinit hydrv::GPIO::GPIOLow led_pin(hydrv::GPIO::GPIOLow::GPIOD_port, 15,
                              hydrv::GPIO::GPIOLow::GPIO_Output);
 constinit hydrv::GPIO::GPIOLow rx_pin(hydrv::GPIO::GPIOLow::GPIOB_port, 11,
@@ -18,7 +17,7 @@ uint8_t buffer[BUFFER_LENGTH];
 
 int main(void)
 {
-    clock.Init();
+    hydrv::clock::Clock::Init(hydrv::clock::Clock::HSI_DEFAULT);
     NVIC_SetPriorityGrouping(0);
     led_pin.Init();
     uart.Init();
@@ -36,6 +35,6 @@ int main(void)
 
 extern "C"
 {
-    void SysTick_Handler(void) { clock.SysTickHandler(); }
+    void SysTick_Handler(void) { hydrv::clock::Clock::SysTickHandler(); }
     void USART3_IRQHandler(void) { uart.IRQCallback(); }
 }

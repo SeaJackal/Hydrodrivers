@@ -22,8 +22,6 @@
 #include "stm32f4xx.h"
 #include "main.h"
 
-#include "hydrv_clock.h"
-
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 /* USER CODE END Includes */
@@ -149,17 +147,6 @@ void DebugMon_Handler(void)
   /* USER CODE BEGIN DebugMonitor_IRQn 1 */
 
   /* USER CODE END DebugMonitor_IRQn 1 */
-}
-
-/**
- * @brief This function handles System tick timer.
- */
-void SysTick_Handler(void)
-{
-  /* USER CODE BEGIN SysTick_IRQn 0 */
-
-  /* USER CODE END SysTick_IRQn 0 */
-  hydrv_Clock_SysTickHandler();
 }
 
 void USART3_IRQHandler(void)
