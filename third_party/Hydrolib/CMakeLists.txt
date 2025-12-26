@@ -3,7 +3,7 @@ include(FetchContent)
 FetchContent_Declare(
     Hydrolib
     GIT_REPOSITORY https://github.com/SeaJackal/Hydrolib-soft.git
-    GIT_TAG c6c795b2c8c9edecf4cfd8097ef3d4ba8e1c3aac
+    GIT_TAG bea0c9fd6c4f287fe660626eb1a97a4c065900a0
 )
 
 FetchContent_MakeAvailable(Hydrolib)
