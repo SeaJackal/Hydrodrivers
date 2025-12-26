@@ -16,8 +16,6 @@ endif()
 
 message(STATUS "Building for MCU family: ${MCU_FAMILY}")
 
-set(LOGGER_TYPE "hydrolib")
-
 if(NOT BUILD_TESTS)
     add_subdirectory(third_party)
     add_subdirectory(hydrv_clock)
