@@ -9,4 +9,6 @@ target_link_libraries(${LIBRARY_NAME} INTERFACE HydrodriversGPIO HydrodriversUAR
 
 target_include_directories(${LIBRARY_NAME} INTERFACE include)
 
-add_subdirectory(example)
+if(HYDRV_BUILD_EXAMPLES)
+    add_subdirectory(example)
+endif()

@@ -4,7 +4,9 @@ if(MCU_FAMILY STREQUAL "F4")
     # add_subdirectory(upper_half)
     add_subdirectory(lower_half)
 
-    add_subdirectory(example)
+    if(HYDRV_BUILD_EXAMPLES)
+        add_subdirectory(example)
+    endif()
     
     message(STATUS "hydrv_tim subdirectories added for MCU_FAMILY: ${MCU_FAMILY}")
 else()

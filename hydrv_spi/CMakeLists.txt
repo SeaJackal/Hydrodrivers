@@ -1,7 +1,9 @@
 if(MCU_FAMILY STREQUAL "F1")   
     add_subdirectory(upper_half)
     add_subdirectory(lower_half)
-    add_subdirectory(example)
+    if(HYDRV_BUILD_EXAMPLES)
+        add_subdirectory(example)
+    endif()
 
     message(STATUS "HydrolibSPI target added for MCU_FAMILY: ${MCU_FAMILY}")
 else()

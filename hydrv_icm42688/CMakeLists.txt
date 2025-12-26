@@ -13,7 +13,9 @@ if(MCU_FAMILY STREQUAL "F1")
     target_link_libraries(${LIBRARY_NAME} INTERFACE HydrolibMath INTERFACE HydrolibFilter)
     target_include_directories(${LIBRARY_NAME} INTERFACE include)
 
-    add_subdirectory(example)
+    if(HYDRV_BUILD_EXAMPLES)
+        add_subdirectory(example)
+    endif()
 
     message(STATUS "${LIBRARY_NAME} target added for MCU_FAMILY: ${MCU_FAMILY}")
 else()
