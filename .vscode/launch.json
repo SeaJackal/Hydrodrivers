@@ -7,7 +7,7 @@
         {
             "name": "Cortex Debug f1",
             "cwd": "${workspaceFolder}",
-            "executable": "${workspaceFolder}/build/hydrv_icm42688/example/HydrvICM42688Example.elf",
+            "executable": "${workspaceFolder}/build/hydrv_uart/example/HydrvRSExample.elf",
             "request": "launch",
             "type": "cortex-debug",
             "runToEntryPoint": "main",

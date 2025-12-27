@@ -3,7 +3,7 @@
 
 extern "C"
 {
-#include "hydrolib_common.h"
+#include "hydrolib_return_codes.hpp"
 }
 
 namespace hydrv::thruster
@@ -28,7 +28,7 @@ public:
 
     void Init();
 
-    hydrolib_ReturnCode SetSpeed(int speed);
+    hydrolib::ReturnCode SetSpeed(int speed);
     int GetSpeed();
 
 private:
@@ -59,17 +59,17 @@ inline void Thruster::Init()
     tim.StartTimer();
 }
 
-inline hydrolib_ReturnCode Thruster::SetSpeed(int thruster_speed)
+inline hydrolib::ReturnCode Thruster::SetSpeed(int thruster_speed)
 {
     if (thruster_speed <= max_speed && thruster_speed >= -max_speed)
     {
         speed = thruster_speed;
         tim.SetCaptureCompare(tim_channel, SpeedToPWM_(speed));
-        return HYDROLIB_RETURN_OK;
+        return hydrolib::ReturnCode::OK;
     }
     else
     {
-        return HYDROLIB_RETURN_ERROR;
+        return hydrolib::ReturnCode::ERROR;
     }
 }
 
