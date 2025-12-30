@@ -82,14 +82,16 @@
             "name": "DebugF4",
             "inherits": "F4",
             "cacheVariables": {
-                "CMAKE_BUILD_TYPE": "Debug"
+                "CMAKE_BUILD_TYPE": "Debug",
+                "HYDRV_BUILD_EXAMPLES": "ON"
             }
         },
         {
             "name": "DebugF1",
             "inherits": "F1",
             "cacheVariables": {
-                "CMAKE_BUILD_TYPE": "Debug"
+                "CMAKE_BUILD_TYPE": "Debug",
+                "HYDRV_BUILD_EXAMPLES": "ON"
             }
         },
         {

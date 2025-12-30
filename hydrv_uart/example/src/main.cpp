@@ -37,4 +37,5 @@ extern "C"
 {
     void SysTick_Handler(void) { hydrv::clock::Clock::SysTickHandler(); }
     void USART3_IRQHandler(void) { uart.IRQCallback(); }
+    void HardFault_Handler(void) { while (1) {} }
 }
