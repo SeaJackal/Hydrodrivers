@@ -10,8 +10,4 @@ if(MCU_FAMILY STREQUAL "F4")
         HydrodriversShell)
 
     target_compile_features(${TARGET_NAME} PUBLIC cxx_std_20)
-
-    message(STATUS "HydrolibSPI target added for MCU_FAMILY: ${MCU_FAMILY}")
-else()
-    message(WARNING "HydrolibSPI target is not supported for MCU_FAMILY: ${MCU_FAMILY}")
 endif()
