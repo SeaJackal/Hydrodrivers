@@ -117,7 +117,7 @@
             ]
         },
         {
-            "name": "Cortex Debug Bus",
+            "name": "Cortex Debug f4 Bus",
             "cwd": "${workspaceFolder}",
             "executable": "${workspaceFolder}/build/hydrv_bus/example/HydrvBusExample.elf",
             "request": "launch",
