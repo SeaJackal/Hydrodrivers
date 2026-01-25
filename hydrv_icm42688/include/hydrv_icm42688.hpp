@@ -6,6 +6,7 @@
 #include "hydrolib_imu_processor.hpp"
 #include "hydrolib_logger.hpp"
 #include "hydrolib_return_codes.hpp"
+#include "hydrolib_rotations.hpp"
 #include "hydrolib_vector3d.hpp"
 #include "hydrv_gpio_low.hpp"
 #include "hydrv_spi.hpp"
@@ -216,7 +217,7 @@ public:
     hydrolib::math::FixedPointBase GetGyroscopeY() const;
     hydrolib::math::FixedPointBase GetGyroscopeZ() const;
 
-    hydrolib::math::Quaternion<hydrolib::math::FixedPointBase>
+    hydrolib::math::Rotation<hydrolib::math::FixedPointBase>
     GetOrientation() const;
 
 private:
@@ -250,7 +251,7 @@ private:
     hydrolib::math::FixedPointBase gyro_y_;
     hydrolib::math::FixedPointBase gyro_z_;
 
-    hydrolib::math::Quaternion<hydrolib::math::FixedPointBase> orientation_;
+    hydrolib::math::Rotation<hydrolib::math::FixedPointBase> orientation_;
 
     State state_;
     bool got_data_;
@@ -294,8 +295,7 @@ consteval ICM42688<CallbackType, Logger>::ICM42688(
       gyro_x_(hydrolib::math::FixedPointBase(0)),
       gyro_y_(hydrolib::math::FixedPointBase(0)),
       gyro_z_(hydrolib::math::FixedPointBase(0)),
-      orientation_(hydrolib::math::Quaternion<hydrolib::math::FixedPointBase>(
-          0, 0, 0, 1)),
+      orientation_(),
       state_(State::NOT_INITIALIZED),
       got_data_(false),
       calibration_z_accel_(0, 0, 0),
@@ -563,7 +563,7 @@ ICM42688<CallbackType, Logger>::GetGyroscopeZ() const
 
 template <typename CallbackType, typename Logger>
 requires hydrolib::concepts::func::FuncConcept<CallbackType, void>
-inline hydrolib::math::Quaternion<hydrolib::math::FixedPointBase>
+inline hydrolib::math::Rotation<hydrolib::math::FixedPointBase>
 ICM42688<CallbackType, Logger>::GetOrientation() const
 {
     return orientation_;
@@ -630,8 +630,11 @@ inline void ICM42688<CallbackType, Logger>::ProcessData_()
     gyro_z_ = hydrolib::math::DegToRad(
         hydrolib::math::FixedPointBase((raw_gyro_z) * 125, 32768));
 
-    orientation_ = imu_processor_.Process({accel_x_, accel_y_, accel_z_},
-                                          {gyro_x_, gyro_y_, gyro_z_});
+    orientation_ =
+        imu_processor_.Process(typename decltype(imu_processor_)::AccelG(
+                                   {accel_x_, accel_y_, accel_z_}),
+                               typename decltype(imu_processor_)::GyroRadPerS(
+                                   {gyro_x_, gyro_y_, gyro_z_}));
 
     LOG(logger_, hydrolib::logger::LogLevel::DEBUG,
         "Accel: X:{} Y:{} Z:{} mm/s², Gyro: X:{} Y:{} Z:{} mdps", accel_x_,
@@ -669,8 +672,11 @@ inline void ICM42688<CallbackType, Logger>::ProcessFIFOData_()
                                 static_cast<int>(Register::TEMP_DATA1)]);
     gyro_z_ = hydrolib::math::FixedPointBase((raw_gyro_z) * 125, 32768);
 
-    orientation_ = imu_processor_.Process({accel_x_, accel_y_, accel_z_},
-                                          {gyro_x_, gyro_y_, gyro_z_});
+    orientation_ =
+        imu_processor_.Process(typename decltype(imu_processor_)::AccelG(
+                                   {accel_x_, accel_y_, accel_z_}),
+                               typename decltype(imu_processor_)::GyroRadPerS(
+                                   {gyro_x_, gyro_y_, gyro_z_}));
 
     LOG(logger_, hydrolib::logger::LogLevel::DEBUG,
         "Accel: X:{} Y:{} Z:{} mm/s², Gyro: X:{} Y:{} Z:{} mdps", accel_x_,

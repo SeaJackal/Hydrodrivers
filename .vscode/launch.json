@@ -21,6 +21,22 @@
             ]
         },
         {
+            "name": "Cortex Debug f1 ICM42688",
+            "cwd": "${workspaceFolder}",
+            "executable": "${workspaceFolder}/build/hydrv_icm42688/example/HydrvICM42688Example.elf",
+            "request": "launch",
+            "type": "cortex-debug",
+            "runToEntryPoint": "main",
+            "servertype": "openocd",
+            "device": "stm32f1x",
+            "svdFile": "resources/STM32F103.svd",
+            "showDevDebugOutput": "raw",
+            "configFiles": [
+                "interface/stlink.cfg",
+                "target/stm32f1x.cfg"
+            ]
+        },
+        {
             "name": "Cortex Debug f4 UART",
             "cwd": "${workspaceFolder}",
             "executable": "${workspaceFolder}/build/hydrv_uart/example/HydrvUARTExample.elf",

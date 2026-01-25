@@ -40,8 +40,8 @@ endif()
 
 add_subdirectory(hydrv_uart)
 
-add_custom_target(compdb ALL
-    COMMAND /bin/sh -c "compdb -p ${CMAKE_BINARY_DIR} list > compile_commands.json && mv compile_commands.json ${CMAKE_BINARY_DIR}/compile_commands.json"
-    WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
-    VERBATIM
-)
+# add_custom_target(compdb ALL
+#     COMMAND /bin/sh -c "compdb -p ${CMAKE_BINARY_DIR} list > compile_commands.json && mv compile_commands.json ${CMAKE_BINARY_DIR}/compile_commands.json"
+#     WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+#     VERBATIM
+# )

@@ -1,6 +1,6 @@
 #include "hydrolib_log_distributor.hpp"
-#include "hydrolib_logger.hpp"
 #include "hydrolib_log_macro.hpp"
+#include "hydrolib_logger.hpp"
 #include "hydrv_clock.hpp"
 #include "hydrv_gpio_low.hpp"
 #include "hydrv_icm42688.hpp"
@@ -81,9 +81,19 @@ int main(void)
                 //     "Acceleration: x:{} y:{} z:{}", icm42688.GetGyroscopeX(),
                 //     icm42688.GetGyroscopeY(), icm42688.GetGyroscopeZ());
                 auto orientation = icm42688.GetOrientation();
-                LOG(logger1, hydrolib::logger::LogLevel::INFO,
-                    "Orientation: x:{} y:{} z:{} w:{}", orientation.x,
-                    orientation.y, orientation.z, orientation.w);
+                hydrolib::math::Vector3D<hydrolib::math::FixedPointBase>
+                    axis_x = orientation.Rotate({1, 0, 0});
+                hydrolib::math::Vector3D<hydrolib::math::FixedPointBase>
+                    axis_y = orientation.Rotate({0, 1, 0});
+                hydrolib::math::Vector3D<hydrolib::math::FixedPointBase>
+                    axis_z = orientation.Rotate({0, 0, 1});
+
+                LOG(logger1, hydrolib::logger::LogLevel::INFO, "X: {} {} {}",
+                    axis_x.x, axis_x.y, axis_x.z);
+                LOG(logger1, hydrolib::logger::LogLevel::INFO, "Y: {} {} {}",
+                    axis_y.x, axis_y.y, axis_y.z);
+                LOG(logger1, hydrolib::logger::LogLevel::INFO, "Z: {} {} {}",
+                    axis_z.x, axis_z.y, axis_z.z);
                 count = 0;
             }
             // LOG(logger1, hydrolib::logger::LogLevel::INFO, "Length: {}",
