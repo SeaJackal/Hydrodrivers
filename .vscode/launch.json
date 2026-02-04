@@ -156,7 +156,7 @@
             "postDebugTask": "Close Renode",
             "miDebuggerServerAddress": "localhost:3333",
             "cwd": "${workspaceRoot}",
-            "miDebuggerPath": "arm-none-eabi-gdb",
+            "miDebuggerPath": "gdb-multiarch",
             "program": "build/hydrv_gpio/example/HydrvGPIOExample.elf"
         }
     ]
