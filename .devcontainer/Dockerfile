@@ -11,6 +11,7 @@ RUN wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key | sudo apt-key add - \
     && apt upgrade -q -y \
     && apt install -y --no-install-recommends \
     openocd \
+    ca-certificates sudo \
     gdb-multiarch \
     python3-pip \
     && apt clean \
@@ -24,3 +25,12 @@ RUN wget -q https://github.com/xpack-dev-tools/arm-none-eabi-gcc-xpack/releases/
     && rm xpack-arm-none-eabi-gcc-${GCC_ARM_VERSION}-linux-x64.tar.gz \
     && cp -s /opt/xpack-arm-none-eabi-gcc-${GCC_ARM_VERSION}/bin/* /usr/local/bin/ \
     && ln -s /opt/xpack-arm-none-eabi-gcc-${GCC_ARM_VERSION}/arm-none-eabi/include /usr/include/newlib
+
+ARG RENODE_VERSION=1.16.0
+    
+RUN wget https://github.com/renode/renode/releases/download/v${RENODE_VERSION}/renode_${RENODE_VERSION}_amd64.deb && \
+    apt-get update && \
+    apt-get install -y --no-install-recommends ./renode_${RENODE_VERSION}_amd64.deb python3-dev && \
+    rm ./renode_${RENODE_VERSION}_amd64.deb && \
+    rm -rf /var/lib/apt/lists/*
+RUN pip3 install -r /opt/renode/tests/requirements.txt --no-cache-dir
