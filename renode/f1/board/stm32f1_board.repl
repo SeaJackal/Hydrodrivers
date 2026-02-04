@@ -1,0 +1,4 @@
+using "cpu/stm32f103_board.repl"
+
+gpioPortC:
+    13 -> greenled1@0
