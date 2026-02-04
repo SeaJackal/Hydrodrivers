@@ -147,6 +147,17 @@
                 "interface/stlink.cfg",
                 "target/stm32f4x.cfg"
             ]
+        },
+        {
+            "name": "Renode debug",
+            "type": "cppdbg",
+            "request": "launch",
+            "preLaunchTask": "Run Renode",
+            "postDebugTask": "Close Renode",
+            "miDebuggerServerAddress": "localhost:3333",
+            "cwd": "${workspaceRoot}",
+            "miDebuggerPath": "arm-none-eabi-gdb",
+            "program": "build/hydrv_gpio/example/HydrvGPIOExample.elf"
         }
     ]
 }
