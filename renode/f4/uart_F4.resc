@@ -10,7 +10,7 @@ machine StartGdbServer 3333
 
 cpu PerformanceInMips 200
 emulation SetGlobalQuantum "0.000001"
-emulation CreateServerSocketTerminal 12345 "term"
+emulation CreateUartPtyTerminal "term" "/tmp/uart" false
 connector Connect sysbus.usart3 term
 
 macro reset

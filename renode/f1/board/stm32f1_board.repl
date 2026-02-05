@@ -1,4 +1,6 @@
 using "renode/f1/cpu/stm32f103.repl"
 
+greenled1: Miscellaneous.LED @ gpioPortC 0xD
+
 gpioPortC:
     13 -> greenled1@0

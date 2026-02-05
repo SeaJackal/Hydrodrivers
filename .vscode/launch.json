@@ -149,10 +149,10 @@
             ]
         },
         {
-            "name": "Renode debug GPIO",
+            "name": "Renode debug GPIO_F1",
             "type": "cppdbg",
             "request": "launch",
-            "preLaunchTask": "Run Renode_GPIO_F1",
+            // "preLaunchTask": "Run Renode_GPIO_F1",
             "postDebugTask": "Close Renode",
             "miDebuggerServerAddress": "localhost:3333",
             "cwd": "${workspaceRoot}",
@@ -160,21 +160,21 @@
             "program": "build/hydrv_gpio/example/HydrvGPIOExample.elf"
         },
         {
-            "name": "Renode debug UART",
+            "name": "Renode debug UART_F1",
             "type": "cppdbg",
             "request": "launch",
-           // "preLaunchTask": "Run Renode_UART_F1",
-            // "postDebugTask": "Close Renode",
+            // "preLaunchTask": "Run Renode_UART_F1",
+            "postDebugTask": "Close Renode",
             "miDebuggerServerAddress": "localhost:3333",
             "cwd": "${workspaceRoot}",
             "miDebuggerPath": "gdb-multiarch",
             "program": "build/hydrv_uart/example/HydrvUARTExample.elf"
         },
         {
-            "name": "Renode debug GPIO",
+            "name": "Renode debug GPIO_F4",
             "type": "cppdbg",
             "request": "launch",
-            "preLaunchTask": "Run Renode_GPIO_F4",
+            // "preLaunchTask": "Run Renode_GPIO_F4",
             "postDebugTask": "Close Renode",
             "miDebuggerServerAddress": "localhost:3333",
             "cwd": "${workspaceRoot}",
@@ -182,11 +182,11 @@
             "program": "build/hydrv_gpio/example/HydrvGPIOExample.elf"
         },
         {
-            "name": "Renode debug UART",
+            "name": "Renode debug UART_F4",
             "type": "cppdbg",
             "request": "launch",
-           // "preLaunchTask": "Run Renode_UART_F4",
-            // "postDebugTask": "Close Renode",
+            // "preLaunchTask": "Run Renode_UART_F4",
+            "postDebugTask": "Close Renode",
             "miDebuggerServerAddress": "localhost:3333",
             "cwd": "${workspaceRoot}",
             "miDebuggerPath": "gdb-multiarch",
