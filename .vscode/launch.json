@@ -149,15 +149,48 @@
             ]
         },
         {
-            "name": "Renode debug",
+            "name": "Renode debug GPIO",
             "type": "cppdbg",
             "request": "launch",
-            "preLaunchTask": "Run Renode",
+            "preLaunchTask": "Run Renode_GPIO_F1",
             "postDebugTask": "Close Renode",
             "miDebuggerServerAddress": "localhost:3333",
             "cwd": "${workspaceRoot}",
             "miDebuggerPath": "gdb-multiarch",
             "program": "build/hydrv_gpio/example/HydrvGPIOExample.elf"
+        },
+        {
+            "name": "Renode debug UART",
+            "type": "cppdbg",
+            "request": "launch",
+           // "preLaunchTask": "Run Renode_UART_F1",
+            // "postDebugTask": "Close Renode",
+            "miDebuggerServerAddress": "localhost:3333",
+            "cwd": "${workspaceRoot}",
+            "miDebuggerPath": "gdb-multiarch",
+            "program": "build/hydrv_uart/example/HydrvUARTExample.elf"
+        },
+        {
+            "name": "Renode debug GPIO",
+            "type": "cppdbg",
+            "request": "launch",
+            "preLaunchTask": "Run Renode_GPIO_F4",
+            "postDebugTask": "Close Renode",
+            "miDebuggerServerAddress": "localhost:3333",
+            "cwd": "${workspaceRoot}",
+            "miDebuggerPath": "gdb-multiarch",
+            "program": "build/hydrv_gpio/example/HydrvGPIOExample.elf"
+        },
+        {
+            "name": "Renode debug UART",
+            "type": "cppdbg",
+            "request": "launch",
+           // "preLaunchTask": "Run Renode_UART_F4",
+            // "postDebugTask": "Close Renode",
+            "miDebuggerServerAddress": "localhost:3333",
+            "cwd": "${workspaceRoot}",
+            "miDebuggerPath": "gdb-multiarch",
+            "program": "build/hydrv_uart/example/HydrvUARTExample.elf"
         }
     ]
 }

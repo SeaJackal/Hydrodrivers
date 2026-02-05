@@ -69,7 +69,6 @@ gpioPortA: GPIOPort.STM32_GPIOPort @ sysbus <0x40020000, +0x400>
     outputSpeedResetValue: 0x0C000000
     pullUpPullDownResetValue: 0x64000000
     numberOfAFs: 16
-    invertedAFPins: [[5, 3], [7, 1, 3]]
     [0-15] -> exti@[0-15]
 
 gpioPortB: GPIOPort.STM32_GPIOPort @ sysbus <0x40020400, +0x400>
@@ -308,7 +307,6 @@ bitbandSram: Miscellaneous.BitBanding @ sysbus <0x22000000, +0x200000>
 
 sysbus:
     init:
-        ApplySVD @https://dl.antmicro.com/projects/renode/svd/STM32F40x.svd.gz
         Tag <0x40021000, 0x40021003> "GPIOE_MODER" 0xFFFFFFFF
         Tag <0x40021004, 0x40021007> "GPIOE_OTYPER" 0x00000008
         // FLASH and USB tags are required for CubeMX-based projects to pass the initialization phase

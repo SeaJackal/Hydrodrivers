@@ -21,7 +21,7 @@ int main(void)
 
     while (1)
     {
-        led_pin.Set();
+         led_pin.Set();
         auto start_time = std::chrono::steady_clock::now();
         while (std::chrono::steady_clock::now() - start_time <
                std::chrono::seconds(1))

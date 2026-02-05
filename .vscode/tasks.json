@@ -28,5 +28,86 @@
                 "panel": "dedicated"
             }
         },
+        {
+            "label": "Run Renode_UART_F1",
+            "type": "shell",
+            "command": "renode",
+            "args": [
+                "-e", "set bin_path @build/hydrv_uart/example/HydrvUARTExample.elf",
+                "-e", "set renode_core_path @third_party/renode",
+                "-e", "include @renode/f1/uart_F1.resc"
+            ],
+            "isBackground": true,
+            "problemMatcher": {
+                "source": "Renode",
+                "pattern": {
+                    "regexp": ""
+                },
+                "background": {
+                    "activeOnStart": true,
+                    "beginsPattern": "Renode, version .*",
+                    "endsPattern": ".*GDB server with all CPUs started on port.*"
+                }
+            },
+            "group": "build",
+            "presentation": {
+                "reveal": "always",
+                "panel": "dedicated"
+            }
+        },
+        {
+            "label": "Run Renode_GPIO_F4",
+            "type": "shell",
+            "command": "renode",
+            "args": [
+                "-e", "set bin_path @build/hydrv_gpio/example/HydrvGPIOExample.elf",
+                "-e", "set renode_core_path @third_party/renode",
+                "-e", "include @renode/f4/gpio_F4.resc"
+            ],
+            "isBackground": true,
+            "problemMatcher": {
+                "source": "Renode",
+                "pattern": {
+                    "regexp": ""
+                },
+                "background": {
+                    "activeOnStart": true,
+                    "beginsPattern": "Renode, version .*",
+                    "endsPattern": ".*GDB server with all CPUs started on port.*"
+                }
+            },
+            "group": "build",
+            "presentation": {
+                "reveal": "always",
+                "panel": "dedicated"
+            }
+        },
+        {
+            "label": "Run Renode_UART_F4",
+            "type": "shell",
+            "command": "renode",
+            "args": [
+                "-e", "set bin_path @build/hydrv_uart/example/HydrvUARTExample.elf",
+                "-e", "set renode_core_path @third_party/renode",
+                "-e", "include @renode/f4/uart_F4.resc"
+            ],
+            "isBackground": true,
+            "problemMatcher": {
+                "source": "Renode",
+                "pattern": {
+                    "regexp": ""
+                },
+                "background": {
+                    "activeOnStart": true,
+                    "beginsPattern": "Renode, version .*",
+                    "endsPattern": ".*GDB server with all CPUs started on port.*"
+                }
+            },
+            "group": "build",
+            "presentation": {
+                "reveal": "always",
+                "panel": "dedicated"
+            }
+        },
     ]
 }
