@@ -31,6 +31,8 @@ public:
 
     void MakeTransaction(const void *tx_buffer, int tx_length, void *rx_buffer,
                          int rx_length);
+    void MakeTransaction(const uint8_t &tx_buffer, void *rx_buffer,
+                         int rx_length);
 
     void IRQCallback();
 
@@ -77,14 +79,18 @@ inline void SPI<IDLE_TX, CallbackType, MAX_TX_LENGTH>::Init()
 
 template <uint8_t IDLE_TX, typename CallbackType, int MAX_TX_LENGTH>
 requires hydrolib::concepts::func::FuncConcept<CallbackType, void>
-inline void SPI<IDLE_TX, CallbackType, MAX_TX_LENGTH>::MakeTransaction(const void *tx_buffer,
-                                                        int tx_length,
-                                                        void *rx_buffer,
-                                                        int rx_length)
+inline void SPI<IDLE_TX, CallbackType, MAX_TX_LENGTH>::MakeTransaction(
+    const void *tx_buffer, int tx_length, void *rx_buffer, int rx_length)
 {
     cs_pin_.Reset();
     tx_length_ = tx_length;
     transaction_length_ = tx_length + rx_length;
+    if (spi_low_.IsRxDone())
+    {
+        while(true)
+        {
+        }
+    }
     if (tx_length)
     {
         memcpy(tx_buffer_, tx_buffer, tx_length);
@@ -96,6 +102,25 @@ inline void SPI<IDLE_TX, CallbackType, MAX_TX_LENGTH>::MakeTransaction(const voi
         rx_buffer_ = static_cast<uint8_t *>(rx_buffer);
         spi_low_.SetTx(IDLE_TX);
     }
+    spi_low_.EnableRxInterruption();
+}
+
+template <uint8_t IDLE_TX, typename CallbackType, int MAX_TX_LENGTH>
+requires hydrolib::concepts::func::FuncConcept<CallbackType, void>
+inline void SPI<IDLE_TX, CallbackType, MAX_TX_LENGTH>::MakeTransaction(
+    const uint8_t &tx_buffer, void *rx_buffer, int rx_length)
+{
+    cs_pin_.Reset();
+    if (spi_low_.IsRxDone())
+    {
+        while(true)
+        {
+        }
+    }
+    tx_length_ = sizeof(tx_buffer);
+    transaction_length_ = rx_length + sizeof(tx_buffer);
+    rx_buffer_ = static_cast<uint8_t *>(rx_buffer);
+    spi_low_.SetTx(tx_buffer);
     spi_low_.EnableRxInterruption();
 }
 

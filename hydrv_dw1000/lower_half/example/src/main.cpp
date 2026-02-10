@@ -24,6 +24,10 @@ constinit hydrv::dw1000::DW1000Low dw1000(hydrv::SPI::SPILow::SPI1_LOW,
                                           spi_sclk_pin, spi_miso_pin,
                                           spi_mosi_pin, cs_pin, 64000, 5);
 
+int counter = 0;
+
+uint8_t buffer[] = "Hello, World!";
+
 int main(void)
 {
     NVIC_SetPriorityGrouping(0);
@@ -31,9 +35,21 @@ int main(void)
     hydrv::clock::Clock::Init(hydrv::clock::Clock::HSI_DEFAULT);
     dw1000.Init();
 
+    hydrv::clock::Clock::Delay(1000);
+
     while (1)
     {
-        dw1000.Process();
+        if (dw1000.Process() == hydrolib::ReturnCode::OK)
+        {
+            hydrv::clock::Clock::Delay(10);
+        }
+        hydrv::clock::Clock::Delay(10);
+        counter++;
+        if (counter == 100)
+        {
+            dw1000.Transmit(buffer, sizeof(buffer));
+            counter = 0;
+        }
     }
 }
 
