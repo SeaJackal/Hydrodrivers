@@ -80,20 +80,21 @@ inline void TimerLow::Init()
 // TODO move to init, pass to constructor by array of channel presets
 inline void TimerLow::ConfigurePWM(unsigned channel, hydrv::GPIO::GPIOLow &pin)
 {
-    CLEAR_BIT(reinterpret_cast<TIM_TypeDef *>(TIMx_)->CCER, 0x1UL << channel);
+    CLEAR_BIT(reinterpret_cast<TIM_TypeDef *>(TIMx_)->CCER,
+              0x1UL << (channel * 4));
 
-    uint32_t ccer = 0;
-    CLEAR_BIT(ccer, (0x1UL << (channel * 4)) + 1);
-    CLEAR_BIT(ccer, (0x1UL << (channel * 4)) + 3);
-
+    uint32_t ccer = reinterpret_cast<TIM_TypeDef *>(TIMx_)->CCER;
+    CLEAR_BIT(ccer, 0x1UL << ((channel * 4) + 1));
+    CLEAR_BIT(ccer, 0x1UL << ((channel * 4) + 3));
     reinterpret_cast<TIM_TypeDef *>(TIMx_)->CCER = ccer;
 
-    uint32_t ccmr = 0;
+    uint32_t ccmr = (channel < 2)
+                        ? reinterpret_cast<TIM_TypeDef *>(TIMx_)->CCMR1
+                        : reinterpret_cast<TIM_TypeDef *>(TIMx_)->CCMR2;
     MODIFY_REG(ccmr, 0x3UL << ((channel % 2) * 8), 0x0UL);
     SET_BIT(ccmr, 0x7UL << ((channel % 2) * 8 + 3)); // Autoreload preload
     MODIFY_REG(ccmr, 0x7UL << ((channel % 2) * 8 + 4),
                0x6UL << ((channel % 2) * 8 + 4));
-
     if (channel < 2)
     {
         reinterpret_cast<TIM_TypeDef *>(TIMx_)->CCMR1 = ccmr;
@@ -103,7 +104,8 @@ inline void TimerLow::ConfigurePWM(unsigned channel, hydrv::GPIO::GPIOLow &pin)
         reinterpret_cast<TIM_TypeDef *>(TIMx_)->CCMR2 = ccmr;
     }
 
-    SET_BIT(reinterpret_cast<TIM_TypeDef *>(TIMx_)->CCER, 0x1UL << channel);
+    SET_BIT(reinterpret_cast<TIM_TypeDef *>(TIMx_)->CCER,
+            0x1UL << (channel * 4));
 
     pin.Init(GPIO_alt_func_);
 }
