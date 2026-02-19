@@ -1,10 +1,12 @@
 #pragma once
 
-#include "hydrolib_return_codes.hpp"
-#include "hydrv_spi.hpp"
 #include <array>
 #include <chrono>
 #include <cstdint>
+
+#include "hydrolib_return_codes.hpp"
+#include "hydrv_dw1000_regs.hpp"
+#include "hydrv_spi.hpp"
 
 using namespace std::chrono_literals;
 
@@ -28,509 +30,11 @@ public:
     void Init();
     hydrolib::ReturnCode Process();
     hydrolib::ReturnCode Transmit(const void *data, int length);
+    int GetReceivedLength() const;
+    hydrolib::ReturnCode GetReceivedData(void *data) const;
     void IRQHandler();
 
 private:
-    using RegId = uint8_t;
-
-    struct DevId
-    {
-        struct __attribute__((packed)) Data
-        {
-            uint32_t value = 0;
-        };
-
-        static constexpr RegId kAddress = 0x00;
-    };
-
-    struct TxFCtrl
-    {
-        struct __attribute__((packed)) Data
-        {
-            uint32_t lo = 0x0015400Cu;
-            uint8_t ifsdelay = 0x00u;
-        };
-
-        struct FieldShift
-        {
-            enum
-            {
-                kTFLEN = 0,
-                kTFLE = 7,
-                kTXBR = 13,
-                kTR = 15,
-                kTXPRF = 16,
-                kTXPSR = 18,
-                kPE = 20,
-                kTXBOFFS = 22
-            };
-        };
-
-        struct Mask
-        {
-            enum : uint32_t
-            {
-                kTFLEN = 0x7Fu << FieldShift::kTFLEN,
-                kTFLE = 0x7u << FieldShift::kTFLE,
-                kTXBR = 0x3u << FieldShift::kTXBR,
-                kTR = 0x1u << FieldShift::kTR,
-                kTXPRF = 0x3u << FieldShift::kTXPRF,
-                kTXPSR = 0x3u << FieldShift::kTXPSR,
-                kPE = 0x3u << FieldShift::kPE,
-                kTXBOFFS = 0x3FFu << FieldShift::kTXBOFFS
-            };
-        };
-
-        static constexpr RegId kAddress = 0x08;
-    };
-
-    struct TxBuffer
-    {
-        struct __attribute__((packed)) Data
-        {
-            uint8_t value[1024] = {};
-        };
-
-        static constexpr RegId kAddress = 0x09;
-    };
-
-    struct SysCtrl
-    {
-        struct __attribute__((packed)) Data
-        {
-            uint32_t value = 0x00000000u;
-        };
-
-        struct FieldShift
-        {
-            enum
-            {
-                kSFCST = 0,
-                kTXSTRT = 1,
-                kTXDLYS = 2,
-                kCANSFCS = 3,
-                kTRXOFF = 6,
-                kWAIT4RESP = 7,
-                kRXENAB = 8,
-                kRXDLYE = 9,
-                kHRBPT = 24
-            };
-        };
-
-        struct Mask
-        {
-            enum : uint32_t
-            {
-                kSFCST = 0x1u << FieldShift::kSFCST,
-                kTXSTRT = 0x1u << FieldShift::kTXSTRT,
-                kTXDLYS = 0x1u << FieldShift::kTXDLYS,
-                kCANSFCS = 0x1u << FieldShift::kCANSFCS,
-                kTRXOFF = 0x1u << FieldShift::kTRXOFF,
-                kWAIT4RESP = 0x1u << FieldShift::kWAIT4RESP,
-                kRXENAB = 0x1u << FieldShift::kRXENAB,
-                kRXDLYE = 0x1u << FieldShift::kRXDLYE,
-                kHRBPT = 0x1u << FieldShift::kHRBPT
-            };
-        };
-
-        static constexpr RegId kAddress = 0x0D;
-    };
-
-    struct SysCfg
-    {
-        struct __attribute__((packed)) Data
-        {
-            uint32_t value = 0x00001200u;
-        };
-
-        struct FieldShift
-        {
-            enum
-            {
-                kRXWTOE = 28,
-                kRXAUTR = 29
-            };
-        };
-
-        struct Mask
-        {
-            enum : uint32_t
-            {
-                kRXWTOE = 0x1u << FieldShift::kRXWTOE,
-                kRXAUTR = 0x1u << FieldShift::kRXAUTR
-            };
-        };
-
-        static constexpr RegId kAddress = 0x04;
-    };
-
-    struct OTP
-    {
-        struct Ctrl
-        {
-            struct __attribute__((packed)) Data
-            {
-                uint16_t value = 0x0000u;
-            };
-
-            struct FieldShift
-            {
-                enum
-                {
-                    kLDELOAD = 15
-                };
-            };
-
-            struct Mask
-            {
-                enum : uint16_t
-                {
-                    kLDELOAD = 0x1u << FieldShift::kLDELOAD
-                };
-            };
-
-            static constexpr RegId kSubAddress = 0x06;
-        };
-
-        static constexpr RegId kAddress = 0x2D;
-    };
-
-    struct SysStatus
-    {
-        struct __attribute__((packed)) Data
-        {
-            uint32_t lo = 0x00000000u;
-            uint8_t hi = 0x00u;
-        };
-
-        struct LowFieldShift
-        {
-            enum
-            {
-                kIRQS = 0,
-                kCPLOCK = 1,
-                kESYNCR = 2,
-                kAAT = 3,
-                kTXFRB = 4,
-                kTXPRS = 5,
-                kTXPHS = 6,
-                kTXFRS = 7,
-                kRXPRD = 8,
-                kRXSFDD = 9,
-                kLDEDONE = 10,
-                kRXPHD = 11,
-                kRXPHE = 12,
-                kRXDFR = 13,
-                kRXFCG = 14,
-                kRXFCE = 15,
-                kRXRFSL = 16,
-                kRXRFTO = 17,
-                kLDEERR = 18,
-                kRXOVRR = 20,
-                kRXPTO = 21,
-                kGPIOIRQ = 22,
-                kSLP2INIT = 23,
-                kRFPLL_LL = 24,
-                kCLKPLL_LL = 25,
-                kRXSFDTO = 26,
-                kHPDWARN = 27,
-                kTXBERR = 28,
-                kAFFREJ = 29,
-                kHSRBP = 30,
-                kICRBP = 31
-            };
-        };
-
-        struct HighFieldShift
-        {
-            enum
-            {
-                kRXRSCS = 0,
-                kRXPREJ = 1,
-                kTXPUTE = 2
-            };
-        };
-
-        struct LowMask
-        {
-            enum : uint64_t
-            {
-                kIRQS = 0x1ull << LowFieldShift::kIRQS,
-                kCPLOCK = 0x1ull << LowFieldShift::kCPLOCK,
-                kESYNCR = 0x1ull << LowFieldShift::kESYNCR,
-                kAAT = 0x1ull << LowFieldShift::kAAT,
-                kTXFRB = 0x1ull << LowFieldShift::kTXFRB,
-                kTXPRS = 0x1ull << LowFieldShift::kTXPRS,
-                kTXPHS = 0x1ull << LowFieldShift::kTXPHS,
-                kTXFRS = 0x1ull << LowFieldShift::kTXFRS,
-                kRXPRD = 0x1ull << LowFieldShift::kRXPRD,
-                kRXSFDD = 0x1ull << LowFieldShift::kRXSFDD,
-                kLDEDONE = 0x1ull << LowFieldShift::kLDEDONE,
-                kRXPHD = 0x1ull << LowFieldShift::kRXPHD,
-                kRXPHE = 0x1ull << LowFieldShift::kRXPHE,
-                kRXDFR = 0x1ull << LowFieldShift::kRXDFR,
-                kRXFCG = 0x1ull << LowFieldShift::kRXFCG,
-                kRXFCE = 0x1ull << LowFieldShift::kRXFCE,
-                kRXRFSL = 0x1ull << LowFieldShift::kRXRFSL,
-                kRXRFTO = 0x1ull << LowFieldShift::kRXRFTO,
-                kLDEERR = 0x1ull << LowFieldShift::kLDEERR,
-                kRXOVRR = 0x1ull << LowFieldShift::kRXOVRR,
-                kRXPTO = 0x1ull << LowFieldShift::kRXPTO,
-                kGPIOIRQ = 0x1ull << LowFieldShift::kGPIOIRQ,
-                kSLP2INIT = 0x1ull << LowFieldShift::kSLP2INIT,
-                kRFPLL_LL = 0x1ull << LowFieldShift::kRFPLL_LL,
-                kCLKPLL_LL = 0x1ull << LowFieldShift::kCLKPLL_LL,
-                kRXSFDTO = 0x1ull << LowFieldShift::kRXSFDTO,
-                kHPDWARN = 0x1ull << LowFieldShift::kHPDWARN,
-                kTXBERR = 0x1ull << LowFieldShift::kTXBERR,
-                kAFFREJ = 0x1ull << LowFieldShift::kAFFREJ,
-                kHSRBP = 0x1ull << LowFieldShift::kHSRBP,
-                kICRBP = 0x1ull << LowFieldShift::kICRBP
-            };
-        };
-
-        struct HighMask
-        {
-            enum : uint64_t
-            {
-                kRXRSCS = 0x1ull << HighFieldShift::kRXRSCS,
-                kRXPREJ = 0x1ull << HighFieldShift::kRXPREJ,
-                kTXPUTE = 0x1ull << HighFieldShift::kTXPUTE
-            };
-        };
-
-        static constexpr RegId kAddress = 0x0F;
-    };
-
-    struct RxFInfo
-    {
-        struct __attribute__((packed)) Data
-        {
-            uint32_t value = 0x00000000u;
-        };
-
-        struct FieldShift
-        {
-            enum
-            {
-                kRXFLEN = 0,
-                kRXFLE = 7,
-                kRXNSPL = 11,
-                kRXBR = 13,
-                kRNG = 15,
-                kRXPRF = 16,
-                kRXPSR = 18,
-                kRXPACC = 20
-            };
-        };
-
-        struct Mask
-        {
-            enum : uint32_t
-            {
-                kRXFLEN = 0x7Fu << FieldShift::kRXFLEN,
-                kRXFLE = 0x7u << FieldShift::kRXFLE,
-                kRXNSPL = 0x3u << FieldShift::kRXNSPL,
-                kRXBR = 0x3u << FieldShift::kRXBR,
-                kRNG = 0x1u << FieldShift::kRNG,
-                kRXPRF = 0x3u << FieldShift::kRXPRF,
-                kRXPSR = 0x3u << FieldShift::kRXPSR,
-                kRXPACC = 0xFFFu << FieldShift::kRXPACC
-            };
-        };
-
-        static constexpr RegId kAddress = 0x10;
-    };
-
-    struct RxBuffer
-    {
-        struct __attribute__((packed)) Data
-        {
-            uint8_t value[1024] = {};
-        };
-
-        static constexpr RegId kAddress = 0x11;
-    };
-
-    struct SysState
-    {
-        struct __attribute__((packed)) Data
-        {
-            uint32_t value = 0x00000000u;
-        };
-
-        struct FieldShift
-        {
-            enum
-            {
-                kTX_STATE = 0,
-                kRX_STATE = 8,
-                kPMSC_STATE = 16
-            };
-        };
-
-        struct Mask
-        {
-            enum : uint32_t
-            {
-                kTX_STATE = 0xFu << FieldShift::kTX_STATE,
-                kRX_STATE = 0xFu << FieldShift::kRX_STATE,
-                kPMSC_STATE = 0xFu << FieldShift::kPMSC_STATE
-            };
-        };
-
-        static constexpr RegId kAddress = 0x19;
-    };
-
-    struct GPIO
-    {
-        struct Mode
-        {
-            struct __attribute__((packed)) Data
-            {
-                uint32_t value = 0x00000000u;
-            };
-
-            struct FieldShift
-            {
-                enum
-                {
-                    kMSGP0 = 6,
-                    kMSGP2 = 10,
-                    kMSGP3 = 12
-                };
-            };
-
-            struct Mask
-            {
-                enum : uint32_t
-                {
-                    kMSGP0 = 0x3u << FieldShift::kMSGP0,
-                    kMSGP2 = 0x3u << FieldShift::kMSGP2,
-                    kMSGP3 = 0x3u << FieldShift::kMSGP3
-                };
-            };
-
-            enum Msgp0 : uint32_t
-            {
-                kGpio0 = 0x0u << FieldShift::kMSGP0,
-                kRxOkLed = 0x1u << FieldShift::kMSGP0
-            };
-
-            enum Msgp2 : uint32_t
-            {
-                kGpio2 = 0x0u << FieldShift::kMSGP2,
-                kRxLed = 0x1u << FieldShift::kMSGP2
-            };
-
-            enum Msgp3 : uint32_t
-            {
-                kGpio3 = 0x0u << FieldShift::kMSGP3,
-                kTxLed = 0x1u << FieldShift::kMSGP3
-            };
-
-            static constexpr RegId kSubAddress = 0x00;
-        };
-
-        static constexpr RegId kAddress = 0x26;
-    };
-
-    struct PMSC
-    {
-        struct Ctrl0
-        {
-            struct __attribute__((packed)) Data
-            {
-                uint32_t value = 0xF0300200u;
-            };
-
-            struct FieldShift
-            {
-                enum
-                {
-                    kSYSCLKS = 0,
-                    kRXCLKS = 2,
-                    kTXCLKS = 4,
-                    kFACE = 6,
-                    kADCCE = 10,
-                    kAMCE = 15,
-                    kGPCE = 16,
-                    kGPRN = 17,
-                    kGPDCE = 18,
-                    kGPDRN = 19,
-                    kKHZCLKEN = 23,
-                    kPLL2_SEQ_EN = 24,
-                    kSOFTRESET = 28
-                };
-            };
-
-            struct Mask
-            {
-                enum : uint32_t
-                {
-                    kSYSCLKS = 0x3u << FieldShift::kSYSCLKS,
-                    kRXCLKS = 0x3u << FieldShift::kRXCLKS,
-                    kTXCLKS = 0x3u << FieldShift::kTXCLKS,
-                    kFACE = 0x1u << FieldShift::kFACE,
-                    kADCCE = 0x1u << FieldShift::kADCCE,
-                    kAMCE = 0x1u << FieldShift::kAMCE,
-                    kGPCE = 0x1u << FieldShift::kGPCE,
-                    kGPRN = 0x1u << FieldShift::kGPRN,
-                    kGPDCE = 0x1u << FieldShift::kGPDCE,
-                    kGPDRN = 0x1u << FieldShift::kGPDRN,
-                    kKHZCLKEN = 0x1u << FieldShift::kKHZCLKEN,
-                    kPLL2_SEQ_EN = 0x1u << FieldShift::kPLL2_SEQ_EN,
-                    kSOFTRESET = 0xFu << FieldShift::kSOFTRESET
-                };
-            };
-
-            enum SysClk : uint32_t
-            {
-                kAuto = 0x0u << FieldShift::kSYSCLKS,
-                kForceXTI = 0x1u << FieldShift::kSYSCLKS,
-                kForcePLL = 0x2u << FieldShift::kSYSCLKS
-            };
-
-            enum SoftReset : uint32_t
-            {
-                kNoReset = 0xFu << FieldShift::kSOFTRESET,
-                kReset = 0x0u << FieldShift::kSOFTRESET
-            };
-
-            static constexpr RegId kSubAddress = 0x00;
-        };
-
-        struct Ledc
-        {
-            struct __attribute__((packed)) Data
-            {
-                uint32_t value = 0x00000020u;
-            };
-
-            struct FieldShift
-            {
-                enum
-                {
-                    kBLINK_TIM = 0,
-                    kBLNKEN = 8
-                };
-            };
-
-            struct Mask
-            {
-                enum : uint32_t
-                {
-                    kBLINK_TIM = 0xFFu << FieldShift::kBLINK_TIM,
-                    kBLNKEN = 0x1u << FieldShift::kBLNKEN
-                };
-            };
-
-            static constexpr RegId kSubAddress = 0x28;
-        };
-
-        static constexpr RegId kAddress = 0x36;
-    };
-
     enum class State
     {
         PROCESSING_RESET,
@@ -655,14 +159,18 @@ private:
 
     SPI::SPI<0x00, CallbackType> spi_;
 
-    DevId::Data dev_id_ = {};
-    SysStatus::Data status_ = {};
-    SysState::Data sys_state_ = {};
-    RxFInfo::Data frame_info_ = {};
-    std::array<uint8_t, sizeof(RxBuffer::Data)> rx_buffer_ = {};
+    regs::DevId::Data dev_id_ = {};
+    regs::SysStatus::Data status_ = {};
+    regs::SysState::Data sys_state_ = {};
+    regs::RxFInfo::Data frame_info_ = {};
+
+    int rx_length_ = 0;
+    std::array<uint8_t, sizeof(regs::RxBuffer::Data)> rx_buffer_ = {};
+
     int tx_length_ = 0;
-    std::array<uint8_t, sizeof(TxBuffer::Data) + sizeof(RegId)> tx_buffer_ = {
-        static_cast<uint8_t>(TxBuffer::kAddress) | kWriteMask};
+    std::array<uint8_t, sizeof(regs::TxBuffer::Data) + sizeof(regs::RegId)>
+        tx_buffer_ = {static_cast<uint8_t>(regs::TxBuffer::kAddress) |
+                      kWriteMask};
 
     bool transaction_complete_ = false;
     State state_ = State::PROCESSING_RESET;
@@ -758,7 +266,15 @@ inline hydrolib::ReturnCode DW1000Low::Transmit(const void *data, int length)
         return hydrolib::ReturnCode::FAIL;
     }
     tx_length_ = length;
-    memcpy(tx_buffer_.data() + sizeof(RegId), data, length);
+    memcpy(tx_buffer_.data() + sizeof(regs::RegId), data, length);
+    return hydrolib::ReturnCode::OK;
+}
+
+inline int DW1000Low::GetReceivedLength() const { return rx_length_; }
+
+inline hydrolib::ReturnCode DW1000Low::GetReceivedData(void *data) const
+{
+    memcpy(data, rx_buffer_.data(), rx_length_);
     return hydrolib::ReturnCode::OK;
 }
 
@@ -768,7 +284,7 @@ inline hydrolib::ReturnCode DW1000Low::ProcessDevId()
 {
     if (!dev_id_requested_)
     {
-        ReadReg<DevId>(dev_id_);
+        ReadReg<regs::DevId>(dev_id_);
         dev_id_requested_ = true;
         return hydrolib::ReturnCode::NO_DATA;
     }
@@ -793,11 +309,11 @@ inline hydrolib::ReturnCode DW1000Low::ProcessConfig()
         {
         case ConfigState::LOWERING_SYSCTL:
         {
-            PMSC::Ctrl0::Data pmsc_ctrl0 = {};
+            regs::PMSC::Ctrl0::Data pmsc_ctrl0 = {};
             pmsc_ctrl0.value =
-                (pmsc_ctrl0.value & ~(PMSC::Ctrl0::Mask::kSYSCLKS)) |
-                PMSC::Ctrl0::SysClk::kForceXTI;
-            WriteSubreg<PMSC, PMSC::Ctrl0>(pmsc_ctrl0);
+                (pmsc_ctrl0.value & ~(regs::PMSC::Ctrl0::Mask::kSYSCLKS)) |
+                regs::PMSC::Ctrl0::SysClk::kForceXTI;
+            WriteSubreg<regs::PMSC, regs::PMSC::Ctrl0>(pmsc_ctrl0);
             config_state_ = ConfigState::WAITING_LOWERING_SYSCTL;
             return hydrolib::ReturnCode::NO_DATA;
         }
@@ -811,9 +327,9 @@ inline hydrolib::ReturnCode DW1000Low::ProcessConfig()
             break;
         case ConfigState::LDELOAD_OTP:
         {
-            OTP::Ctrl::Data otp_ctrl = {};
-            otp_ctrl.value |= OTP::Ctrl::Mask::kLDELOAD;
-            WriteSubreg<OTP, OTP::Ctrl>(otp_ctrl);
+            regs::OTP::Ctrl::Data otp_ctrl = {};
+            otp_ctrl.value |= regs::OTP::Ctrl::Mask::kLDELOAD;
+            WriteSubreg<regs::OTP, regs::OTP::Ctrl>(otp_ctrl);
             config_state_ = ConfigState::WAITING_LDELOAD_OTP;
             return hydrolib::ReturnCode::NO_DATA;
         }
@@ -836,11 +352,11 @@ inline hydrolib::ReturnCode DW1000Low::ProcessConfig()
             break;
         case ConfigState::RISING_SYSCLK:
         {
-            PMSC::Ctrl0::Data pmsc_ctrl0 = {};
+            regs::PMSC::Ctrl0::Data pmsc_ctrl0 = {};
             pmsc_ctrl0.value =
-                (pmsc_ctrl0.value & ~(PMSC::Ctrl0::Mask::kSYSCLKS)) |
-                PMSC::Ctrl0::SysClk::kAuto;
-            WriteSubreg<PMSC, PMSC::Ctrl0>(pmsc_ctrl0);
+                (pmsc_ctrl0.value & ~(regs::PMSC::Ctrl0::Mask::kSYSCLKS)) |
+                regs::PMSC::Ctrl0::SysClk::kAuto;
+            WriteSubreg<regs::PMSC, regs::PMSC::Ctrl0>(pmsc_ctrl0);
             config_state_ = ConfigState::WAITING_RISING_SYSCLK;
             return hydrolib::ReturnCode::NO_DATA;
         }
@@ -854,13 +370,13 @@ inline hydrolib::ReturnCode DW1000Low::ProcessConfig()
             break;
         case ConfigState::ENABLING_GPIO_CLOCKS:
         {
-            PMSC::Ctrl0::Data pmsc_ctrl0 = {};
-            pmsc_ctrl0.value |= PMSC::Ctrl0::Mask::kGPCE;
-            pmsc_ctrl0.value |= PMSC::Ctrl0::Mask::kGPRN;
-            pmsc_ctrl0.value |= PMSC::Ctrl0::Mask::kGPDCE;
-            pmsc_ctrl0.value |= PMSC::Ctrl0::Mask::kGPDRN;
-            pmsc_ctrl0.value |= PMSC::Ctrl0::Mask::kKHZCLKEN;
-            WriteSubreg<PMSC, PMSC::Ctrl0>(pmsc_ctrl0);
+            regs::PMSC::Ctrl0::Data pmsc_ctrl0 = {};
+            pmsc_ctrl0.value |= regs::PMSC::Ctrl0::Mask::kGPCE;
+            pmsc_ctrl0.value |= regs::PMSC::Ctrl0::Mask::kGPRN;
+            pmsc_ctrl0.value |= regs::PMSC::Ctrl0::Mask::kGPDCE;
+            pmsc_ctrl0.value |= regs::PMSC::Ctrl0::Mask::kGPDRN;
+            pmsc_ctrl0.value |= regs::PMSC::Ctrl0::Mask::kKHZCLKEN;
+            WriteSubreg<regs::PMSC, regs::PMSC::Ctrl0>(pmsc_ctrl0);
             config_state_ = ConfigState::WAITING_ENABLING_GPIO_CLOCKS;
             return hydrolib::ReturnCode::NO_DATA;
         }
@@ -874,11 +390,11 @@ inline hydrolib::ReturnCode DW1000Low::ProcessConfig()
             break;
         case ConfigState::CONFIGURING_LED:
         {
-            PMSC::Ledc::Data ledc = {};
-            ledc.value =
-                (ledc.value & ~PMSC::Ledc::Mask::kBLINK_TIM) | (0x20u << 0);
-            ledc.value |= PMSC::Ledc::Mask::kBLNKEN;
-            WriteSubreg<PMSC, PMSC::Ledc>(ledc);
+            regs::PMSC::Ledc::Data ledc = {};
+            ledc.value = (ledc.value & ~regs::PMSC::Ledc::Mask::kBLINK_TIM) |
+                         (0x20u << 0);
+            ledc.value |= regs::PMSC::Ledc::Mask::kBLNKEN;
+            WriteSubreg<regs::PMSC, regs::PMSC::Ledc>(ledc);
             config_state_ = ConfigState::WAITING_CONFIGURING_LED;
             return hydrolib::ReturnCode::NO_DATA;
         }
@@ -892,14 +408,15 @@ inline hydrolib::ReturnCode DW1000Low::ProcessConfig()
             break;
         case ConfigState::CONFIGURING_GPIO_MODE:
         {
-            GPIO::Mode::Data gpio_mode = {};
-            gpio_mode.value = (gpio_mode.value & ~(GPIO::Mode::Mask::kMSGP0 |
-                                                   GPIO::Mode::Mask::kMSGP2 |
-                                                   GPIO::Mode::Mask::kMSGP3)) |
-                              static_cast<uint32_t>(GPIO::Mode::kRxOkLed) |
-                              static_cast<uint32_t>(GPIO::Mode::kRxLed) |
-                              static_cast<uint32_t>(GPIO::Mode::kTxLed);
-            WriteSubreg<GPIO, GPIO::Mode>(gpio_mode);
+            regs::GPIO::Mode::Data gpio_mode = {};
+            gpio_mode.value =
+                (gpio_mode.value & ~(regs::GPIO::Mode::Mask::kMSGP0 |
+                                     regs::GPIO::Mode::Mask::kMSGP2 |
+                                     regs::GPIO::Mode::Mask::kMSGP3)) |
+                static_cast<uint32_t>(regs::GPIO::Mode::kRxOkLed) |
+                static_cast<uint32_t>(regs::GPIO::Mode::kRxLed) |
+                static_cast<uint32_t>(regs::GPIO::Mode::kTxLed);
+            WriteSubreg<regs::GPIO, regs::GPIO::Mode>(gpio_mode);
             config_state_ = ConfigState::WAITING_CONFIGURING_GPIO_MODE;
             return hydrolib::ReturnCode::NO_DATA;
         }
@@ -913,9 +430,9 @@ inline hydrolib::ReturnCode DW1000Low::ProcessConfig()
             break;
         case ConfigState::ENABLING_RX:
         {
-            SysCtrl::Data sys_ctrl_rxenab = {};
-            sys_ctrl_rxenab.value |= SysCtrl::Mask::kRXENAB;
-            WriteReg<SysCtrl>(sys_ctrl_rxenab);
+            regs::SysCtrl::Data sys_ctrl_rxenab = {};
+            sys_ctrl_rxenab.value |= regs::SysCtrl::Mask::kRXENAB;
+            WriteReg<regs::SysCtrl>(sys_ctrl_rxenab);
             config_state_ = ConfigState::WAITING_ENABLING_RX;
             return hydrolib::ReturnCode::NO_DATA;
         }
@@ -939,11 +456,11 @@ inline hydrolib::ReturnCode DW1000Low::ProcessReset()
         {
         case ResetState::LOWERING_SYSCLK:
         {
-            PMSC::Ctrl0::Data pmsc_ctrl0 = {};
+            regs::PMSC::Ctrl0::Data pmsc_ctrl0 = {};
             pmsc_ctrl0.value =
-                (pmsc_ctrl0.value & ~PMSC::Ctrl0::Mask::kSYSCLKS) |
-                PMSC::Ctrl0::SysClk::kForceXTI;
-            WriteSubreg<PMSC, PMSC::Ctrl0>(pmsc_ctrl0);
+                (pmsc_ctrl0.value & ~regs::PMSC::Ctrl0::Mask::kSYSCLKS) |
+                regs::PMSC::Ctrl0::SysClk::kForceXTI;
+            WriteSubreg<regs::PMSC, regs::PMSC::Ctrl0>(pmsc_ctrl0);
             reset_state_ = ResetState::WAITING_LOWERING_SYSCLK;
             return hydrolib::ReturnCode::NO_DATA;
         }
@@ -957,14 +474,14 @@ inline hydrolib::ReturnCode DW1000Low::ProcessReset()
             return hydrolib::ReturnCode::NO_DATA;
         case ResetState::RESETING:
         {
-            PMSC::Ctrl0::Data pmsc_ctrl0 = {};
+            regs::PMSC::Ctrl0::Data pmsc_ctrl0 = {};
             pmsc_ctrl0.value =
-                (pmsc_ctrl0.value & ~PMSC::Ctrl0::Mask::kSYSCLKS) |
-                PMSC::Ctrl0::SysClk::kForceXTI;
+                (pmsc_ctrl0.value & ~regs::PMSC::Ctrl0::Mask::kSYSCLKS) |
+                regs::PMSC::Ctrl0::SysClk::kForceXTI;
             pmsc_ctrl0.value =
-                (pmsc_ctrl0.value & ~PMSC::Ctrl0::Mask::kSOFTRESET) |
-                PMSC::Ctrl0::SoftReset::kReset;
-            WriteSubreg<PMSC, PMSC::Ctrl0>(pmsc_ctrl0);
+                (pmsc_ctrl0.value & ~regs::PMSC::Ctrl0::Mask::kSOFTRESET) |
+                regs::PMSC::Ctrl0::SoftReset::kReset;
+            WriteSubreg<regs::PMSC, regs::PMSC::Ctrl0>(pmsc_ctrl0);
             reset_state_ = ResetState::WAITING_RESET;
             return hydrolib::ReturnCode::NO_DATA;
         }
@@ -987,14 +504,14 @@ inline hydrolib::ReturnCode DW1000Low::ProcessReset()
             return hydrolib::ReturnCode::NO_DATA;
         case ResetState::CLEARING_RESET:
         {
-            PMSC::Ctrl0::Data pmsc_ctrl0 = {};
+            regs::PMSC::Ctrl0::Data pmsc_ctrl0 = {};
             pmsc_ctrl0.value =
-                (pmsc_ctrl0.value & ~PMSC::Ctrl0::Mask::kSYSCLKS) |
-                PMSC::Ctrl0::SysClk::kForceXTI;
+                (pmsc_ctrl0.value & ~regs::PMSC::Ctrl0::Mask::kSYSCLKS) |
+                regs::PMSC::Ctrl0::SysClk::kForceXTI;
             pmsc_ctrl0.value =
-                (pmsc_ctrl0.value & ~PMSC::Ctrl0::Mask::kSOFTRESET) |
-                PMSC::Ctrl0::SoftReset::kNoReset;
-            WriteSubreg<PMSC, PMSC::Ctrl0>(pmsc_ctrl0);
+                (pmsc_ctrl0.value & ~regs::PMSC::Ctrl0::Mask::kSOFTRESET) |
+                regs::PMSC::Ctrl0::SoftReset::kNoReset;
+            WriteSubreg<regs::PMSC, regs::PMSC::Ctrl0>(pmsc_ctrl0);
             reset_state_ = ResetState::WAITING_CLEARING_RESET;
             return hydrolib::ReturnCode::NO_DATA;
         }
@@ -1008,11 +525,11 @@ inline hydrolib::ReturnCode DW1000Low::ProcessReset()
             return hydrolib::ReturnCode::NO_DATA;
         case ResetState::RAISING_SYSCLK:
         {
-            PMSC::Ctrl0::Data pmsc_ctrl0 = {};
+            regs::PMSC::Ctrl0::Data pmsc_ctrl0 = {};
             pmsc_ctrl0.value =
-                (pmsc_ctrl0.value & ~PMSC::Ctrl0::Mask::kSYSCLKS) |
-                PMSC::Ctrl0::SysClk::kAuto;
-            WriteSubreg<PMSC, PMSC::Ctrl0>(pmsc_ctrl0);
+                (pmsc_ctrl0.value & ~regs::PMSC::Ctrl0::Mask::kSYSCLKS) |
+                regs::PMSC::Ctrl0::SysClk::kAuto;
+            WriteSubreg<regs::PMSC, regs::PMSC::Ctrl0>(pmsc_ctrl0);
             reset_state_ = ResetState::WAITING_RAISING_SYSCLK;
             return hydrolib::ReturnCode::NO_DATA;
         }
@@ -1070,7 +587,7 @@ inline hydrolib::ReturnCode DW1000Low::ProcessReading()
         switch (reading_state_)
         {
         case ReadingState::READING_STATUS:
-            ReadReg<SysStatus>(status_);
+            ReadReg<regs::SysStatus>(status_);
             reading_state_ = ReadingState::WAITING_STATUS;
             return hydrolib::ReturnCode::NO_DATA;
         case ReadingState::WAITING_STATUS:
@@ -1082,14 +599,14 @@ inline hydrolib::ReturnCode DW1000Low::ProcessReading()
             }
             return hydrolib::ReturnCode::NO_DATA;
         case ReadingState::READING_SYS_STATE:
-            ReadReg<SysState>(sys_state_);
+            ReadReg<regs::SysState>(sys_state_);
             reading_state_ = ReadingState::WAITING_SYS_STATE;
             return hydrolib::ReturnCode::NO_DATA;
         case ReadingState::WAITING_SYS_STATE:
             if (transaction_complete_)
             {
                 transaction_complete_ = false;
-                if (status_.lo & SysStatus::LowMask::kRXFCG)
+                if (status_.lo & regs::SysStatus::LowMask::kRXFCG)
                 {
                     reading_state_ = ReadingState::READING_RX_FRAME_INFO;
                     break;
@@ -1099,7 +616,7 @@ inline hydrolib::ReturnCode DW1000Low::ProcessReading()
             }
             return hydrolib::ReturnCode::NO_DATA;
         case ReadingState::READING_RX_FRAME_INFO:
-            ReadReg<RxFInfo>(frame_info_);
+            ReadReg<regs::RxFInfo>(frame_info_);
             reading_state_ = ReadingState::WAITING_RX_FRAME_INFO;
             return hydrolib::ReturnCode::NO_DATA;
         case ReadingState::WAITING_RX_FRAME_INFO:
@@ -1111,7 +628,7 @@ inline hydrolib::ReturnCode DW1000Low::ProcessReading()
             }
             return hydrolib::ReturnCode::NO_DATA;
         case ReadingState::READING_RX_BUFFER:
-            ReadRxBuffer(frame_info_.value & RxFInfo::Mask::kRXFLEN);
+            ReadRxBuffer(frame_info_.value & regs::RxFInfo::Mask::kRXFLEN);
             reading_state_ = ReadingState::WAITING_RX_BUFFER;
             return hydrolib::ReturnCode::NO_DATA;
         case ReadingState::WAITING_RX_BUFFER:
@@ -1124,11 +641,11 @@ inline hydrolib::ReturnCode DW1000Low::ProcessReading()
             return hydrolib::ReturnCode::NO_DATA;
         case ReadingState::REENABLING_RX:
         {
-            SysCtrl::Data sys_ctrl_rxenab = {};
+            regs::SysCtrl::Data sys_ctrl_rxenab = {};
             status_.hi = 0;
             status_.lo = 0;
-            sys_ctrl_rxenab.value |= SysCtrl::Mask::kRXENAB;
-            WriteReg<SysCtrl>(sys_ctrl_rxenab);
+            sys_ctrl_rxenab.value |= regs::SysCtrl::Mask::kRXENAB;
+            WriteReg<regs::SysCtrl>(sys_ctrl_rxenab);
             reading_state_ = ReadingState::WAITING_REENABLING_RX;
             return hydrolib::ReturnCode::NO_DATA;
         }
@@ -1155,9 +672,9 @@ inline hydrolib::ReturnCode DW1000Low::ProcessWriting()
         {
         case WritingState::DISABLING_RX:
         {
-            SysCtrl::Data sys_ctrl_trxoff = {};
-            sys_ctrl_trxoff.value |= SysCtrl::Mask::kTRXOFF;
-            WriteReg<SysCtrl>(sys_ctrl_trxoff);
+            regs::SysCtrl::Data sys_ctrl_trxoff = {};
+            sys_ctrl_trxoff.value |= regs::SysCtrl::Mask::kTRXOFF;
+            WriteReg<regs::SysCtrl>(sys_ctrl_trxoff);
             writing_state_ = WritingState::WAITING_DISABLING_RX;
             return hydrolib::ReturnCode::NO_DATA;
         }
@@ -1171,12 +688,12 @@ inline hydrolib::ReturnCode DW1000Low::ProcessWriting()
             break;
         case WritingState::WRITING_TX_FRAME_CONTROL:
         {
-            TxFCtrl::Data tx_frame_control = {};
+            regs::TxFCtrl::Data tx_frame_control = {};
             tx_frame_control.lo =
-                (tx_frame_control.lo & ~TxFCtrl::Mask::kTFLEN) |
+                (tx_frame_control.lo & ~regs::TxFCtrl::Mask::kTFLEN) |
                 (static_cast<uint32_t>((tx_length_ + 2)
-                                       << TxFCtrl::FieldShift::kTFLEN));
-            WriteReg<TxFCtrl>(tx_frame_control);
+                                       << regs::TxFCtrl::FieldShift::kTFLEN));
+            WriteReg<regs::TxFCtrl>(tx_frame_control);
             writing_state_ = WritingState::WAITING_TX_FRAME_CONTROL;
             return hydrolib::ReturnCode::NO_DATA;
         };
@@ -1202,10 +719,10 @@ inline hydrolib::ReturnCode DW1000Low::ProcessWriting()
             break;
         case WritingState::WRITING_TX_START:
         {
-            SysCtrl::Data sys_ctrl_tx_start = {};
+            regs::SysCtrl::Data sys_ctrl_tx_start = {};
             sys_ctrl_tx_start.value |=
-                SysCtrl::Mask::kTXSTRT | SysCtrl::Mask::kWAIT4RESP;
-            WriteReg<SysCtrl>(sys_ctrl_tx_start);
+                regs::SysCtrl::Mask::kTXSTRT | regs::SysCtrl::Mask::kWAIT4RESP;
+            WriteReg<regs::SysCtrl>(sys_ctrl_tx_start);
             writing_state_ = WritingState::WAITING_TX_START;
             return hydrolib::ReturnCode::NO_DATA;
         }
@@ -1219,7 +736,7 @@ inline hydrolib::ReturnCode DW1000Low::ProcessWriting()
             writing_state_ = WritingState::READING_TX_STATUS;
             break;
         case WritingState::READING_TX_STATUS:
-            ReadReg<SysStatus>(status_);
+            ReadReg<regs::SysStatus>(status_);
             writing_state_ = WritingState::WAITING_READING_TX_STATUS;
             return hydrolib::ReturnCode::NO_DATA;
         case WritingState::WAITING_READING_TX_STATUS:
@@ -1228,7 +745,7 @@ inline hydrolib::ReturnCode DW1000Low::ProcessWriting()
                 return hydrolib::ReturnCode::NO_DATA;
             }
             transaction_complete_ = false;
-            if (!(status_.lo & SysStatus::LowMask::kTXFRS))
+            if (!(status_.lo & regs::SysStatus::LowMask::kTXFRS))
             {
                 writing_state_ = WritingState::READING_TX_STATUS;
                 return hydrolib::ReturnCode::NO_DATA;
@@ -1251,7 +768,7 @@ inline void DW1000Low::WriteReg(const Reg::Data &data)
 {
     struct __attribute__((packed)) RegWriteBuffer
     {
-        RegId reg;
+        regs::RegId reg;
         Reg::Data data;
     };
 
@@ -1266,8 +783,8 @@ inline void DW1000Low::WriteSubreg(const Subreg::Data &data)
 {
     struct __attribute__((packed)) SubregWriteBuffer
     {
-        RegId reg;
-        RegId subreg;
+        regs::RegId reg;
+        regs::RegId subreg;
         Subreg::Data data;
     };
     SubregWriteBuffer subreg_write_buffer = {.reg = Reg::kAddress | kWriteMask |
@@ -1280,12 +797,13 @@ inline void DW1000Low::WriteSubreg(const Subreg::Data &data)
 
 inline void DW1000Low::ReadRxBuffer(int length)
 {
-    spi_.MakeTransaction(RxBuffer::kAddress, rx_buffer_.data(), length);
+    rx_length_ = length;
+    spi_.MakeTransaction(regs::RxBuffer::kAddress, rx_buffer_.data(), length);
 }
 
 inline void DW1000Low::WriteTxBuffer()
 {
-    spi_.MakeTransaction(tx_buffer_.data(), tx_length_ + sizeof(RegId), nullptr,
-                         0);
+    spi_.MakeTransaction(tx_buffer_.data(), tx_length_ + sizeof(regs::RegId),
+                         nullptr, 0);
 }
 }; // namespace hydrv::dw1000
