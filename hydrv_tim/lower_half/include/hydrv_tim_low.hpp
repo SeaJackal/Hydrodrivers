@@ -27,6 +27,9 @@ public:
     static constexpr TimerPreset TIM5_low{TIM5_BASE, 2, RCC_APB1ENR_TIM5EN,
                                           RCC_BASE +
                                               offsetof(RCC_TypeDef, APB1ENR)};
+    static constexpr TimerPreset TIM3_low{TIM3_BASE, 2, RCC_APB1ENR_TIM3EN,
+                                          RCC_BASE +
+                                              offsetof(RCC_TypeDef, APB1ENR)};
 
 public:
     consteval TimerLow(TimerPreset preset, unsigned prescaler, uint32_t period);
