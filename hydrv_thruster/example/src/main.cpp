@@ -16,8 +16,19 @@ hydrv::timer::TimerLow tim(hydrv::timer::TimerLow::TIM5_low,
                            hydrv::thruster::Thruster::tim_prescaler,
                            hydrv::thruster::Thruster::tim_counter_period);
 
+hydrv::GPIO::GPIOLow tim3_pin0(hydrv::GPIO::GPIOLow::GPIOA_port, 6,
+                               hydrv::GPIO::GPIOLow::GPIO_Timer);
+hydrv::GPIO::GPIOLow tim3_pin1(hydrv::GPIO::GPIOLow::GPIOA_port, 7,
+                               hydrv::GPIO::GPIOLow::GPIO_Timer);
+hydrv::timer::TimerLow tim3(hydrv::timer::TimerLow::TIM3_low,
+                            hydrv::thruster::Thruster::tim_prescaler,
+                            hydrv::thruster::Thruster::tim_counter_period);
+
 hydrv::thruster::Thruster thruster0(0, tim, tim_pin0);
 hydrv::thruster::Thruster thruster1(1, tim, tim_pin1);
+
+hydrv::thruster::Thruster thruster2(0, tim3, tim3_pin0);
+hydrv::thruster::Thruster thruster3(1, tim3, tim3_pin1);
 
 int main(void)
 {
@@ -25,17 +36,25 @@ int main(void)
     hydrv::clock::Clock::Init(hydrv::clock::Clock::HSI_DEFAULT);
     thruster0.Init();
     thruster1.Init();
+    thruster2.Init();
+    thruster3.Init();
 
     while (1)
     {
         thruster0.SetSpeed(1000);
         thruster1.SetSpeed(-1000);
+        thruster2.SetSpeed(1000);
+        thruster3.SetSpeed(-1000);
         hydrv::clock::Clock::Delay(2000);
         thruster0.SetSpeed(-1000);
         thruster1.SetSpeed(1000);
+        thruster2.SetSpeed(-1000);
+        thruster3.SetSpeed(1000);
         hydrv::clock::Clock::Delay(2000);
         thruster0.SetSpeed(0);
         thruster1.SetSpeed(0);
+        thruster2.SetSpeed(0);
+        thruster3.SetSpeed(0);
         hydrv::clock::Clock::Delay(2000);
     }
 }
