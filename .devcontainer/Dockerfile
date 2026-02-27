@@ -36,8 +36,3 @@ RUN wget https://github.com/renode/renode/releases/download/v${RENODE_VERSION}/r
     rm -rf /var/lib/apt/lists/*
 RUN pip3 install -r /opt/renode/tests/requirements.txt --no-cache-dir
 
-RUN if [ "$USER_GID" != "1000" ] || [ "$USER_UID" != "1000" ]; then \
-    groupmod --gid $USER_GID vscode \
-    && usermod --uid $USER_UID --gid $USER_GID vscode \
-    && chown -R $USER_UID:$USER_GID /home/vscode; \
-    fi
