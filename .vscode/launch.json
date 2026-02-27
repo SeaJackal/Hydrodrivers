@@ -191,6 +191,17 @@
             "cwd": "${workspaceRoot}",
             "miDebuggerPath": "gdb-multiarch",
             "program": "build/hydrv_uart/example/HydrvUARTExample.elf"
+        },
+        {
+            "name": "Renode debug BUS_F4",
+            "type": "cppdbg",
+            "request": "launch",
+            // "preLaunchTask": "Run Renode_UART_F4",
+            "postDebugTask": "Close Renode",
+            "miDebuggerServerAddress": "localhost:3333",
+            "cwd": "${workspaceRoot}",
+            "miDebuggerPath": "gdb-multiarch",
+            "program": "build/hydrv_bus/example/HydrvBusExample.elf"
         }
     ]
 }

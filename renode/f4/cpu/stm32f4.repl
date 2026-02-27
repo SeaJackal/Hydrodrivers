@@ -305,6 +305,15 @@ bitbandPeripherals: Miscellaneous.BitBanding @ sysbus <0x42000000, +0x2000000>
 bitbandSram: Miscellaneous.BitBanding @ sysbus <0x22000000, +0x200000>
     peripheralBase: 0x20000000
 
+UserButton: Miscellaneous.Button @ gpioPortA
+    -> gpioPortA@0
+
+UserLED: Miscellaneous.LED @ gpioPortD
+
+gpioPortD:
+    12 -> UserLED@0
+   
+
 sysbus:
     init:
         Tag <0x40021000, 0x40021003> "GPIOE_MODER" 0xFFFFFFFF
