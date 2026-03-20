@@ -29,21 +29,27 @@ constinit hydrv::GPIO::GPIOLow tx_pin1(hydrv::GPIO::GPIOLow::GPIOB_port, 6,
 constinit hydrv::UART::UART<255, 255>
     uart1(hydrv::UART::UARTLow::USART1_115200_LOW, rx_pin1, tx_pin1, 7);
 
-constinit hydrv::GPIO::GPIOLow tim_pin(hydrv::GPIO::GPIOLow::GPIOA_port, 0,
-                                       hydrv::GPIO::GPIOLow::GPIO_Timer);
+constinit hydrv::GPIO::GPIOLow tim_pin_0(hydrv::GPIO::GPIOLow::GPIOA_port, 0,
+                                         hydrv::GPIO::GPIOLow::GPIO_Timer);
+constinit hydrv::GPIO::GPIOLow tim_pin_1{hydrv::GPIO::GPIOLow::GPIOA_port, 1,
+                                         hydrv::GPIO::GPIOLow::GPIO_Timer};
 hydrv::timer::TimerLow tim(hydrv::timer::TimerLow::TIM5_low,
                            hydrv::thruster::Thruster::tim_prescaler,
                            hydrv::thruster::Thruster::tim_counter_period);
 
-hydrv::thruster::Thruster thruster(0, tim, tim_pin);
+hydrv::thruster::Thruster thruster_0(0, tim, tim_pin_0);
+hydrv::thruster::Thruster thruster_1(1, tim, tim_pin_1);
 
 int Handler(int argc, char *argv[]);
 
 hydrolib::device::StreamDevice<decltype(uart1)> uart_device("uart", uart1);
 
-hydrolib::device::ThrusterDevice<decltype(thruster)> thruster_device("thruster",
-                                                                     thruster);
-hydrolib::device::DeviceManager device_manager({&uart_device, &thruster_device});
+hydrolib::device::ThrusterDevice<decltype(thruster_0)>
+    thruster_device_0("thr0", thruster_0);
+hydrolib::device::ThrusterDevice<decltype(thruster_1)>
+    thruster_device_1("thr1", thruster_1);
+hydrolib::device::DeviceManager
+    device_manager({&uart_device, &thruster_device_0, &thruster_device_1});
 
 class CommandMap
 {
@@ -89,7 +95,8 @@ int main(void)
     uart1.Init();
     uart3.Init();
 
-    thruster.Init();
+    thruster_0.Init();
+    thruster_1.Init();
 
     while (1)
     {
