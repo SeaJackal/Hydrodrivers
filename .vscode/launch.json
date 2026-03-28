@@ -85,6 +85,22 @@
             ]
         },
         {
+            "name": "Cortex Debug f4 SPI",
+            "cwd": "${workspaceFolder}",
+            "executable": "${workspaceFolder}/build/hydrv_gpio/example/HydrvGPIOExample.elf",
+            "request": "launch",
+            "type": "cortex-debug",
+            "runToEntryPoint": "main",
+            "servertype": "openocd",
+            "device": "stm32f4x",
+            "svdFile": "resources/STM32F407.svd",
+            "showDevDebugOutput": "raw",
+            "configFiles": [
+                "interface/stlink.cfg",
+                "target/stm32f4x.cfg"
+            ]
+        },
+        {
             "name": "Cortex Debug Timer",
             "cwd": "${workspaceFolder}",
             "executable": "${workspaceFolder}/build/hydrv_tim/example/HydrvTIMERExample.elf",

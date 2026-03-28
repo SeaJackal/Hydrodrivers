@@ -3,7 +3,7 @@ set(LIBRARY_NAME HydrodriversSPI)
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
 
-if(MCU_FAMILY STREQUAL "F1")   
+if(MCU_FAMILY STREQUAL "F1" OR MCU_FAMILY STREQUAL "F4")
     add_library(${LIBRARY_NAME} INTERFACE)
     
     target_link_libraries(${LIBRARY_NAME} INTERFACE HydrodriversSPILow)
