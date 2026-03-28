@@ -1,4 +1,4 @@
-if(MCU_FAMILY STREQUAL "F1")   
+if(MCU_FAMILY STREQUAL "F1" OR MCU_FAMILY STREQUAL "F4")
     add_subdirectory(upper_half)
     add_subdirectory(lower_half)
     if(HYDRV_BUILD_EXAMPLES)
