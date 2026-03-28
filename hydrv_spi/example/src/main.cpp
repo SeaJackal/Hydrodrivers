@@ -5,7 +5,7 @@
 #define BUFFER_LENGTH 4
 
 #ifdef STM32F407xx
-constinit hydrv::GPIO::GPIOLow cs_pin(hydrv::GPIO::GPIOLow::GPIOA_port, 0,
+constinit hydrv::GPIO::GPIOLow cs_pin(hydrv::GPIO::GPIOLow::GPIOA_port, 4,
                                       hydrv::GPIO::GPIOLow::GPIO_Fast_Output);
 constinit hydrv::GPIO::GPIOLow sck_pin(hydrv::GPIO::GPIOLow::GPIOA_port, 5,
                                        hydrv::GPIO::GPIOLow::GPIO_SPI_OUTPUT);

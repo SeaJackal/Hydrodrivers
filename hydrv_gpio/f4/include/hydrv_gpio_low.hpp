@@ -18,6 +18,7 @@ public:
     enum GPIOFunc
     {
         OUTPUT = 0,
+        FAST_OUTPUT,
         UART,
         TIMER,
         I2C,
@@ -63,7 +64,7 @@ public:
     static constexpr GPIOPreset GPIO_I2C_SDA{I2C};
     static constexpr GPIOPreset GPIO_SPI_INPUT{SPI};
     static constexpr GPIOPreset GPIO_SPI_OUTPUT{SPI};
-    static constexpr GPIOPreset GPIO_Fast_Output{};
+    static constexpr GPIOPreset GPIO_Fast_Output{FAST_OUTPUT};
 
 public:
     consteval GPIOLow(const GPIOPort &GPIO_group, unsigned pin,
@@ -175,6 +176,11 @@ inline hydrolib::ReturnCode GPIOLow::Init(uint32_t altfunc = 0)
         break;
     case OUTPUT:
         SetPinConfig_(output_speed_reg_value_low_, false,
+                      push_pull_reg_value_no_);
+        SetModeOutput_();
+        break;
+    case FAST_OUTPUT:
+        SetPinConfig_(output_speed_reg_value_very_high_, false,
                       push_pull_reg_value_no_);
         SetModeOutput_();
         break;

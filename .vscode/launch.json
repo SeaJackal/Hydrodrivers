@@ -87,7 +87,7 @@
         {
             "name": "Cortex Debug f4 SPI",
             "cwd": "${workspaceFolder}",
-            "executable": "${workspaceFolder}/build/hydrv_gpio/example/HydrvGPIOExample.elf",
+            "executable": "${workspaceFolder}/build/hydrv_spi/example/HydrvSPIExample.elf",
             "request": "launch",
             "type": "cortex-debug",
             "runToEntryPoint": "main",

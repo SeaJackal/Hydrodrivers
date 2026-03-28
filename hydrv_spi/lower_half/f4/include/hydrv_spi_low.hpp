@@ -334,7 +334,7 @@ consteval SPILow::BaudratePrescaler::BaudratePrescaler(
     int main_clock_frequency_khz, int target_frequency_khz)
     : mask_(0)
 {
-    int divided_frequency = main_clock_frequency_khz;
+    int divided_frequency = main_clock_frequency_khz / 2;
     while (target_frequency_khz < divided_frequency)
     {
         divided_frequency /= 2;
@@ -352,7 +352,7 @@ consteval SPILow::BaudratePrescaler::BaudratePrescaler(
     int main_clock_frequency_khz, int max_frequency_khz, int min_frequency_khz)
     : mask_(0)
 {
-    int divided_frequency = main_clock_frequency_khz;
+    int divided_frequency = main_clock_frequency_khz / 2;
     while (max_frequency_khz < divided_frequency)
     {
         divided_frequency /= 2;
