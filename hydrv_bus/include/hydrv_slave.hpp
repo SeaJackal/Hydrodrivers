@@ -10,7 +10,7 @@ namespace hydrv::bus
 {
 template <typename PhyDriver, int RX_BUFFER_CAPACITY, int TX_BUFFER_CAPACITY,
           hydrolib::bus::application::PublicMemoryConcept Memory,
-          typename Logger>
+          typename Logger, bool TRANSMIT_ON_HIGHT, typename CallbackType>
 class Slave
 {
 public:
@@ -45,28 +45,34 @@ private:
 
 template <int RX_BUFFER_CAPACITY, int TX_BUFFER_CAPACITY,
           hydrolib::bus::application::PublicMemoryConcept Memory,
-          typename Logger>
-using UARTSlave =
-    Slave<hydrv::UART::UART<RX_BUFFER_CAPACITY, TX_BUFFER_CAPACITY>,
-          RX_BUFFER_CAPACITY, TX_BUFFER_CAPACITY, Memory, Logger>;
+          typename Logger,
+          typename CallbackType =
+              decltype(&hydrolib::concepts::func::DummyFunc<void>)>
+using UARTSlave = Slave<
+    hydrv::UART::UART<RX_BUFFER_CAPACITY, TX_BUFFER_CAPACITY, CallbackType>,
+    RX_BUFFER_CAPACITY, TX_BUFFER_CAPACITY, Memory, Logger, true, CallbackType>;
 template <int RX_BUFFER_CAPACITY, int TX_BUFFER_CAPACITY,
           hydrolib::bus::application::PublicMemoryConcept Memory,
-          typename Logger>
+          typename Logger, bool TRANSMIT_ON_HIGHT = true,
+          typename CallbackType =
+              decltype(&hydrolib::concepts::func::DummyFunc<void>)>
 using RS485Slave =
-    Slave<hydrv::UART::RS485<RX_BUFFER_CAPACITY, TX_BUFFER_CAPACITY>,
-          RX_BUFFER_CAPACITY, TX_BUFFER_CAPACITY, Memory, Logger>;
+    Slave<hydrv::UART::RS485<RX_BUFFER_CAPACITY, TX_BUFFER_CAPACITY,
+                             TRANSMIT_ON_HIGHT, CallbackType>,
+          RX_BUFFER_CAPACITY, TX_BUFFER_CAPACITY, Memory, Logger,
+          TRANSMIT_ON_HIGHT, CallbackType>;
 
 template <typename PhyDriver, int RX_BUFFER_CAPACITY, int TX_BUFFER_CAPACITY,
           hydrolib::bus::application::PublicMemoryConcept Memory,
-          typename Logger>
-consteval Slave<
-    PhyDriver, RX_BUFFER_CAPACITY, TX_BUFFER_CAPACITY, Memory,
-    Logger>::Slave(Logger &logger, Memory &memory,
-                   hydrolib::bus::datalink::AddressType master_address,
-                   hydrolib::bus::datalink::AddressType self_address,
-                   const UART::UARTLow::UARTPreset &UART_preset,
-                   hydrv::GPIO::GPIOLow &rx_pin, hydrv::GPIO::GPIOLow &tx_pin,
-                   int irq_priority)
+          typename Logger, bool TRANSMIT_ON_HIGHT, typename CallbackType>
+consteval Slave<PhyDriver, RX_BUFFER_CAPACITY, TX_BUFFER_CAPACITY, Memory,
+                Logger, TRANSMIT_ON_HIGHT, CallbackType>::
+    Slave(Logger &logger, Memory &memory,
+          hydrolib::bus::datalink::AddressType master_address,
+          hydrolib::bus::datalink::AddressType self_address,
+          const UART::UARTLow::UARTPreset &UART_preset,
+          hydrv::GPIO::GPIOLow &rx_pin, hydrv::GPIO::GPIOLow &tx_pin,
+          int irq_priority)
 requires std::same_as<PhyDriver,
                       hydrv::UART::UART<RX_BUFFER_CAPACITY, TX_BUFFER_CAPACITY>>
     : phy_driver_(UART_preset, rx_pin, tx_pin, irq_priority),
@@ -78,15 +84,15 @@ requires std::same_as<PhyDriver,
 
 template <typename PhyDriver, int RX_BUFFER_CAPACITY, int TX_BUFFER_CAPACITY,
           hydrolib::bus::application::PublicMemoryConcept Memory,
-          typename Logger>
-consteval Slave<
-    PhyDriver, RX_BUFFER_CAPACITY, TX_BUFFER_CAPACITY, Memory,
-    Logger>::Slave(Logger &logger, Memory &memory,
-                   hydrolib::bus::datalink::AddressType master_address,
-                   hydrolib::bus::datalink::AddressType self_address,
-                   const UART::UARTLow::UARTPreset &uart_preset,
-                   hydrv::GPIO::GPIOLow &rx_pin, hydrv::GPIO::GPIOLow &tx_pin,
-                   hydrv::GPIO::GPIOLow &direction_pin, int irq_priority)
+          typename Logger, bool TRANSMIT_ON_HIGHT, typename CallbackType>
+consteval Slave<PhyDriver, RX_BUFFER_CAPACITY, TX_BUFFER_CAPACITY, Memory,
+                Logger, TRANSMIT_ON_HIGHT, CallbackType>::
+    Slave(Logger &logger, Memory &memory,
+          hydrolib::bus::datalink::AddressType master_address,
+          hydrolib::bus::datalink::AddressType self_address,
+          const UART::UARTLow::UARTPreset &uart_preset,
+          hydrv::GPIO::GPIOLow &rx_pin, hydrv::GPIO::GPIOLow &tx_pin,
+          hydrv::GPIO::GPIOLow &direction_pin, int irq_priority)
 requires std::same_as<PhyDriver, hydrv::UART::RS485<RX_BUFFER_CAPACITY,
                                                     TX_BUFFER_CAPACITY>>
     : phy_driver_(uart_preset, rx_pin, tx_pin, direction_pin, irq_priority),
@@ -98,18 +104,18 @@ requires std::same_as<PhyDriver, hydrv::UART::RS485<RX_BUFFER_CAPACITY,
 
 template <typename PhyDriver, int RX_BUFFER_CAPACITY, int TX_BUFFER_CAPACITY,
           hydrolib::bus::application::PublicMemoryConcept Memory,
-          typename Logger>
-void Slave<PhyDriver, RX_BUFFER_CAPACITY, TX_BUFFER_CAPACITY, Memory,
-           Logger>::Init()
+          typename Logger, bool TRANSMIT_ON_HIGHT, typename CallbackType>
+void Slave<PhyDriver, RX_BUFFER_CAPACITY, TX_BUFFER_CAPACITY, Memory, Logger,
+           TRANSMIT_ON_HIGHT, CallbackType>::Init()
 {
     phy_driver_.Init();
 }
 
 template <typename PhyDriver, int RX_BUFFER_CAPACITY, int TX_BUFFER_CAPACITY,
           hydrolib::bus::application::PublicMemoryConcept Memory,
-          typename Logger>
-void Slave<PhyDriver, RX_BUFFER_CAPACITY, TX_BUFFER_CAPACITY, Memory,
-           Logger>::Process()
+          typename Logger, bool TRANSMIT_ON_HIGHT, typename CallbackType>
+void Slave<PhyDriver, RX_BUFFER_CAPACITY, TX_BUFFER_CAPACITY, Memory, Logger,
+           TRANSMIT_ON_HIGHT, CallbackType>::Process()
 {
     manager_.Process();
     slave_.Process();
@@ -117,9 +123,9 @@ void Slave<PhyDriver, RX_BUFFER_CAPACITY, TX_BUFFER_CAPACITY, Memory,
 
 template <typename PhyDriver, int RX_BUFFER_CAPACITY, int TX_BUFFER_CAPACITY,
           hydrolib::bus::application::PublicMemoryConcept Memory,
-          typename Logger>
-void Slave<PhyDriver, RX_BUFFER_CAPACITY, TX_BUFFER_CAPACITY, Memory,
-           Logger>::IRQCallback()
+          typename Logger, bool TRANSMIT_ON_HIGHT, typename CallbackType>
+void Slave<PhyDriver, RX_BUFFER_CAPACITY, TX_BUFFER_CAPACITY, Memory, Logger,
+           TRANSMIT_ON_HIGHT, CallbackType>::IRQCallback()
 {
     phy_driver_.IRQCallback();
 }
