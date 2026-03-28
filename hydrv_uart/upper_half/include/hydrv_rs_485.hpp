@@ -7,7 +7,7 @@
 #include "hydrv_uart.hpp"
 #include "hydrv_uart_low.hpp"
 
-namespace hydrv::RS485
+namespace hydrv::UART
 {
 
 template <int RX_BUFFER_CAPACITY, int TX_BUFFER_CAPACITY,
@@ -15,7 +15,7 @@ template <int RX_BUFFER_CAPACITY, int TX_BUFFER_CAPACITY,
           typename CallbackType =
               decltype(&hydrolib::concepts::func::DummyFunc<void>)>
 requires hydrolib::concepts::func::FuncConcept<CallbackType, void>
-class RS485 : public UART::UART<RX_BUFFER_CAPACITY, TX_BUFFER_CAPACITY>
+class RS485 : public UART<RX_BUFFER_CAPACITY, TX_BUFFER_CAPACITY>
 {
 private:
     using Parent =
@@ -25,7 +25,7 @@ private:
 
 public:
     consteval RS485(
-        const UART::UARTLow::UARTPreset &preset, hydrv::GPIO::GPIOLow &rx_pin,
+        const UARTLow::UARTPreset &preset, hydrv::GPIO::GPIOLow &rx_pin,
         hydrv::GPIO::GPIOLow &tx_pin, hydrv::GPIO::GPIOLow &direction_pin,
         unsigned irq_priority,
         CallbackType rx_callback = hydrolib::concepts::func::DummyFunc<void>);
@@ -57,7 +57,7 @@ template <int RX_BUFFER_CAPACITY, int TX_BUFFER_CAPACITY,
           bool TRANSMIT_ON_HIGHT, typename CallbackType>
 requires hydrolib::concepts::func::FuncConcept<CallbackType, void>
 consteval RS485<RX_BUFFER_CAPACITY, TX_BUFFER_CAPACITY, TRANSMIT_ON_HIGHT,
-                CallbackType>::RS485(const UART::UARTLow::UARTPreset
+                CallbackType>::RS485(const UARTLow::UARTPreset
                                          &UART_preset,
                                      hydrv::GPIO::GPIOLow &rx_pin,
                                      hydrv::GPIO::GPIOLow &tx_pin,

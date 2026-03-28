@@ -13,7 +13,7 @@ constinit hydrv::GPIO::GPIOLow tx_pin(hydrv::GPIO::GPIOLow::GPIOB_port, 10,
 constinit hydrv::GPIO::GPIOLow direction_pin(hydrv::GPIO::GPIOLow::GPIOC_port,
                                              13,
                                              hydrv::GPIO::GPIOLow::GPIO_Output);
-constinit hydrv::RS485::RS485<255, 255>
+constinit hydrv::UART::RS485<255, 255>
     RS(hydrv::UART::UARTLow::USART3_115200_LOW, rx_pin, tx_pin, direction_pin,
        7);
 
