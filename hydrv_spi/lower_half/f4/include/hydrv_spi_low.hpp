@@ -2,11 +2,11 @@
 
 #include <cstddef>
 #include <cstdint>
-#include <stm32f103xb.h>
+#include <stm32f407xx.h>
 
 extern "C"
 {
-#include "stm32f1xx.h"
+#include "stm32f4xx.h"
 }
 
 #include "hydrv_gpio_low.hpp"
@@ -73,17 +73,14 @@ public:
         const uint32_t RCC_APBENR_SPIxEN;
         const uint32_t RCC_address;
         const IRQn_Type SPIx_IRQn;
+        const uint8_t SPI_alt_func;
     };
 
 public:
     // Common SPI presets for different peripherals
     static constexpr SPIPreset SPI1_LOW{
         SPI1_BASE, RCC_APB2ENR_SPI1EN,
-        RCC_BASE + offsetof(RCC_TypeDef, APB2ENR), SPI1_IRQn};
-
-    static constexpr SPIPreset SPI2_LOW{
-        SPI2_BASE, RCC_APB1ENR_SPI2EN,
-        RCC_BASE + offsetof(RCC_TypeDef, APB1ENR), SPI2_IRQn};
+        RCC_BASE + offsetof(RCC_TypeDef, APB2ENR), SPI1_IRQn, 5};
 
 public:
     consteval SPILow(const SPIPreset &preset, hydrv::GPIO::GPIOLow &sck_pin,
@@ -167,9 +164,9 @@ inline void SPILow::Init()
 
     SET_BIT(reinterpret_cast<SPI_TypeDef *>(preset_.SPIx)->CR1, SPI_CR1_SPE);
 
-    sck_pin_.Init(0);
-    miso_pin_.Init(0);
-    mosi_pin_.Init(0);
+    sck_pin_.Init(preset_.SPI_alt_func);
+    miso_pin_.Init(preset_.SPI_alt_func);
+    mosi_pin_.Init(preset_.SPI_alt_func);
 }
 
 inline bool SPILow::IsRxDone()

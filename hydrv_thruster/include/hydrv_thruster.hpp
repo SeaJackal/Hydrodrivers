@@ -45,9 +45,9 @@ private:
 inline constexpr Thruster::Thruster(unsigned thruster_tim_channel,
                           hydrv::timer::TimerLow &thruster_tim,
                           hydrv::GPIO::GPIOLow &thruster_tim_pin)
-    : tim_channel(thruster_tim_channel), tim(thruster_tim),
-      tim_pin(thruster_tim_pin),
-      speed(speed_null)
+    : speed(speed_null), tim(thruster_tim),
+      tim_channel(thruster_tim_channel),
+      tim_pin(thruster_tim_pin)
 {
 }
 

@@ -18,8 +18,11 @@ public:
     enum GPIOFunc
     {
         OUTPUT = 0,
+        FAST_OUTPUT,
         UART,
-        TIMER
+        TIMER,
+        I2C,
+        SPI
     };
     struct GPIOPort
     {
@@ -57,6 +60,11 @@ public:
     static constexpr GPIOPreset GPIO_UART_TX{UART};
     static constexpr GPIOPreset GPIO_UART_RX{UART};
     static constexpr GPIOPreset GPIO_Timer{TIMER};
+    static constexpr GPIOPreset GPIO_I2C_SCL{I2C};
+    static constexpr GPIOPreset GPIO_I2C_SDA{I2C};
+    static constexpr GPIOPreset GPIO_SPI_INPUT{SPI};
+    static constexpr GPIOPreset GPIO_SPI_OUTPUT{SPI};
+    static constexpr GPIOPreset GPIO_Fast_Output{FAST_OUTPUT};
 
 public:
     consteval GPIOLow(const GPIOPort &GPIO_group, unsigned pin,
@@ -86,6 +94,7 @@ private:
 
     const uint32_t push_pull_reg_mask_;
     const uint32_t push_pull_reg_value_no_;
+    const uint32_t push_pull_reg_value_pull_up_;
 
     const uint32_t mode_reg_mask_;
     const uint32_t mode_reg_value_output_;
@@ -129,6 +138,7 @@ consteval inline GPIOLow::GPIOLow(const GPIOPort &GPIO_group, unsigned pin,
       output_type_reg_mask_(0x1UL << pin),
       push_pull_reg_mask_(0x3UL << (2 * pin)),
       push_pull_reg_value_no_(0x0UL),
+      push_pull_reg_value_pull_up_(0x1UL << (2 * pin)),
       mode_reg_mask_(0x3UL << (2 * pin)),
       mode_reg_value_output_(0x1UL << (2 * pin)),
       mode_reg_value_altfunc_(0x2UL << (2 * pin)),
@@ -150,6 +160,10 @@ inline hydrolib::ReturnCode GPIOLow::Init(uint32_t altfunc = 0)
 
     switch (pin_func_)
     {
+    case SPI:
+        SetPinConfig_(output_speed_reg_value_very_high_, false,
+                     push_pull_reg_value_no_);
+        SetModeAltfunc_(altfunc);
     case UART:
         SetPinConfig_(output_speed_reg_value_very_high_, false,
                       push_pull_reg_value_no_);
@@ -164,6 +178,16 @@ inline hydrolib::ReturnCode GPIOLow::Init(uint32_t altfunc = 0)
         SetPinConfig_(output_speed_reg_value_low_, false,
                       push_pull_reg_value_no_);
         SetModeOutput_();
+        break;
+    case FAST_OUTPUT:
+        SetPinConfig_(output_speed_reg_value_very_high_, false,
+                      push_pull_reg_value_no_);
+        SetModeOutput_();
+        break;
+    case I2C:
+        SetPinConfig_(output_speed_reg_value_very_high_, true,
+                      push_pull_reg_value_pull_up_);
+        SetModeAltfunc_(altfunc);
         break;
     default:
         return hydrolib::ReturnCode::FAIL;

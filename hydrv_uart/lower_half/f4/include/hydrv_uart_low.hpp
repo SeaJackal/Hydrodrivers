@@ -37,6 +37,9 @@ public:
 
     static constexpr UARTPreset USART1_921600_LOW{
         USART1_BASE, 7, RCC_APB2ENR_USART1EN, RCC_BASE + offsetof(RCC_TypeDef, APB2ENR), USART1_IRQn, 5, 11};
+        
+    static constexpr UARTPreset USART2_115200_LOW{
+        USART2_BASE, 7, RCC_APB1ENR_USART2EN, RCC_BASE + offsetof(RCC_TypeDef, APB1ENR), USART2_IRQn, 22, 13};
 
     static constexpr UARTPreset USART3_115200_LOW{
         USART3_BASE, 7, RCC_APB1ENR_USART3EN, RCC_BASE + offsetof(RCC_TypeDef, APB1ENR), USART3_IRQn, 22, 13};
