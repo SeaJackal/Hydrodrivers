@@ -11,14 +11,14 @@
     "mounts": [
         "source=${localEnv:HOME}/.ssh,target=/home/vscode/.ssh,type=bind"
     ],
-    // "build": {
-    //     "dockerfile": "Dockerfile",
-    //     "args": {
-    //         "USERNAME": "hydrolib",
-    //         "GID": "${localEnv:UID}",
-    //         "UID": "${localEnv:UID}"
-    //     }
-    // },
+    /*"build": {
+        "dockerfile": "Dockerfile",
+        "args": {
+            "USERNAME": "hydrolib",
+            "GID": "${localEnv:UID}",
+            "UID": "${localEnv:UID}"
+        }
+    },*/
     "runArgs": [
         "--privileged",
         "--security-opt",

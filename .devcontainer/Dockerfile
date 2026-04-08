@@ -24,3 +24,8 @@ RUN wget -q https://github.com/xpack-dev-tools/arm-none-eabi-gcc-xpack/releases/
     && rm xpack-arm-none-eabi-gcc-${GCC_ARM_VERSION}-linux-x64.tar.gz \
     && cp -s /opt/xpack-arm-none-eabi-gcc-${GCC_ARM_VERSION}/bin/* /usr/local/bin/ \
     && ln -s /opt/xpack-arm-none-eabi-gcc-${GCC_ARM_VERSION}/arm-none-eabi/include /usr/include/newlib
+
+RUN wget https://builds.renode.io/renode-latest.linux-portable.tar.gz \
+    && tar -xf renode-latest.linux-portable.tar.gz -C /opt --strip-components=1 \
+    && ln -s /opt/renode /usr/local/bin/renode \
+    && rm renode-latest.linux-portable.tar.gz 
