@@ -1,4 +1,4 @@
-using "renode/f4/cpu/stm32f4.repl"
+using "/workspaces/Hydrodrivers/renode/f4/cpu/stm32f4.repl"
 
 UserButton: Miscellaneous.Button @ gpioPortA
     -> gpioPortA@0
