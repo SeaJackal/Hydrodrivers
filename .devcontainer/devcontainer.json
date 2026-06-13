@@ -9,7 +9,8 @@
     },
     // Remove for Windows
     "mounts": [
-        "source=${localEnv:HOME}/.ssh,target=/home/vscode/.ssh,type=bind"
+        "source=${localEnv:HOME}/.ssh,target=/home/vscode/.ssh,type=bind",
+        "source=${localEnv:HOME}/Hydrolib-serial-protocol-desktop,target=/opt/hydrosp,type=bind"
     ],
     /*"build": {
         "dockerfile": "Dockerfile",
