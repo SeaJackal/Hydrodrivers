@@ -20,7 +20,8 @@ public:
         OUTPUT = 0,
         UART,
         TIMER,
-        I2C
+        I2C,
+        ANALOG
     };
     struct GPIOPort
     {
@@ -60,6 +61,7 @@ public:
     static constexpr GPIOPreset GPIO_Timer{TIMER};
     static constexpr GPIOPreset GPIO_I2C_SCL{I2C};
     static constexpr GPIOPreset GPIO_I2C_SDA{I2C};
+    static constexpr GPIOPreset GPIO_Analog{ANALOG};
 
 public:
     consteval GPIOLow(const GPIOPort &GPIO_group, unsigned pin,
@@ -94,6 +96,7 @@ private:
     const uint32_t mode_reg_mask_;
     const uint32_t mode_reg_value_output_;
     const uint32_t mode_reg_value_altfunc_;
+    const uint32_t mode_reg_value_analog_;
 
     const uint32_t altfunc_reg_low_mask_;
     const uint32_t altfunc_reg_high_mask_;
@@ -109,6 +112,8 @@ private:
     void SetModeOutput_();
 
     void SetModeAltfunc_(uint32_t altfunc);
+
+    void SetModeAnalog_();
 
     uint32_t GetAltfuncRegLowValue_(uint32_t func);
 
@@ -137,6 +142,7 @@ consteval inline GPIOLow::GPIOLow(const GPIOPort &GPIO_group, unsigned pin,
       mode_reg_mask_(0x3UL << (2 * pin)),
       mode_reg_value_output_(0x1UL << (2 * pin)),
       mode_reg_value_altfunc_(0x2UL << (2 * pin)),
+      mode_reg_value_analog_(0x3UL << (2 * pin)),
       altfunc_reg_low_mask_(pin < 8 ? 0xFUL << (4 * pin) : 0x0UL),
       altfunc_reg_high_mask_(pin < 8 ? 0x0UL : 0xFUL << (4 * (pin - 8))),
       set_reg_mask_(0x1UL << pin),
@@ -174,6 +180,11 @@ inline hydrolib::ReturnCode GPIOLow::Init(uint32_t altfunc = 0)
         SetPinConfig_(output_speed_reg_value_very_high_, true,
                       push_pull_reg_value_pull_up_);
         SetModeAltfunc_(altfunc);
+        break;
+    case ANALOG:
+        SetPinConfig_(output_speed_reg_value_low_, false,
+                      push_pull_reg_value_no_);
+        SetModeAnalog_();
         break;
     default:
         return hydrolib::ReturnCode::FAIL;
@@ -242,6 +253,11 @@ inline void GPIOLow::SetModeAltfunc_(uint32_t altfunc)
     }
 
     MODIFY_REG(reinterpret_cast<GPIO_TypeDef*>(GPIOx_)->MODER, mode_reg_mask_, mode_reg_value_altfunc_);
+}
+
+inline void GPIOLow::SetModeAnalog_()
+{
+    MODIFY_REG(reinterpret_cast<GPIO_TypeDef*>(GPIOx_)->MODER, mode_reg_mask_, mode_reg_value_analog_);
 }
 
 inline uint32_t GPIOLow::GetAltfuncRegLowValue_(uint32_t func)

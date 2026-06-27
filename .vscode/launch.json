@@ -105,6 +105,26 @@
             ]
         },
         {
+            "name": "Cortex Debug f4 ADC",
+            "cwd": "${workspaceFolder}",
+            "executable": "${workspaceFolder}/build/hydrv_adc/example/HydrvADCExample.elf",
+            "request": "launch",
+            "type": "cortex-debug",
+            "runToEntryPoint": "main",
+            "servertype": "openocd",
+            "device": "stm32f4x",
+            "svdFile": "resources/STM32F407.svd",
+            "showDevDebugOutput": "raw",
+            "liveWatch": {
+                "enabled": true,
+                "samplesPerSecond": 4
+            },
+            "configFiles": [
+                "interface/stlink.cfg",
+                "target/stm32f4x.cfg"
+            ]
+        },
+        {
             "name": "Cortex Debug Timer",
             "cwd": "${workspaceFolder}",
             "executable": "${workspaceFolder}/build/hydrv_tim/example/HydrvTIMERExample.elf",

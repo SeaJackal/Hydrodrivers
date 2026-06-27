@@ -81,6 +81,8 @@ public:
                                                Configure::kFloatingInput};
     static constexpr GPIOPreset GPIO_SPI_OUTPUT{
         Mode::kOutput50MHz, Configure::kAlternateFunctionPushPullOutput};
+    static constexpr GPIOPreset GPIO_Analog{Mode::kInput,
+                                            Configure::kAnalogInput};
 
 public:
     consteval GPIOLow(const GPIOPort &GPIO_group, unsigned pin,

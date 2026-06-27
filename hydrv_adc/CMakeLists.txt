@@ -1,0 +1,13 @@
+cmake_minimum_required(VERSION 3.10)
+
+if(MCU_FAMILY STREQUAL "F4")
+    add_subdirectory(lower_half)
+    if(HYDRV_BUILD_EXAMPLES)
+        add_subdirectory(example)
+    endif()
+
+    message(STATUS "hydrv_adc subdirectories added for MCU_FAMILY: ${MCU_FAMILY}")
+else()
+    message(WARNING "hydrv_adc subdirectories are not supported for MCU_FAMILY: ${MCU_FAMILY}")
+endif()
+
