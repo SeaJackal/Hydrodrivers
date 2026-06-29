@@ -5,6 +5,6 @@ add_executable(${TARGET_NAME}
 
 target_link_libraries(${TARGET_NAME}
     HydrodriversClockCPP HydrodriversTimerLow HydrodriversGPIO HydrodriversI2C
-    HydrolibMath HydrolibMotorController)
+    HydrodriversADCLow HydrolibMath HydrolibMotorController HydrolibPID)
 
 target_compile_features(${TARGET_NAME} PUBLIC cxx_std_20)
