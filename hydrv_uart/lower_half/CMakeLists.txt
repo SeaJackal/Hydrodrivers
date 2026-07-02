@@ -14,6 +14,8 @@ if(MCU_FAMILY STREQUAL "F1")
     target_include_directories(${LIBRARY_NAME} INTERFACE f1/include)
 elseif(MCU_FAMILY STREQUAL "F4")
     target_include_directories(${LIBRARY_NAME} INTERFACE f4/include)
+elseif(MCU_FAMILY STREQUAL "G4")
+    target_include_directories(${LIBRARY_NAME} INTERFACE g4/include)
 endif()
 
 if(BUILD_TESTS)

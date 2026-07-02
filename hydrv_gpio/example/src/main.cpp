@@ -9,6 +9,9 @@ constinit hydrv::GPIO::GPIOLow led_pin(hydrv::GPIO::GPIOLow::GPIOD_port, 12,
 #elif defined(STM32F103xB)
 constinit hydrv::GPIO::GPIOLow led_pin(hydrv::GPIO::GPIOLow::GPIOC_port, 13,
                                        hydrv::GPIO::GPIOLow::GPIO_Output);
+#elif defined(STM32G431xx)
+constinit hydrv::GPIO::GPIOLow led_pin(hydrv::GPIO::GPIOLow::GPIOC_port, 6,
+                                       hydrv::GPIO::GPIOLow::GPIO_Output);
 #endif
 
 int main(void)

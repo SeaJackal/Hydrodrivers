@@ -9,11 +9,11 @@ set(FETCHCONTENT_BASE_DIR "${CMAKE_SOURCE_DIR}/.deps" CACHE PATH "Base directory
 option(HYDRV_BUILD_EXAMPLES "Build Hydrodrivers examples" OFF)
 
 if(NOT DEFINED MCU_FAMILY)
-    message(FATAL_ERROR "MCU_FAMILY variable is not defined. Please set it to F1 or F4.")
+    message(FATAL_ERROR "MCU_FAMILY variable is not defined. Please set it to F1 or F4 or G4.")
 endif()
 
-if(NOT MCU_FAMILY STREQUAL "F1" AND NOT MCU_FAMILY STREQUAL "F4")
-    message(FATAL_ERROR "Invalid MCU_FAMILY value: ${MCU_FAMILY}. Supported values are: F1, F4")
+if(NOT MCU_FAMILY STREQUAL "F1" AND NOT MCU_FAMILY STREQUAL "F4" AND NOT MCU_FAMILY STREQUAL "G4")
+    message(FATAL_ERROR "Invalid MCU_FAMILY value: ${MCU_FAMILY}. Supported values are: F1, F4, G4")
 endif()
 
 message(STATUS "Building for MCU family: ${MCU_FAMILY}")

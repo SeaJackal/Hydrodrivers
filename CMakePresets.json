@@ -49,6 +49,17 @@
             }
         },
         {
+            "name": "G4",
+            "inherits": "target",
+            "hidden": true,
+            "toolchainFile": "${sourceDir}/resources/gcc-arm-none-eabi-g4.cmake",
+            "cacheVariables": {
+                "CMAKE_C_FLAGS": "-DSTM32G431xx",
+                "CMAKE_CXX_FLAGS": "-DSTM32G431xx",
+                "MCU_FAMILY": "G4"
+            }
+        },
+        {
             "name": "Debug",
             "inherits": "default",
             "cacheVariables": {
@@ -89,6 +100,14 @@
         {
             "name": "DebugF1",
             "inherits": "F1",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Debug",
+                "HYDRV_BUILD_EXAMPLES": "ON"
+            }
+        },
+        {
+            "name": "DebugG4",
+            "inherits": "G4",
             "cacheVariables": {
                 "CMAKE_BUILD_TYPE": "Debug",
                 "HYDRV_BUILD_EXAMPLES": "ON"

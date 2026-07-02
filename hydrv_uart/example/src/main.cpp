@@ -6,12 +6,12 @@
 
 constinit hydrv::GPIO::GPIOLow led_pin(hydrv::GPIO::GPIOLow::GPIOD_port, 15,
                                        hydrv::GPIO::GPIOLow::GPIO_Output);
-constinit hydrv::GPIO::GPIOLow rx_pin(hydrv::GPIO::GPIOLow::GPIOB_port, 11,
+constinit hydrv::GPIO::GPIOLow rx_pin(hydrv::GPIO::GPIOLow::GPIOB_port, 4,
                                       hydrv::GPIO::GPIOLow::GPIO_UART_RX);
-constinit hydrv::GPIO::GPIOLow tx_pin(hydrv::GPIO::GPIOLow::GPIOB_port, 10,
+constinit hydrv::GPIO::GPIOLow tx_pin(hydrv::GPIO::GPIOLow::GPIOA_port, 2,
                                       hydrv::GPIO::GPIOLow::GPIO_UART_TX);
 constinit hydrv::UART::UART<255, 255>
-    uart(hydrv::UART::UARTLow::USART3_115200_LOW, rx_pin, tx_pin, 7);
+    uart(hydrv::UART::UARTLow::USART2_115200_LOW, rx_pin, tx_pin, 7);
 
 uint8_t buffer[BUFFER_LENGTH];
 
@@ -36,7 +36,7 @@ int main(void)
 extern "C"
 {
     void SysTick_Handler(void) { hydrv::clock::Clock::SysTickHandler(); }
-    void USART3_IRQHandler(void) { uart.IRQCallback(); }
+    void USART2_IRQHandler(void) { uart.IRQCallback(); }
     void HardFault_Handler(void)
     {
         while (1)
