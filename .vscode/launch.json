@@ -157,6 +157,38 @@
             ]
         },
         {
+            "name": "Cortex Debug g4 Timer",
+            "cwd": "${workspaceFolder}",
+            "executable": "${workspaceFolder}/build/hydrv_tim/example/HydrvTIMERExample.elf",
+            "request": "launch",
+            "type": "cortex-debug",
+            "runToEntryPoint": "main",
+            "servertype": "openocd",
+            "device": "stm32g4x",
+            "svdFile": "resources/STM32G431.svd",
+            "showDevDebugOutput": "raw",
+            "configFiles": [
+                "interface/stlink.cfg",
+                "target/stm32g4x.cfg"
+            ]
+        },
+        {
+            "name": "Cortex Debug g4 Motor",
+            "cwd": "${workspaceFolder}",
+            "executable": "${workspaceFolder}/build/hydrv_motor/example/HydrvMotorExample.elf",
+            "request": "launch",
+            "type": "cortex-debug",
+            "runToEntryPoint": "main",
+            "servertype": "openocd",
+            "device": "stm32g4x",
+            "svdFile": "resources/STM32G431.svd",
+            "showDevDebugOutput": "raw",
+            "configFiles": [
+                "interface/stlink.cfg",
+                "target/stm32g4x.cfg"
+            ]
+        },
+        {
             "name": "Cortex Debug Timer",
             "cwd": "${workspaceFolder}",
             "executable": "${workspaceFolder}/build/hydrv_tim/example/HydrvTIMERExample.elf",

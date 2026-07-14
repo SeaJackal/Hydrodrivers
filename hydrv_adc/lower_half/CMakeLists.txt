@@ -12,5 +12,7 @@ target_link_libraries(${LIBRARY_NAME} INTERFACE CMSIS)
 
 if(MCU_FAMILY STREQUAL "F4")
     target_include_directories(${LIBRARY_NAME} INTERFACE f4/include)
+elseif(MCU_FAMILY STREQUAL "G4")
+    target_include_directories(${LIBRARY_NAME} INTERFACE g4/include)
 endif()
 

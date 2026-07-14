@@ -1,20 +1,29 @@
 #include "hydrv_clock.hpp"
 
-
 #include "hydrv_tim_low.hpp"
 
 extern "C"
 {
     void SysTick_Handler();
 }
-constinit hydrv::GPIO::GPIOLow tim_pin(hydrv::GPIO::GPIOLow::GPIOA_port, 0,
-                             hydrv::GPIO::GPIOLow::GPIO_Timer);
-constinit hydrv::timer::TimerLow tim(hydrv::timer::TimerLow::TIM5_low, 168, 10000);
+constinit hydrv::GPIO::GPIOLow tim_pin(hydrv::GPIO::GPIOLow::GPIOA_port, 8,
+                                       hydrv::GPIO::GPIOLow::GPIO_Timer);
+constinit hydrv::GPIO::GPIOLow low_pin(hydrv::GPIO::GPIOLow::GPIOA_port, 11,
+                                       hydrv::GPIO::GPIOLow::GPIO_Output);
+constinit hydrv::GPIO::GPIOLow en_pin(hydrv::GPIO::GPIOLow::GPIOB_port, 12,
+                                      hydrv::GPIO::GPIOLow::GPIO_Output);
+constinit hydrv::timer::TimerLow tim(hydrv::timer::TimerLow::TIM1_low, 17,
+                                     10000);
 
 int main(void)
 {
-     NVIC_SetPriorityGrouping(0);
+    NVIC_SetPriorityGrouping(0);
     hydrv::clock::Clock::Init(hydrv::clock::Clock::HSI_DEFAULT);
+
+    low_pin.Init();
+    low_pin.Set();
+    en_pin.Init();
+    en_pin.Set();
 
     tim.Init();
     tim.ConfigurePWM(0, tim_pin);
