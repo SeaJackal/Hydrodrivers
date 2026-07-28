@@ -9,16 +9,17 @@
     },
     // Remove for Windows
     "mounts": [
-        "source=${localEnv:HOME}/.ssh,target=/home/vscode/.ssh,type=bind"
+        "source=${localEnv:HOME}/.ssh,target=/home/hydrolib/.ssh,type=bind",
+        "source=${localEnv:HOME}/.gitconfig,target=/home/hydrolib/.gitconfig,type=bind,readonly"
     ],
-    /*"build": {
-        "dockerfile": "Dockerfile",
-        "args": {
-            "USERNAME": "hydrolib",
-            "GID": "${localEnv:UID}",
-            "UID": "${localEnv:UID}"
-        }
-    },*/
+    // "build": {
+    //     "dockerfile": "Dockerfile",
+    //     "args": {
+    //         "USERNAME": "hydrolib"
+    //     }
+    // },
+    "remoteUser": "hydrolib",
+    "updateRemoteUserUID": true,
     "runArgs": [
         "--privileged",
         "--security-opt",
