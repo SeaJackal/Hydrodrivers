@@ -1,6 +1,7 @@
-using "renode/f1/cpu/stm32f103.repl"
+using "/workspaces/Hydrodrivers/renode/f1/cpu/stm32f103.repl"
 
-greenled1: Miscellaneous.LED @ gpioPortC 0xD
+// UserLED: Miscellaneous.LED @ gpioPortC 0xD
+UserLED: Miscellaneous.LED @ sysbus
 
 gpioPortC:
-    13 -> greenled1@0
+    13 -> UserLED@0

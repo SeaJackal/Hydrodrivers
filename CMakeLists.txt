@@ -5,6 +5,7 @@ project(Hydrodrivers VERSION 1.0)
 enable_language(C CXX ASM)
 
 set(FETCHCONTENT_BASE_DIR "${CMAKE_SOURCE_DIR}/.deps" CACHE PATH "Base directory for CMake FetchContent downloads")
+set(RUN_TESTS "ON" CACHE BOOL "Run tests")
 
 option(HYDRV_BUILD_EXAMPLES "Build Hydrodrivers examples" OFF)
 
@@ -17,6 +18,8 @@ if(NOT MCU_FAMILY STREQUAL "F1" AND NOT MCU_FAMILY STREQUAL "F4")
 endif()
 
 message(STATUS "Building for MCU family: ${MCU_FAMILY}")
+
+add_subdirectory(renode)
 
 if(NOT BUILD_TESTS)
     add_subdirectory(third_party)

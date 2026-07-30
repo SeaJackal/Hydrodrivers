@@ -3,57 +3,21 @@ import random
 import threading
 import time
 import logging
-from pyrenode3.wrappers import Emulation, Monitor
 import serial
+import sys
 
-UART_DEVICE = "/tmp/uart"
+from pyrenode3.wrappers import Emulation, Monitor
+from renode_lib.emulation_env import EmulationEnv
+from renode_lib.uart_periph import UartPeriph
+
+UART_DEVICE = "usart3"
+UART_PATH = f"/tmp/{UART_DEVICE}"
 PAYLOAD_LENGTH = 5
 PAYLOAD_SEED = 42
 DEFAULT_ITERATIONS = 1000
-MACHINE_NAME = "UART_F4"
 UART_BAUDRATE = 115200
 logger = logging.getLogger(__name__)
 
-
-def _repo_root() -> str:
-    here = os.path.abspath(os.path.dirname(__file__))
-    return os.path.abspath(os.path.join(here, "..", "..", ".."))
-
-
-def _generate_payload() -> bytes:
-    return random.Random(PAYLOAD_SEED).randbytes(PAYLOAD_LENGTH)
-    
-
-def _execute(monitor, command: str) -> str:
-    logger.debug("Renode command: %s", command)
-    output, error = monitor.execute(command)
-    if error:
-        raise RuntimeError(f"Renode command failed: {command}\n{error}")
-    return output
-
-
-def _create_uart_example_emulation():
-    root = _repo_root()
-    elf_path = os.path.join(root, "build", "hydrv_uart", "example", "HydrvUARTExample.elf")
-    repl_path = os.path.join(root, "renode", "f4", "board", "stm32f4_discovery.repl")
-
-    logger.info("Creating Renode emulation for %s", MACHINE_NAME)
-    logger.info("Using ELF: %s", elf_path)
-    logger.info("Using platform: %s", repl_path)
-
-    emulation = Emulation()
-    monitor = Monitor()
-    machine = emulation.add_mach(MACHINE_NAME)
-
-    machine.load_repl(repl_path)
-    _execute(monitor, 'cpu PerformanceInMips 200')
-    _execute(monitor, 'emulation SetGlobalQuantum "0.000001"')
-    _execute(monitor, 'emulation CreateUartPtyTerminal "term" "/tmp/uart" true')
-    _execute(monitor, 'connector Connect sysbus.usart3 term')
-    machine.load_elf(elf_path)
-    _execute(monitor, 'sysbus.cpu VectorTableOffset 0x08000000')
-
-    return emulation
 
 def _wait_for_uart_device(path: str, timeout: float = 2.0) -> None:
     logger.info("Waiting for UART device: %s", path)
@@ -91,23 +55,25 @@ def test_uart_example(uart: serial.Serial, timeout: float = 2.0) -> None:
         raise AssertionError(f"Expected {payload!r}, received {received!r}")
 
 def run_uart_example(iterations: int = DEFAULT_ITERATIONS) -> None:
+    repl_path = sys.argv[1]
+    elf_path = sys.argv[2]
     logger.info("Starting UART pyrenode3 test with %d iterations", iterations)
-    emulation = _create_uart_example_emulation()
+    uart_emulation = EmulationEnv(elf_path, repl_path, [UartPeriph(UART_DEVICE)])
     logger.info("Starting Renode emulation")
-    emulation.StartAll()
+    uart_emulation.emulation.StartAll()
 
-    _wait_for_uart_device(UART_DEVICE)
+    _wait_for_uart_device(UART_PATH)
 
     try:
         passed = 0
         progress_interval = max(1, iterations // 10)
         with serial.Serial(
-            port=UART_DEVICE,
+            port=UART_PATH,
             baudrate=UART_BAUDRATE,
             timeout=2.0,
             write_timeout=2.0,
         ) as uart:
-            logger.info("Opened UART serial port %s at %d baud", UART_DEVICE, UART_BAUDRATE)
+            logger.info("Opened UART serial port %s at %d baud", UART_PATH, UART_BAUDRATE)
             for index in range(1, iterations + 1):
                 test_uart_example(uart)
                 passed = index
@@ -119,7 +85,7 @@ def run_uart_example(iterations: int = DEFAULT_ITERATIONS) -> None:
         raise
     finally:
         logger.info("Pausing Renode emulation")
-        emulation.PauseAll()
+        uart_emulation.emulation.PauseAll()
 
 
 if __name__ == "__main__":
