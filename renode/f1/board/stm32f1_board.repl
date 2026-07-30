@@ -1,4 +1,4 @@
-using "/workspaces/Hydrodrivers/renode/f1/cpu/stm32f103.repl"
+using "../cpu/stm32f103.repl"
 
 // UserLED: Miscellaneous.LED @ gpioPortC 0xD
 UserLED: Miscellaneous.LED @ sysbus
