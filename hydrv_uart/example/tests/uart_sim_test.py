@@ -14,7 +14,7 @@ UART_DEVICE = "usart3"
 UART_PATH = f"/tmp/{UART_DEVICE}"
 PAYLOAD_LENGTH = 5
 PAYLOAD_SEED = 42
-DEFAULT_ITERATIONS = 1000
+DEFAULT_ITERATIONS = 10000
 UART_BAUDRATE = 115200
 logger = logging.getLogger(__name__)
 
@@ -30,10 +30,10 @@ def _wait_for_uart_device(path: str, timeout: float = 2.0) -> None:
     raise TimeoutError(f"UART device was not created: {path}")
 
 def _generate_payload() -> bytes:
-    return random.Random(PAYLOAD_SEED).randbytes(PAYLOAD_LENGTH)
+    return random.randbytes(PAYLOAD_LENGTH)
 
 
-def test_uart_example(uart: serial.Serial, timeout: float = 2.0) -> None:
+def test_uart_example(uart: serial.Serial) -> None:
     payload = _generate_payload()
     logger.debug("Sending UART payload: %r", payload)
 
@@ -61,6 +61,7 @@ def run_uart_example(iterations: int = DEFAULT_ITERATIONS) -> None:
     uart_emulation = EmulationEnv(elf_path, repl_path, [UartPeriph(UART_DEVICE)])
     logger.info("Starting Renode emulation")
     uart_emulation.emulation.StartAll()
+    random.seed(PAYLOAD_SEED)
 
     _wait_for_uart_device(UART_PATH)
 
@@ -75,7 +76,12 @@ def run_uart_example(iterations: int = DEFAULT_ITERATIONS) -> None:
         ) as uart:
             logger.info("Opened UART serial port %s at %d baud", UART_PATH, UART_BAUDRATE)
             for index in range(1, iterations + 1):
-                test_uart_example(uart)
+                try:
+                    test_uart_example(uart)
+                    time.sleep(0.01)
+                except:
+                    logger.info("Error on attempt %d", index)
+                    raise
                 passed = index
                 if index == 1 or index == iterations or index % progress_interval == 0:
                     logger.info("UART echo progress: %d/%d passed", index, iterations)

@@ -80,6 +80,7 @@ public:
     bool IsByteTransferFinished();
     bool IsAckFailure();
 
+    void ClearStatusBits();
     void ClearAddr();
     void ClearAckFailure();
 
@@ -186,6 +187,16 @@ inline bool I2CLow::IsAckFailure()
 {
     return READ_BIT(reinterpret_cast<I2C_TypeDef *>(preset_.I2Cx)->SR1,
                     I2C_SR1_AF);
+}
+
+inline void I2CLow::ClearStatusBits()
+{
+    volatile uint32_t tmpreg = 0x00U;
+    tmpreg = reinterpret_cast<I2C_TypeDef *>(preset_.I2Cx)->SR1;
+    tmpreg = reinterpret_cast<I2C_TypeDef *>(preset_.I2Cx)->SR2;
+    (void)tmpreg;
+
+    reinterpret_cast<I2C_TypeDef *>(preset_.I2Cx)->SR1 = 0;
 }
 
 inline void I2CLow::ClearAddr()

@@ -4,6 +4,7 @@ from pyrenode3.wrappers import Emulation, Monitor
 from renode_lib.periph import Periph
 
 MACHINE_NAME = "TEST_MACHINE"
+LOG_FILE = "/tmp/renode.log"
 
 class EmulationEnv:
     def __init__(self, elf_path: str, repl_path: str, peripherals: list[Periph] = []):
@@ -21,12 +22,13 @@ class EmulationEnv:
         self._execute('emulation SetGlobalQuantum "0.000001"')
         self.machine.load_elf(elf_path)
         self._execute("sysbus.cpu VectorTableOffset 0x08000000")
+        self._execute("machine StartGdbServer 3333")
+        self.log_file_path = LOG_FILE
+        self._execute(f"logFile @{LOG_FILE}")
 
         for peripheral in peripherals:
-            peripheral.init(self)
-
-        # self.led = getattr(self.machine.sysbus.gpioPortD.UserLED, "internal", self.machine.sysbus.gpioPortD.UserLED)
-        self.led = getattr(self.machine.sysbus.UserLED, "internal", self.machine.sysbus.UserLED)
+            result = peripheral.init(self)
+            setattr(self, result[0], result[1])
 
     def _execute(self, command: str) -> str:
         self.logger.debug("Renode command: %s", command)

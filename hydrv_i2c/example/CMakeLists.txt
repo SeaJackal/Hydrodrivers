@@ -5,3 +5,7 @@ add_executable(${TARGET_NAME}
 
 target_link_libraries(${TARGET_NAME}
     HydrodriversClockCPP HydrodriversI2C HydrodriversUART HydrolibLogger)
+
+get_property(HYDRODRIVERS_RENODE_TEST_HELPER GLOBAL PROPERTY HYDRODRIVERS_RENODE_TEST_HELPER)
+include(${HYDRODRIVERS_RENODE_TEST_HELPER})
+hydrv_add_renode_tests(${TARGET_NAME} tests/i2c_sim_test.py)

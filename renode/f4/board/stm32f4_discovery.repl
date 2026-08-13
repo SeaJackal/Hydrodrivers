@@ -1,8 +1,5 @@
 using "../cpu/stm32f4.repl"
 
-UserButton: Miscellaneous.Button @ gpioPortA
-    -> gpioPortA@0
-
 // UserLED: Miscellaneous.LED @ gpioPortD
 UserLED: Miscellaneous.LED @ sysbus
 

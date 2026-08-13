@@ -83,6 +83,7 @@ inline void I2C<CallbackType, MAX_TX_LENGTH>::Write(uint8_t address,
                                                     const void *tx_buffer,
                                                     int tx_length)
 {
+    i2c_low_.ClearStatusBits();
     address_ = address;
     tx_length_ = tx_length;
     memcpy(tx_buffer_, tx_buffer, tx_length);
@@ -98,6 +99,7 @@ inline void I2C<CallbackType, MAX_TX_LENGTH>::Read(uint8_t address,
                                                    void *rx_buffer,
                                                    int rx_length)
 {
+    i2c_low_.ClearStatusBits();
     address_ = address | 0x1;
     rx_length_ = rx_length;
     rx_buffer_ = static_cast<uint8_t *>(rx_buffer);

@@ -5,6 +5,7 @@ import sys
 from pyrenode3.wrappers import Emulation, Monitor
 from Antmicro.Renode.Time import TimeInterval
 from renode_lib.emulation_env import EmulationEnv
+from renode_lib.gpio_periph import GpioPeriph
 
 logger = logging.getLogger(__name__)
 
@@ -12,7 +13,7 @@ def gpio_example_should_blink_led() -> None:
     repl_path = sys.argv[1]
     elf_path = sys.argv[2]
     logger.info("Starting GPIO pyrenode3 test")
-    gpio_emulation = EmulationEnv(elf_path, repl_path)
+    gpio_emulation = EmulationEnv(elf_path, repl_path, [GpioPeriph("led")])
     logger.info("Advancing Renode emulation")
     try:
         gpio_emulation.emulation.RunFor(TimeInterval.FromMilliseconds(1))

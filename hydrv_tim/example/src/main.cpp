@@ -18,16 +18,15 @@ int main(void)
 
     tim.Init();
     tim.ConfigurePWM(0, tim_pin);
-    tim.StartTimer();
-
     tim.SetCaptureCompare(0, 7500);
+    tim.StartTimer();
 
     while (1)
     {
-        hydrv::clock::Clock::Delay(500);
         tim.SetCaptureCompare(0, 7500);
         hydrv::clock::Clock::Delay(500);
         tim.SetCaptureCompare(0, 2500);
+        hydrv::clock::Clock::Delay(500);
     }
 }
 

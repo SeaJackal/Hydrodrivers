@@ -250,6 +250,27 @@
             "cwd": "${workspaceRoot}",
             "miDebuggerPath": "gdb-multiarch",
             "program": "build/hydrv_bus/example/HydrvBusExample.elf"
-        }
+        },
+        {
+            "name": "Renode debug I2C_F4",
+            "type": "cppdbg",
+            "request": "launch",
+            "postDebugTask": "Close Renode",
+            "miDebuggerServerAddress": "localhost:3333",
+            "cwd": "${workspaceRoot}",
+            "miDebuggerPath": "gdb-multiarch",
+            "program": "build/hydrv_i2c/example/HydrvI2CExample.elf"
+        },
+        {
+            "name": "Renode debug TIM_F4",
+            "type": "cppdbg",
+            "request": "launch",
+            // "preLaunchTask": "Run Renode_UART_F4",
+            "postDebugTask": "Close Renode",
+            "miDebuggerServerAddress": "localhost:3333",
+            "cwd": "${workspaceRoot}",
+            "miDebuggerPath": "gdb-multiarch",
+            "program": "build/hydrv_tim/example/HydrvTIMERExample.elf"
+        },
     ]
 }

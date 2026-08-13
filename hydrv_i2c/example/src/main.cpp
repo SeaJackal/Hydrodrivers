@@ -56,27 +56,25 @@ int main(void)
     i2c_done = false;
     i2c.Write(I2C_ADDRESS, &tx_value, 1);
 
-    auto last_log = std::chrono::steady_clock::now();
     auto last_request = std::chrono::steady_clock::now();
 
     while (1)
     {
-        if (!i2c_done && std::chrono::steady_clock::now() - last_request <
-                             std::chrono::milliseconds(100))
+        if (std::chrono::steady_clock::now() - last_request <
+            std::chrono::milliseconds(100))
         {
             continue;
         }
-        last_request = std::chrono::steady_clock::now();
         i2c_done = false;
         i2c.Read(I2C_ADDRESS, rx_buffer, READ_LENGTH);
-        raw_angle = (rx_buffer[0] << 8) | rx_buffer[1];
-        if (std::chrono::steady_clock::now() - last_log >
-            std::chrono::milliseconds(100))
+        while (!i2c_done && std::chrono::steady_clock::now() - last_request <
+                                std::chrono::milliseconds(1000))
         {
-            LOG(logger1, hydrolib::logger::LogLevel::INFO, "angle: {}",
-                raw_angle);
-            last_log = std::chrono::steady_clock::now();
+            continue;
         }
+        raw_angle = (rx_buffer[0] << 8) | rx_buffer[1];
+        LOG(logger1, hydrolib::logger::LogLevel::INFO, "angle: {}", raw_angle);
+        last_request = std::chrono::steady_clock::now();
     }
 }
 

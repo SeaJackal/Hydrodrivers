@@ -41,7 +41,8 @@
                 "llvm-vs-code-extensions.vscode-clangd",
                 "mcu-debug.debug-tracker-vscode",
                 "marus25.cortex-debug",
-                "mcu-debug.peripheral-viewer"
+                "mcu-debug.peripheral-viewer",
+                "ms-python.python"
             ],
             "settings": {
                 "clangd.arguments": [
@@ -49,7 +50,10 @@
                 ],
                 "C_Cpp.intelliSenseEngine": "disabled",
                 "cortex-debug.armToolchainPath": "/bin", // Path to arm-none-eabi toolchain
-                "cortex-debug.gdbPath": "/bin/gdb-multiarch"
+                "cortex-debug.gdbPath": "/bin/gdb-multiarch",
+                "python.analysis.extraPaths": [
+                    "${workspaceFolder}/renode"
+                ],
             }
         }
     }
