@@ -26,6 +26,14 @@ usart4: UART.STM32_UART @ sysbus <0x40004C00, +0x100>
 usart5: UART.STM32_UART @ sysbus <0x40005000, +0x100>
     -> nvic@53
 
+spi1: SPI.STM32SPI @ sysbus 0x40013000
+    series: STM32Series.F1
+    IRQ -> nvic@35
+
+spi2: SPI.STM32SPI @ sysbus 0x40003800
+    series: STM32Series.F1
+    IRQ -> nvic@36
+
 nvic: IRQControllers.NVIC @ sysbus 0xE000E000
     priorityMask: 0xF0
     systickFrequency: 72000000

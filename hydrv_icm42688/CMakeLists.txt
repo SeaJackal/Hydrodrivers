@@ -13,7 +13,8 @@ if(MCU_FAMILY STREQUAL "F1" OR MCU_FAMILY STREQUAL "F4")
     target_link_libraries(${LIBRARY_NAME} INTERFACE HydrolibMath INTERFACE HydrolibFilter)
     target_include_directories(${LIBRARY_NAME} INTERFACE include)
 
-    if(HYDRV_BUILD_EXAMPLES)
+    hydrv_module_is_requested(hydrv_icm42688 HYDRV_CURRENT_MODULE_REQUESTED)
+    if(HYDRV_BUILD_EXAMPLES AND HYDRV_CURRENT_MODULE_REQUESTED)
         add_subdirectory(example)
     endif()
 

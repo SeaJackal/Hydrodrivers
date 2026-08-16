@@ -5,9 +5,17 @@ project(Hydrodrivers VERSION 1.0)
 enable_language(C CXX ASM)
 
 set(FETCHCONTENT_BASE_DIR "${CMAKE_SOURCE_DIR}/.deps" CACHE PATH "Base directory for CMake FetchContent downloads")
-set(RUN_TESTS "ON" CACHE BOOL "Run tests")
+set(RUN_TESTS "ON" CACHE BOOL "Register Renode tests")
 
 option(HYDRV_BUILD_EXAMPLES "Build Hydrodrivers examples" OFF)
+option(BUILD_TESTS "Build host unit tests" OFF)
+option(HYDRV_VERIFY_SELECTION "Verify the resolved Hydrodrivers target set" OFF)
+
+include(CTest)
+
+if(BUILD_TESTS OR RUN_TESTS)
+    enable_testing()
+endif()
 
 if(NOT DEFINED MCU_FAMILY)
     message(FATAL_ERROR "MCU_FAMILY variable is not defined. Please set it to F1 or F4.")
@@ -19,27 +27,21 @@ endif()
 
 message(STATUS "Building for MCU family: ${MCU_FAMILY}")
 
-add_subdirectory(renode)
+include(cmake/HydrvModules.cmake)
 
-if(NOT BUILD_TESTS)
-    add_subdirectory(third_party)
+add_subdirectory(third_party)
 
-    add_subdirectory(hydrv_clock)
-    add_subdirectory(hydrv_gpio)
-    add_subdirectory(hydrv_dma)
-    add_subdirectory(hydrv_tim)
-    add_subdirectory(hydrv_thruster)
-    add_subdirectory(hydrv_vectornav)
-    add_subdirectory(hydrv_spi)
-    add_subdirectory(hydrv_i2c)
-    add_subdirectory(hydrv_icm42688)
-    add_subdirectory(hydrv_shell)
-    add_subdirectory(hydrv_bus)
-else()
-    include(CTest)
+if(HYDRV_BUILD_EXAMPLES)
+    add_subdirectory(renode)
 endif()
 
-add_subdirectory(hydrv_uart)
+foreach(HYDRV_MODULE IN LISTS HYDRV_RESOLVED_MODULES)
+    add_subdirectory(${HYDRV_MODULE})
+endforeach()
+
+if(HYDRV_VERIFY_SELECTION)
+    include(cmake/HydrvVerifySelection.cmake)
+endif()
 
 # add_custom_target(compdb ALL
 #     COMMAND /bin/sh -c "compdb -p ${CMAKE_BINARY_DIR} list > compile_commands.json && mv compile_commands.json ${CMAKE_BINARY_DIR}/compile_commands.json"

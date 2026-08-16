@@ -2,7 +2,8 @@ if(MCU_FAMILY STREQUAL "F4")
     set(LIBRARY_NAME HydrodriversVectorNAV)
 
     add_library(${LIBRARY_NAME} INTERFACE)
-    if(HYDRV_BUILD_EXAMPLES)
+    hydrv_module_is_requested(hydrv_vectornav HYDRV_CURRENT_MODULE_REQUESTED)
+    if(HYDRV_BUILD_EXAMPLES AND HYDRV_CURRENT_MODULE_REQUESTED)
         add_subdirectory(example)
     endif()
 

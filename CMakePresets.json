@@ -5,7 +5,7 @@
             "name": "default",
             "hidden": true,
             "generator": "Unix Makefiles",
-            "binaryDir": "${sourceDir}/build",
+            "binaryDir": "${sourceDir}/build/${presetName}",
             "cacheVariables": {
                 "CMAKE_C_STANDARD": "11",
                 "CMAKE_CXX_STANDARD": "20",
@@ -54,7 +54,11 @@
             "cacheVariables": {
                 "CMAKE_BUILD_TYPE": "Debug",
                 "BUILD_TESTS": "ON",
-                "HYDRV_BUILD_EXAMPLES": "ON"
+                "BUILD_TESTING": "OFF",
+                "HYDRV_BUILD_EXAMPLES": "OFF",
+                "HYDRV_BUILD_MODULES": "hydrv_uart",
+                "MCU_FAMILY": "F4",
+                "RUN_TESTS": "OFF"
             }
         },
         {
@@ -95,12 +99,22 @@
             }
         },
         {
-            "name": "Testing",
-            "inherits": "host",
+            "name": "RenodeF4",
+            "inherits": "DebugF4",
             "cacheVariables": {
-                "CMAKE_BUILD_TYPE": "Debug",
-                "BUILD_TESTS": "ON"
+                "RUN_TESTS": "ON"
             }
+        },
+        {
+            "name": "RenodeF1",
+            "inherits": "DebugF1",
+            "cacheVariables": {
+                "RUN_TESTS": "ON"
+            }
+        },
+        {
+            "name": "Testing",
+            "inherits": "Debug"
         }
     ],
     "buildPresets": [
@@ -119,6 +133,49 @@
         {
             "name": "MinSizeRel",
             "configurePreset": "MinSizeRel"
+        },
+        {
+            "name": "DebugF4",
+            "configurePreset": "DebugF4"
+        },
+        {
+            "name": "DebugF1",
+            "configurePreset": "DebugF1"
+        },
+        {
+            "name": "RenodeF4",
+            "configurePreset": "RenodeF4"
+        },
+        {
+            "name": "RenodeF1",
+            "configurePreset": "RenodeF1"
+        },
+        {
+            "name": "Testing",
+            "configurePreset": "Testing"
+        }
+    ],
+    "testPresets": [
+        {
+            "name": "RenodeF4",
+            "configurePreset": "RenodeF4",
+            "output": {
+                "outputOnFailure": true
+            }
+        },
+        {
+            "name": "RenodeF1",
+            "configurePreset": "RenodeF1",
+            "output": {
+                "outputOnFailure": true
+            }
+        },
+        {
+            "name": "Testing",
+            "configurePreset": "Testing",
+            "output": {
+                "outputOnFailure": true
+            }
         }
     ]
 }

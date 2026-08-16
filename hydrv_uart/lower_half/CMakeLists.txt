@@ -16,6 +16,6 @@ elseif(MCU_FAMILY STREQUAL "F4")
     target_include_directories(${LIBRARY_NAME} INTERFACE f4/include)
 endif()
 
-if(BUILD_TESTS)
+if(BUILD_TESTS AND HYDRV_CURRENT_MODULE_REQUESTED)
     add_subdirectory(mock)
 endif()
