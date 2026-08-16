@@ -174,7 +174,7 @@ rcc: Miscellaneous.STM32F4_RCC @ sysbus 0x40023800
     rtcPeripheral: rtc
     Timer9Reset -> timer9@255
 
-timer1: Timers.STM32_Timer @ sysbus 0x40010000
+timer1: Timers.HydrvSTM32Timer @ sysbus 0x40010000
     BreakInterrupt -> nvic@24
     UpdateInterrupt -> nvic@25
     [TriggerInterrupt, CommutationInterrupt] -> nvic@[26, 26]
@@ -182,37 +182,37 @@ timer1: Timers.STM32_Timer @ sysbus 0x40010000
     frequency: 10000000
     initialLimit: 0xFFFF
 
-timer2: Timers.STM32_Timer @ sysbus 0x40000000
+timer2: Timers.HydrvSTM32Timer @ sysbus 0x40000000
     -> nvic@28
     frequency: 10000000
     initialLimit: 0xFFFFFFFF
 
-timer3: Timers.STM32_Timer @ sysbus 0x40000400
+timer3: Timers.HydrvSTM32Timer @ sysbus 0x40000400
     -> nvic@29
     frequency: 10000000
     initialLimit: 0xFFFF
 
-timer4: Timers.STM32_Timer @ sysbus 0x40000800
+timer4: Timers.HydrvSTM32Timer @ sysbus 0x40000800
     -> nvic@30
     frequency: 10000000
     initialLimit: 0xFFFF
 
-timer5: Timers.STM32_Timer @ sysbus 0x40000C00
+timer5: Timers.HydrvSTM32Timer @ sysbus 0x40000C00
     -> nvic@50
     frequency: 168000000
     initialLimit: 0xFFFFFFFF
 
-timer6: Timers.STM32_Timer @ sysbus 0x40001000
+timer6: Timers.HydrvSTM32Timer @ sysbus 0x40001000
     -> nvic@54
     frequency: 10000000
     initialLimit: 0xFFFF
 
-timer7: Timers.STM32_Timer @ sysbus 0x40001400
+timer7: Timers.HydrvSTM32Timer @ sysbus 0x40001400
     -> nvic@55
     frequency: 10000000
     initialLimit: 0xFFFF
 
-timer8: Timers.STM32_Timer @ sysbus 0x40010400
+timer8: Timers.HydrvSTM32Timer @ sysbus 0x40010400
     BreakInterrupt -> nvic@43
     UpdateInterrupt -> nvic@44
     [TriggerInterrupt, CommutationInterrupt] -> nvic@[45, 45]
@@ -220,32 +220,32 @@ timer8: Timers.STM32_Timer @ sysbus 0x40010400
     frequency: 10000000
     initialLimit: 0xFFFF
 
-timer9: Timers.STM32_Timer @ sysbus 0x40014000
+timer9: Timers.HydrvSTM32Timer @ sysbus 0x40014000
     -> nvic@24
     frequency: 10000000
     initialLimit: 0xFFFF
 
-timer10: Timers.STM32_Timer @ sysbus 0x40014400
+timer10: Timers.HydrvSTM32Timer @ sysbus 0x40014400
     -> nvic@25
     frequency: 10000000
     initialLimit: 0xFFFF
 
-timer11: Timers.STM32_Timer @ sysbus 0x40014800
+timer11: Timers.HydrvSTM32Timer @ sysbus 0x40014800
     -> nvic@26
     frequency: 10000000
     initialLimit: 0xFFFF
 
-timer12: Timers.STM32_Timer @ sysbus 0x40001800
+timer12: Timers.HydrvSTM32Timer @ sysbus 0x40001800
     -> nvic@43
     frequency: 10000000
     initialLimit: 0xFFFF
 
-timer13: Timers.STM32_Timer @ sysbus 0x40001C00
+timer13: Timers.HydrvSTM32Timer @ sysbus 0x40001C00
     -> nvic@44
     frequency: 10000000
     initialLimit: 0xFFFF
 
-timer14: Timers.STM32_Timer @ sysbus 0x40002000
+timer14: Timers.HydrvSTM32Timer @ sysbus 0x40002000
     -> nvic@45
     frequency: 10000000
     initialLimit: 0xFFFF

@@ -93,9 +93,9 @@ jobs:
           - platform: F4
             label: hydrv_tim
             key: f4-hydrv-tim
-            preset: DebugF4
+            preset: RenodeF4
             modules: hydrv_tim
-            has_tests: false
+            has_tests: true
           - platform: F4
             label: hydrv_thruster
             key: f4-hydrv-thruster
