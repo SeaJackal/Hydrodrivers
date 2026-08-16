@@ -1,7 +1,8 @@
 if(MCU_FAMILY STREQUAL "F1" OR MCU_FAMILY STREQUAL "F4")
     add_subdirectory(upper_half)
     add_subdirectory(lower_half)
-    if(HYDRV_BUILD_EXAMPLES)
+    hydrv_module_is_requested(hydrv_spi HYDRV_CURRENT_MODULE_REQUESTED)
+    if(HYDRV_BUILD_EXAMPLES AND HYDRV_CURRENT_MODULE_REQUESTED)
         add_subdirectory(example)
     endif()
 

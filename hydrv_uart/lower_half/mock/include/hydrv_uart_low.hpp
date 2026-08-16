@@ -1,6 +1,8 @@
 #ifndef HYDRV_UART_LOW_H_
 #define HYDRV_UART_LOW_H_
 
+#define HYDRV_UART_LOW_SUPPORTS_RUNTIME_CONSTRUCTION 1
+
 #include <cstdint>
 
 #include <cstring>

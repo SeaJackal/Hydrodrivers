@@ -1,20 +1,274 @@
 name: Building and testing library
 run-name: Building and testing library
-on: [push]
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
 jobs:
-  Build-F1:
+  build:
+    name: Build / ${{ matrix.platform }} / ${{ matrix.label }}
     runs-on: ubuntu-latest
     container:
       image: seajackal/hydrodrivers:latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - platform: F1
+            label: all
+            key: f1-all
+            preset: DebugF1
+            modules: all
+            has_tests: false
+          - platform: F1
+            label: hydrv_clock
+            key: f1-hydrv-clock
+            preset: DebugF1
+            modules: hydrv_clock
+            has_tests: false
+          - platform: F1
+            label: hydrv_gpio
+            key: f1-hydrv-gpio
+            preset: RenodeF1
+            modules: hydrv_gpio
+            has_tests: true
+          - platform: F1
+            label: hydrv_uart
+            key: f1-hydrv-uart
+            preset: RenodeF1
+            modules: hydrv_uart
+            has_tests: true
+          - platform: F1
+            label: hydrv_spi
+            key: f1-hydrv-spi
+            preset: RenodeF1
+            modules: hydrv_spi
+            has_tests: true
+          - platform: F1
+            label: hydrv_icm42688
+            key: f1-hydrv-icm42688
+            preset: DebugF1
+            modules: hydrv_icm42688
+            has_tests: false
+          - platform: F1
+            label: hydrv_shell
+            key: f1-hydrv-shell
+            preset: DebugF1
+            modules: hydrv_shell
+            has_tests: false
+          - platform: F1
+            label: hydrv_bus
+            key: f1-hydrv-bus
+            preset: DebugF1
+            modules: hydrv_bus
+            has_tests: false
+          - platform: F4
+            label: all
+            key: f4-all
+            preset: DebugF4
+            modules: all
+            has_tests: false
+          - platform: F4
+            label: hydrv_clock
+            key: f4-hydrv-clock
+            preset: DebugF4
+            modules: hydrv_clock
+            has_tests: false
+          - platform: F4
+            label: hydrv_gpio
+            key: f4-hydrv-gpio
+            preset: RenodeF4
+            modules: hydrv_gpio
+            has_tests: true
+          - platform: F4
+            label: hydrv_dma
+            key: f4-hydrv-dma
+            preset: DebugF4
+            modules: hydrv_dma
+            has_tests: false
+          - platform: F4
+            label: hydrv_tim
+            key: f4-hydrv-tim
+            preset: RenodeF4
+            modules: hydrv_tim
+            has_tests: true
+          - platform: F4
+            label: hydrv_thruster
+            key: f4-hydrv-thruster
+            preset: DebugF4
+            modules: hydrv_thruster
+            has_tests: false
+          - platform: F4
+            label: hydrv_uart
+            key: f4-hydrv-uart
+            preset: RenodeF4
+            modules: hydrv_uart
+            has_tests: true
+          - platform: F4
+            label: hydrv_vectornav
+            key: f4-hydrv-vectornav
+            preset: DebugF4
+            modules: hydrv_vectornav
+            has_tests: false
+          - platform: F4
+            label: hydrv_spi
+            key: f4-hydrv-spi
+            preset: RenodeF4
+            modules: hydrv_spi
+            has_tests: true
+          - platform: F4
+            label: hydrv_i2c
+            key: f4-hydrv-i2c
+            preset: RenodeF4
+            modules: hydrv_i2c
+            has_tests: true
+          - platform: F4
+            label: hydrv_icm42688
+            key: f4-hydrv-icm42688
+            preset: DebugF4
+            modules: hydrv_icm42688
+            has_tests: false
+          - platform: F4
+            label: hydrv_shell
+            key: f4-hydrv-shell
+            preset: DebugF4
+            modules: hydrv_shell
+            has_tests: false
+          - platform: F4
+            label: hydrv_bus
+            key: f4-hydrv-bus
+            preset: DebugF4
+            modules: hydrv_bus
+            has_tests: false
+          - platform: F4
+            label: hydrv_tim+hydrv_uart
+            key: f4-hydrv-tim-hydrv-uart
+            preset: DebugF4
+            modules: hydrv_tim;hydrv_uart
+            has_tests: false
+          - platform: Host
+            label: hydrv_uart
+            key: host-hydrv-uart
+            preset: Testing
+            modules: hydrv_uart
+            has_tests: true
+
     steps:
-      - uses: actions/checkout@v4
-      - run: cmake --preset DebugF1
-      - run: cmake --build ./build
-  Build-F4:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Configure selected modules
+        run: >-
+          cmake --preset "${{ matrix.preset }}"
+          -B "build/ci-${{ matrix.key }}"
+          -DHYDRV_BUILD_MODULES="${{ matrix.modules }}"
+          -DHYDRV_VERIFY_SELECTION=ON
+
+      - name: Build selected modules
+        run: cmake --build "build/ci-${{ matrix.key }}" --parallel
+
+      - name: Pack build tree for tests
+        if: matrix.has_tests
+        run: tar -czf "build/ci-${{ matrix.key }}.tar.gz" -C "build/ci-${{ matrix.key }}" .
+
+      - name: Upload build tree
+        if: matrix.has_tests
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-${{ matrix.key }}
+          path: build/ci-${{ matrix.key }}.tar.gz
+          if-no-files-found: error
+          retention-days: 1
+
+  validate-selector:
+    name: Build validation / ${{ matrix.label }}
     runs-on: ubuntu-latest
     container:
       image: seajackal/hydrodrivers:latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - label: unknown-module
+            key: unknown-module
+            preset: DebugF4
+            modules: hydrv_typo
+            expected: Unknown module
+          - label: unsupported-family
+            key: unsupported-family
+            preset: DebugF1
+            modules: hydrv_tim
+            expected: does not support MCU_FAMILY=F1
+
     steps:
-      - uses: actions/checkout@v4
-      - run: cmake --preset DebugF4
-      - run: cmake --build ./build
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Verify rejected selection
+        run: >-
+          cmake
+          -DSOURCE_DIR="${GITHUB_WORKSPACE}"
+          -DBINARY_DIR="${GITHUB_WORKSPACE}/build/negative-${{ matrix.key }}"
+          -DPRESET="${{ matrix.preset }}"
+          -DMODULES="${{ matrix.modules }}"
+          -DEXPECTED_TEXT="${{ matrix.expected }}"
+          -P cmake/tests/ExpectConfigureFailure.cmake
+
+  test:
+    name: Test / ${{ matrix.platform }} / ${{ matrix.label }}
+    needs:
+      - build
+      - validate-selector
+    runs-on: ubuntu-latest
+    container:
+      image: seajackal/hydrodrivers:latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - platform: F1
+            label: hydrv_gpio
+            key: f1-hydrv-gpio
+          - platform: F1
+            label: hydrv_uart
+            key: f1-hydrv-uart
+          - platform: F1
+            label: hydrv_spi
+            key: f1-hydrv-spi
+          - platform: F4
+            label: hydrv_gpio
+            key: f4-hydrv-gpio
+          - platform: F4
+            label: hydrv_uart
+            key: f4-hydrv-uart
+          - platform: F4
+            label: hydrv_spi
+            key: f4-hydrv-spi
+          - platform: F4
+            label: hydrv_i2c
+            key: f4-hydrv-i2c
+          - platform: Host
+            label: hydrv_uart
+            key: host-hydrv-uart
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Download matching build tree
+        uses: actions/download-artifact@v4
+        with:
+          name: build-${{ matrix.key }}
+          path: artifacts
+
+      - name: Restore build tree
+        run: |
+          mkdir -p "build/ci-${{ matrix.key }}"
+          tar -xzf "artifacts/ci-${{ matrix.key }}.tar.gz" -C "build/ci-${{ matrix.key }}"
+
+      - name: Run tests
+        run: ctest --test-dir "build/ci-${{ matrix.key }}" --output-on-failure

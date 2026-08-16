@@ -16,7 +16,8 @@ if(MCU_FAMILY STREQUAL "F1" OR MCU_FAMILY STREQUAL "F4")
         target_include_directories(${LIBRARY_NAME} INTERFACE f4/include)
     endif()
     
-    if(HYDRV_BUILD_EXAMPLES)
+    hydrv_module_is_requested(hydrv_gpio HYDRV_CURRENT_MODULE_REQUESTED)
+    if(HYDRV_BUILD_EXAMPLES AND HYDRV_CURRENT_MODULE_REQUESTED)
         add_subdirectory(example)
     endif()
 
