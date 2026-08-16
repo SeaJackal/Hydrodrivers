@@ -10,6 +10,12 @@
 
 #include "hydrv_uart_low.hpp"
 
+#ifdef HYDRV_UART_LOW_SUPPORTS_RUNTIME_CONSTRUCTION
+#define HYDRV_UART_CONSTRUCTOR_EVAL
+#else
+#define HYDRV_UART_CONSTRUCTOR_EVAL consteval
+#endif
+
 namespace hydrv::UART
 {
 template <int RX_BUFFER_CAPACITY, int TX_BUFFER_CAPACITY,
@@ -19,7 +25,7 @@ requires hydrolib::concepts::func::FuncConcept<CallbackType, void>
 class UART
 {
 public:
-    consteval UART(
+    HYDRV_UART_CONSTRUCTOR_EVAL UART(
         const UARTLow::UARTPreset &UART_preset, hydrv::GPIO::GPIOLow &rx_pin,
         hydrv::GPIO::GPIOLow &tx_pin, unsigned IRQ_priority,
         CallbackType rx_callback = hydrolib::concepts::func::DummyFunc<void>);
@@ -65,7 +71,8 @@ int write(UART<RX_BUFFER_CAPACITY, TX_BUFFER_CAPACITY, CallbackType> &stream,
 
 template <int RX_BUFFER_CAPACITY, int TX_BUFFER_CAPACITY, typename CallbackType>
 requires hydrolib::concepts::func::FuncConcept<CallbackType, void>
-consteval UART<RX_BUFFER_CAPACITY, TX_BUFFER_CAPACITY, CallbackType>::UART(
+HYDRV_UART_CONSTRUCTOR_EVAL UART<RX_BUFFER_CAPACITY, TX_BUFFER_CAPACITY,
+                                CallbackType>::UART(
     const UARTLow::UARTPreset &UART_preset, hydrv::GPIO::GPIOLow &rx_pin,
     hydrv::GPIO::GPIOLow &tx_pin, unsigned IRQ_priority,
     CallbackType rx_callback)
@@ -75,6 +82,8 @@ consteval UART<RX_BUFFER_CAPACITY, TX_BUFFER_CAPACITY, CallbackType>::UART(
       rx_callback_(rx_callback)
 {
 }
+
+#undef HYDRV_UART_CONSTRUCTOR_EVAL
 
 template <int RX_BUFFER_CAPACITY, int TX_BUFFER_CAPACITY, typename CallbackType>
 requires hydrolib::concepts::func::FuncConcept<CallbackType, void>
